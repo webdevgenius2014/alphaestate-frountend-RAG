@@ -13,7 +13,7 @@ export default function Button({ variant = "primary", className = "", children, 
             : "bg-white/5 border border-white/15 text-white font-semibold p-[16px_24px] rounded-xl hover:bg-white/10 disabled:opacity-60 text-base";
 
     return (
-        <button className={`w-full transition-all duration-300 ${base} ${className}`} {...props}>
+        <button className={`w-full transition-all duration-400 ease-linear ${base} ${className}`} {...props}>
             {children}
         </button>
     );

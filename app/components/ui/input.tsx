@@ -31,7 +31,7 @@ export default function Input({ label, rightElement, className = "", type, ...pr
     return (
         <div>
             {label && (
-                <label className="block text-base font-medium text-white mb-2.5">{label}</label>
+                <label className="block text-base font-normal text-white mb-2.5">{label}</label>
             )}
             <div className="relative">
                 <input
