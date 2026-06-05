@@ -12,12 +12,32 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+
+/* ── Dashboard CSS variables ───────────────────────────── */
+:root {
+  --db-sidebar-bg: #F9F6EF;
+  --db-navbar-bg: #ffffff;
+  --db-main-bg: #ffffff;
+  --db-border: #E9E9E9;
+  --db-text-primary: #0B1F3A;
+  --db-text-muted: rgba(11, 31, 58, 0.45);
+  --db-search-bg: #ffffff;
+  --db-item-bg: #F9F6EF;
+  --db-toggle-border: #B8B8B8;
 }
+
+.dark {
+  --db-sidebar-bg: #0B1F3A;
+  --db-navbar-bg: #0B1F3A;
+  --db-main-bg: #06121F;
+  --db-border: rgba(255, 255, 255, 0.1);
+  --db-text-primary: #ffffff;
+  --db-text-muted: rgba(255, 255, 255, 0.4);
+  --db-search-bg: rgba(255, 255, 255, 0.06);
+  --db-item-bg: #0B1F3A;
+  --db-toggle-border: rgba(255, 255, 255, 0.2);
+}
+/* ────────────────────────────────────────────────────── */
 
 body {
   background: var(--background);
@@ -38,4 +58,34 @@ input:-webkit-autofill:active {
   border-color: rgba(255, 255, 255, 0.4) !important;
   caret-color: #ffffff;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+
+/* Hide scrollbar completely */
+.hide-scroll {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Thin scrollbar */
+.thin-scroll {
+  scrollbar-width: thin; /* Firefox */
+}
+
+.thin-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+}
+
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
