@@ -78,7 +78,7 @@ export default function SignUpPage() {
 
                     <p className="text-center text-[13px] relative text-white mt-10.5">
                         <span className="relative z-10"> Don&apos;t have an account?{" "}
-                            <Link href="/login" className="text-[#D28A44] font-semibold hover:underline">
+                            <Link href="/login" className="text-[#D28A44] font-semibold underline">
                                 Login
                             </Link></span>
                         <span className="w-[376.24212646484375px] h-[44.265953063964844px] rounded-[37132024px] opacity-[0.50] backdrop-blur-[22.13243293762207px] bg-[radial-gradient(70.71%_70.71%_at_50%_50%,rgba(208,138,69,0.55)_0%,rgba(0,0,0,0)_70%)] absolute left-1/2 -translate-x-1/2 -bottom-5 block max-w-50"></span>

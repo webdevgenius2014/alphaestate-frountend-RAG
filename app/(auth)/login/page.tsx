@@ -26,7 +26,7 @@ export default function LoginPage() {
                 loop
                 muted
                 playsInline
-                className="absolute hidden xl:flex inset-0 w-full left-[-16%] object-contain h-full scale-x-[-1]"
+                className="absolute hidden xl:flex inset-0 w-full left-[-15%] object-contain h-full"
             >
                 <source src="/13.mp4" type="video/mp4" />
             </video>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                                     </span>
                                     <span className="text-white">Keep me logged in</span>
                                 </label>
-                                <Link href="#" className="text-[#D28A44] hover:underline">
+                                <Link href="/forgot-password" className="text-[#D28A44] hover:underline">
                                     Forgot password?
                                 </Link>
                             </div>
@@ -113,7 +113,7 @@ export default function LoginPage() {
 
                     <p className="text-center text-[13px] relative text-white mt-8">
                         <span className="relative z-10">Don&apos;t have an account?{" "}
-                            <Link href="/signup" className="text-[#D28A44] font-semibold hover:underline">
+                            <Link href="/signup" className="text-[#D28A44] font-semibold underline">
                                 Register
                             </Link></span>
                         <span className="w-[376.24212646484375px] h-[44.265953063964844px] rounded-[37132024px] opacity-[0.50] backdrop-blur-[22.13243293762207px] bg-[radial-gradient(70.71%_70.71%_at_50%_50%,rgba(208,138,69,0.55)_0%,rgba(0,0,0,0)_70%)] absolute left-1/2 -translate-x-1/2 -bottom-5 block max-w-50"></span>
