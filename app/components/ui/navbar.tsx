@@ -14,7 +14,7 @@ export default function Navbar() {
     const pageLabel = formatLabel(segment);
 
     return (
-        <header className="bg-(--db-navbar-bg) flex items-center justify-between px-5 py-4.5 shrink-0">
+        <header className="bg-(--db-main-bg) flex items-center justify-between px-5 py-4.5 shrink-0">
 
             <div className="flex items-center gap-2 text-base text-(--db-text-primary) font-normal">
                 {segment === "dashboard" && (

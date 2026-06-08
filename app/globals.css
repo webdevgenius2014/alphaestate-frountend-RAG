@@ -24,6 +24,13 @@
   --db-search-bg: #ffffff;
   --db-item-bg: #F9F6EF;
   --db-toggle-border: #B8B8B8;
+  --db-table-header-bg: #FFE7CF;
+  --db-chat-bubble-bg: #FFEFE0;
+  --db-chat-tile-bg: #FFDDBD;
+  --db-chat-text: #0B1F3A;
+  --db-chat-icon-btn-bg: rgba(11, 31, 58, 0.11);
+  --db-chat-area-bg: linear-gradient(to right, #F9EFE6 0%, #FEFCFA 50%, #F9F0E7 100%);
+  --db-chat-dot-opacity: 0.5;
 }
 
 .dark {
@@ -36,8 +43,24 @@
   --db-search-bg: rgba(255, 255, 255, 0.06);
   --db-item-bg: #0B1F3A;
   --db-toggle-border: rgba(255, 255, 255, 0.2);
+  --db-table-header-bg: rgba(210, 138, 68, 0.15);
+  --db-chat-bubble-bg: #0B1F3A;
+  --db-chat-tile-bg: rgba(210, 138, 68, 0.12);
+  --db-chat-text: #ffffff;
+  --db-chat-icon-btn-bg: rgba(255, 255, 255, 0.1);
+  --db-chat-area-bg: #06121F;
+  --db-chat-dot-opacity: 0.1;
 }
 /* ────────────────────────────────────────────────────── */
+
+/* ── AI Chat utilities ─────────────────────────────────── */
+.chat-area-bg {
+  background: var(--db-chat-area-bg);
+}
+.chat-dot-overlay {
+  opacity: var(--db-chat-dot-opacity);
+}
+/* ─────────────────────────────────────────────────────── */
 
 body {
   background: var(--background);
@@ -74,6 +97,7 @@ input:-webkit-autofill:active {
 /* Thin scrollbar */
 .thin-scroll {
   scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* thumb track */
 }
 
 .thin-scroll::-webkit-scrollbar {
@@ -82,10 +106,14 @@ input:-webkit-autofill:active {
 }
 
 .thin-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.3);
   border-radius: 9999px;
 }
 
 .thin-scroll::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.thin-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }

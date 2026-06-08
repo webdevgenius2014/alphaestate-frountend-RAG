@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import Link from "next/link";
 import Sidebar from "@/app/components/ui/sidebar";
 import Navbar from "@/app/components/ui/navbar";
 
@@ -14,10 +15,10 @@ type ThemeCtx = {
 
 const ThemeContext = createContext<ThemeCtx>({
     isDark: false,
-    toggleTheme: () => {},
+    toggleTheme: () => { },
     isDrawerOpen: false,
-    toggleDrawer: () => {},
-    closeDrawer: () => {},
+    toggleDrawer: () => { },
+    closeDrawer: () => { },
 });
 
 export function useTheme() {
@@ -46,8 +47,15 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
                 <Sidebar />
                 <div className="flex flex-col flex-1 overflow-hidden">
                     <Navbar />
-                    <main className="flex-1 overflow-auto bg-(--db-main-bg)">
+                    <main className="flex-1 p-[20px_21px_20px_20px] overflow-auto bg-(--db-main-bg)">
                         {children}
+                        <footer className="bg-(--db-sidebar-bg) mt-5 px-5 py-3 flex flex-wrap rounded-[3px] items-center justify-between gap-2">
+                            <p className="text-xs inline-flex text-(--db-text-primary)">© Copyright 2025, Alpha Estate | All Rights Reserved</p>
+                            <div className="inline-flex items-center gap-4 text-xs text-(--db-text-primary)">
+                                <Link href="#" className="hover:text-(--db-text-primary) transition-colors">Privacy Policy</Link>
+                                <Link href="#" className="hover:text-(--db-text-primary) transition-colors">Terms of Service</Link>
+                            </div>
+                        </footer>
                     </main>
                 </div>
             </div>
