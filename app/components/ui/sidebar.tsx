@@ -82,7 +82,7 @@ export default function Sidebar() {
                                     className={`shrink-0 ${active ? "text-white" : "text-[#D28A44] group-hover:text-white"}`}
                                 />
                                 {!collapsed && (
-                                    <span className="text-sm font-medium truncate">
+                                    <span className="text-sm truncate">
                                         {item.label}
                                     </span>
                                 )}
@@ -108,7 +108,7 @@ export default function Sidebar() {
                                     title={collapsed ? item.label : undefined}
                                     className={`group flex w-full items-center gap-3 px-4.25 text-[15px] rounded-sm transition-all duration-200 ease-linear ${isDark
                                             ? "bg-[#D28A44] text-white font-semibold"
-                                            : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium  hover:font-semibold"
+                                            : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium hover:font-semibold"
                                         } ${collapsed ? "justify-center py-2" : "py-4"}`}
                                 >
                                     <item.icon
@@ -116,7 +116,7 @@ export default function Sidebar() {
                                     />
                                     {!collapsed && (
                                         <>
-                                            <span className="text-sm font-medium flex-1 text-left">
+                                            <span className="text-sm flex-1 text-left">
                                                 {item.label}
                                             </span>
                                             <div
@@ -150,7 +150,7 @@ export default function Sidebar() {
                                     className={`shrink-0 ${active ? "text-white" : "text-[#D28A44] group-hover:text-white"}`}
                                 />
                                 {!collapsed && (
-                                    <span className="text-sm font-medium truncate">
+                                    <span className="text-sm truncate">
                                         {item.label}
                                     </span>
                                 )}
