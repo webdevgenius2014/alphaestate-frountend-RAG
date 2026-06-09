@@ -33,14 +33,14 @@ export default function DashboardPage() {
         <div className="flex flex-col min-h-full">
             <div className="flex-1 space-y-6">
 
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h1 className="text-xl md:text-[25px] mb-2 leading-[100%] font-medium text-(--db-text-primary)">👋 Welcome back, Jammy Roy</h1>
                         <p className="text-sm text-(--db-text-primary) leading-5 font-normal max-w-130.75">
                             Track properties, market movements, investment insights, and AI-driven analytics all from one minimal command center.
                         </p>
                     </div>
-                    <Button variant="primary" className="w-auto! p-[10px_16px]! rounded-md! font-bold! text-xs! flex items-center gap-1.5 shrink-0">
+                    <Button variant="navy" className="w-auto! p-[10px_16px]! rounded-md! font-bold! text-xs! flex items-center gap-1.5 shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
                             <path d="M8.5 10.625V2.125" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                             <path d="M14.875 10.625V13.4583C14.875 13.8341 14.7257 14.1944 14.4601 14.4601C14.1944 14.7257 13.8341 14.875 13.4583 14.875H3.54167C3.16594 14.875 2.80561 14.7257 2.53993 14.4601C2.27426 14.1944 2.125 13.8341 2.125 13.4583V10.625" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
@@ -89,7 +89,7 @@ export default function DashboardPage() {
                 <Card className="rounded-none!">
                     <div className="flex items-start flex-wrap justify-between gap-4 mb-4">
                         <div>
-                            <h2 className="text-base md:text-[21px] font-semibold text-(--db-text-primary)">Price Trend — Price per sqft (AED)</h2>
+                            <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">Price Trend — Price per sqft (AED)</h2>
                             <p className="text-[13px] text-(--db-text-primary) mt-0.5">12-month rolling · Top 2 districts</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -110,7 +110,7 @@ export default function DashboardPage() {
                     <Card className="rounded-none!">
                         <div className="flex items-start flex-wrap justify-between gap-4 mb-4">
                             <div>
-                                <h2 className="text-base md:text-[21px] font-semibold text-(--db-text-primary)">Rental Yield by District</h2>
+                                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">Rental Yield by District</h2>
                                 <p className="text-xs text-(--db-text-primary) mt-0.5">Current quarter · Freehold only</p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
                     <Card className="rounded-none!">
                         <div className="mb-4">
-                            <h2 className="text-base md:text-[21px] font-semibold text-(--db-text-primary)">District Cap Rate Map</h2>
+                            <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">District Cap Rate Map</h2>
                             <p className="text-xs text-(--db-text-primary) mt-0.5">Q1 2026 · All districts</p>
                         </div>
                         <CapRateChart />

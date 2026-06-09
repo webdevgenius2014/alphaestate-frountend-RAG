@@ -88,7 +88,7 @@ export default function LoginPage() {
                             <div className="flex-1 h-px bg-white/10" />
                         </div>
 
-                        <Button type="submit" disabled={loading}>
+                        <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Signing in..." : "Login"}
                         </Button>
 

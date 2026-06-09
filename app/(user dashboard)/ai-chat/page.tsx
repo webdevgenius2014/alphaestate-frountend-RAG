@@ -4,16 +4,15 @@ import { useState, useRef, useEffect } from "react";
 import {
     AI_CHAT_CONV_GROUPS,
     AI_SEED_MESSAGES,
-    AIChatBotIcon,
     AIChatPlusIcon,
-    AIChatBubbleIcon,
     AIChatSendIcon,
-    AIChatEditIcon,
     type AIChatMessage,
     SparkelIcon,
     AIChatAudioIcon,
     AIChatLinkIcon,
 } from "@/app/(user dashboard)/constants";
+import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
+import Button from "@/app/components/ui/button";
 
 
 function UserBubble({ msg }: { msg: AIChatMessage }) {
@@ -33,7 +32,14 @@ function UserBubble({ msg }: { msg: AIChatMessage }) {
     );
 }
 
-function AIBubble({ msg }: { msg: AIChatMessage }) {
+type RoiForm = { purchasePrice: string; rentalIncome: string; district: string; propertyType: string; vacancyRate: string };
+
+function AIBubble({ msg, activeTab, roiForm, setRoiForm }: {
+    msg: AIChatMessage;
+    activeTab: "chat" | "roi";
+    roiForm: RoiForm;
+    setRoiForm: React.Dispatch<React.SetStateAction<RoiForm>>;
+}) {
     return (
         <div className="flex flex-col gap-2 max-w-164">
             <div className="flex flex-col gap-1.5">
@@ -43,21 +49,96 @@ function AIBubble({ msg }: { msg: AIChatMessage }) {
                     </div>
                     <span className="text-xs font-normal text-(--db-text-primary)5">Alphaestate Analyst</span>
                 </div>
-                <div className="bg-(--db-chat-bubble-bg) border border-(--db-border) rounded-[7px] p-5 flex flex-col gap-4">
+                <div className="bg-(--db-chat-bubble-bg) rounded-[7px] p-5 flex flex-col gap-4">
                     <p className="text-sm text-(--db-chat-text)">{msg.content}</p>
 
-                    {msg.insights && (
+                    {activeTab === "roi" ? (
+                        <div className="bg-(--db-chat-tile-bg) rounded-md p-[11px_15px]">
+                            <p className="text-base font-medium text-[#D28A44] mb-2.5">ROI Investment Calculator</p>
+                            <div className="grid grid-cols-2 gap-4 mb-2.75">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-(--db-chat-text)">Property Purchase Price</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter property purchase price"
+                                        value={roiForm.purchasePrice}
+                                        onChange={(e) => setRoiForm(f => ({ ...f, purchasePrice: e.target.value }))}
+                                        className="w-full bg-(--db-chat-bubble-bg) border border-[#D28A4452] rounded-md px-3 py-2.5 text-[11px] text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none focus:border-[#D28A4470] transition-colors"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-(--db-chat-text)">Expected Annual Rental Income</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter yearly rental income"
+                                        value={roiForm.rentalIncome}
+                                        onChange={(e) => setRoiForm(f => ({ ...f, rentalIncome: e.target.value }))}
+                                        className="w-full bg-(--db-chat-bubble-bg) border border-[#D28A4452] rounded-md px-3 py-2.5 text-[11px] text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none focus:border-[#D28A4470] transition-colors"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-2.75">
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-(--db-chat-text)">District</label>
+                                    <select
+                                        value={roiForm.district}
+                                        onChange={(e) => setRoiForm(f => ({ ...f, district: e.target.value }))}
+                                        className="w-full bg-(--db-chat-bubble-bg) border border-[#D28A4452] rounded-md px-3 py-2.5 text-[11px] text-(--db-text-primary) outline-none focus:border-[#D28A4470] transition-colors"
+                                    >
+                                        <option value="">Select a district</option>
+                                        <option>Yas Island</option>
+                                        <option>Al Reem Island</option>
+                                        <option>Saadiyat Island</option>
+                                        <option>Al Maryah Island</option>
+                                        <option>Khalidiyah</option>
+                                        <option>Al Raha Beach</option>
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="text-sm font-medium text-(--db-chat-text)">Property Type</label>
+                                    <select
+                                        value={roiForm.propertyType}
+                                        onChange={(e) => setRoiForm(f => ({ ...f, propertyType: e.target.value }))}
+                                        className="w-full bg-(--db-chat-bubble-bg) border border-[#D28A4452] rounded-md px-3 py-2.5 text-[11px] text-(--db-text-primary) outline-none focus:border-[#D28A4470] transition-colors"
+                                    >
+                                        <option>Apartment</option>
+                                        <option>Villa</option>
+                                        <option>Townhouse</option>
+                                        <option>Penthouse</option>
+                                        <option>Studio</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5 mb-2.75">
+                                <label className="text-sm font-medium text-(--db-chat-text)">Vacancy Rate (%)</label>
+                                <input
+                                    type="text"
+                                    placeholder="Enter Vacancy Rate"
+                                    value={roiForm.vacancyRate}
+                                    onChange={(e) => setRoiForm(f => ({ ...f, vacancyRate: e.target.value }))}
+                                    className="w-full bg-(--db-chat-bubble-bg) border border-[#D28A4452] rounded-md px-3 py-2.5 text-[11px] text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none focus:border-[#D28A4470] transition-colors"
+                                />
+                                <p className="text-[7px] p-[7px_6px] rounded-md bg-[#D28A4438] text-(--db-text-primary) flex items-center gap-1.5">
+                                    <img src="/about.svg" alt="" />
+                                    Vacancy rate is the estimated percentage of time the property will be unoccupied per year. Abu Dhabi market average: 10%. Leave blank to use default.
+                                </p>
+                            </div>
+                            <Button variant="primary" className="uppercase">
+                                Calculate ROI
+                            </Button>
+                        </div>
+                    ) : msg.insights && (
                         <>
                             <div>
                                 <p className="text-sm font-medium text-[#D28A44] mb-2.5 uppercase">Key Insights</p>
                                 <div className="grid grid-cols-4 gap-2">
                                     <div className="bg-(--db-chat-tile-bg) rounded-md p-[11px_15px]">
                                         <p className="text-sm text-(--db-chat-text) mb-1.5">AI Confidence</p>
-                                        <p className="text-lg md:text-[21px] font-bold text-[#D28A44] leading-none">0%</p>
+                                        <AnimatedNumber value="91%" className="text-lg md:text-[21px] font-bold text-[#D28A44] leading-none" />
                                     </div>
                                     <div className="bg-(--db-chat-tile-bg) rounded-md p-[11px_15px]">
                                         <p className="text-sm text-(--db-chat-text) mb-1.5">ROI</p>
-                                        <p className="text-lg md:text-[21px] font-bold text-[#D28A44] leading-none">0%</p>
+                                        <AnimatedNumber value="8.1%" className="text-lg md:text-[21px] font-bold text-[#D28A44] leading-none" />
                                     </div>
                                     <div className="bg-(--db-chat-tile-bg) rounded-md p-[11px_15px]">
                                         <p className="text-sm text-(--db-chat-text) mb-1.5">Market Signal</p>
@@ -90,15 +171,48 @@ function AIBubble({ msg }: { msg: AIChatMessage }) {
 }
 
 
+const CHAT_PHRASE = "Ask | about districts, ROI, investment opportunities, or market trends....";
+
 export default function AIChatPage() {
     const [messages, setMessages] = useState<AIChatMessage[]>(AI_SEED_MESSAGES);
     const [input, setInput] = useState("");
     const [activeConv, setActiveConv] = useState("Market Analysis");
+    const [chatPlaceholder, setChatPlaceholder] = useState("");
+    const [activeTab, setActiveTab] = useState<"chat" | "roi">("chat");
+    const [roiForm, setRoiForm] = useState({ purchasePrice: "", rentalIncome: "", district: "", propertyType: "Apartment", vacancyRate: "" });
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    useEffect(() => {
+        let charIdx = 0;
+        let deleting = false;
+        let timeout: ReturnType<typeof setTimeout>;
+        const tick = () => {
+            if (!deleting) {
+                charIdx++;
+                setChatPlaceholder(CHAT_PHRASE.slice(0, charIdx));
+                if (charIdx === CHAT_PHRASE.length) {
+                    deleting = true;
+                    timeout = setTimeout(tick, 2000);
+                    return;
+                }
+            } else {
+                charIdx--;
+                setChatPlaceholder(CHAT_PHRASE.slice(0, charIdx));
+                if (charIdx === 0) {
+                    deleting = false;
+                    timeout = setTimeout(tick, 300);
+                    return;
+                }
+            }
+            timeout = setTimeout(tick, deleting ? 25 : 55);
+        };
+        timeout = setTimeout(tick, 400);
+        return () => clearTimeout(timeout);
+    }, []);
 
     const send = () => {
         const text = input.trim();
@@ -140,10 +254,10 @@ export default function AIChatPage() {
                                 {group.items.map((item) => (
                                     <button
                                         key={item}
-                                        onClick={() => setActiveConv(item)}
+                                        onClick={() => { setActiveConv(item); setActiveTab(item === "ROI Calculator" ? "roi" : "chat"); }}
                                         className={`flex items-center gap-2 text-[12px] font-normal text-left w-full transition-colors ${activeConv === item
                                             ? "text-[#D28A44]"
-                                            : "text-(--db-text-primary) "
+                                            : "text-(--db-text-primary) hover:text-[#D28A44]"
                                             }`}
                                     >
                                         <span className="truncate">{item}</span>
@@ -167,7 +281,7 @@ export default function AIChatPage() {
                     </button>
                 </div>
 
-                <div className="overflow-y-auto rounded-lg relative px-5 py-5 flex flex-col gap-5 hide-scroll chat-area-bg">
+                <div className="flex-1 overflow-y-auto rounded-lg relative px-5 py-5 flex flex-col gap-5 hide-scroll chat-area-bg">
                     <div
                         className="absolute inset-0 min-h-dvh pointer-events-none chat-dot-overlay"
                         style={{
@@ -180,9 +294,8 @@ export default function AIChatPage() {
                         {messages.map((msg) =>
                             msg.role === "user"
                                 ? <UserBubble key={msg.id} msg={msg} />
-                                : <AIBubble key={msg.id} msg={msg} />
+                                : <AIBubble key={msg.id} msg={msg} activeTab={activeTab} roiForm={roiForm} setRoiForm={setRoiForm} />
                         )}
-
                         <div ref={bottomRef} />
                     </div>
                     <div className="shrink-0 relative z-10 p-2.5 bg-(--db-main-bg) rounded-lg">
@@ -192,7 +305,7 @@ export default function AIChatPage() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={onKey}
-                                placeholder="Ask | |about districts, ROI, investment opportunities, or market trends..."
+                                placeholder={chatPlaceholder}
                                 rows={1}
                                 className="flex-1 resize-none bg-transparent text-sm text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none leading-relaxed"
                             />
@@ -216,16 +329,15 @@ export default function AIChatPage() {
                         </div>
                         <div className="flex gap-2 overflow-x-auto">
                             {[
-                                { id: 1, text: "Best districts for ROI", color: "#D28A44" },
-                                { id: 2, text: "Compare Yas vs Al Reem", color: "#D28A44" },
-                                { id: 3, text: "Best rental yield areas", color: "#D28A44" },
-                                { id: 4, text: "Under AED 2M opportunities", color: "#D28A44" },
-                                { id: 5, text: "Luxury investment zones", color: "#D28A44" }
+                                { id: 1, text: "Best districts for ROI", },
+                                { id: 2, text: "Compare Yas vs Al Reem", },
+                                { id: 3, text: "Best rental yield areas", },
+                                { id: 4, text: "Under AED 2M opportunities", },
+                                { id: 5, text: "Luxury investment zones", }
                             ].map((tag) => (
                                 <span
                                     key={tag.id}
-                                    className="border min-w-fit border-[#D28A4480] rounded-sm text-[10px] px-[7.5px] py-[4.5px]"
-                                    style={{ color: tag.color }}
+                                    className="border min-w-fit border-[#D28A4480] text-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm text-[10px] px-[7.5px] py-[4.5px]"
                                 >
                                     {tag.text}
                                 </span>
