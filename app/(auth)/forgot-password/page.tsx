@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
                                 Didn&apos;t receive it? Check your spam folder or try again.
                             </p>
 
-                            <Button type="button" onClick={() => setSent(false)}>
+                            <Button type="button" onClick={() => setSent(false)} className="text-base! max-w-full! font-bold! py-3.75!">
                                 Try Again
                             </Button>
                         </>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
 
-                                <Button type="submit" disabled={loading}>
+                                <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                                     {loading ? "Sending..." : "Send Reset Link"}
                                 </Button>
                             </form>

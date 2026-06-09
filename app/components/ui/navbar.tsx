@@ -16,7 +16,7 @@ export default function Navbar() {
     return (
         <header className="bg-(--db-main-bg) flex items-center justify-between px-5 py-4.5 shrink-0">
 
-            <div className="flex items-center gap-2 text-base text-(--db-text-primary) font-normal">
+            <div className="hidden md:flex items-center gap-2 text-base text-(--db-text-primary) font-normal">
                 {segment === "dashboard" && (
                     <>
                         <span>Overview</span>
@@ -26,7 +26,7 @@ export default function Navbar() {
                 <span>{pageLabel}</span>
             </div>
 
-            <div className="flex items-center gap-2.25">
+            <div className="flex items-center gap-2.25 ml-auto">
                 <div className="w-8.5 h-8.5 rounded-full flex items-center justify-center overflow-hidden shrink-0">
                     <img src="/favicon.ico" alt="" className="object-cover" />
                 </div>

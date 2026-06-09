@@ -70,7 +70,7 @@ export default function SignUpPage() {
                             </div>
                         </div>
 
-                        <Button type="submit" disabled={loading}>
+                        <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Creating account..." : "Sign up"}
                         </Button>
 
