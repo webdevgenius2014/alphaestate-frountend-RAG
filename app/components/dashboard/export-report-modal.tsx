@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Input from "@/app/components/ui/input";
+import ModalButton from "@/app/components/ui/modal-button";
+import { SelectChevron } from "@/app/(user dashboard)/constants";
 
 const EXPORT_SECTIONS = [
     "Price Trend Analysis",
@@ -12,18 +14,11 @@ const EXPORT_SECTIONS = [
     "District Comparison",
 ];
 
-const selectCls = "w-full bg-[#FEF5EC] border border-[#EAD5B8] text-[#0B1F3A] rounded-md px-4 py-3 text-sm outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer";
+const selectCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-field-border) text-(--db-text-primary) rounded-md px-4 py-3 h-[45.6px] text-sm outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer";
 
-function SelectChevron() {
-    return (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M6 9l6 6 6-6" stroke="#D28A44" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <label className="block text-sm font-semibold text-[#D28A44] mb-1.5">{children}</label>;
+    return <label className="block text-[17px] font-medium text-(--db-text-primary) mb-2.25">{children}</label>;
 }
 
 function SelectField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -66,23 +61,20 @@ export function ExportReportModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-[10px] w-full max-w-141.5 shadow-2xl relative flex flex-col"
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-141.5 shadow-2xl relative flex flex-col"
                 style={{ maxHeight: "92vh" }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-20"
-                >
+                <button onClick={onClose} className="absolute top-4 right-4 z-20">
                     <img src="/close.svg" alt="" />
                 </button>
 
                 {/* ── Sticky header ── */}
-                <div className="sticky top-0 bg-white rounded-t-2xl px-8 pt-8 pb-5 border-b border-[#F0E8DF] z-10 shrink-0">
-                    <h2 className="text-[22px] font-bold text-[#0B1F3A] text-center mb-1.5">
+                <div className="sticky top-0 bg-(--db-modal-bg) rounded-t-2xl px-8 pt-8 pb-5 z-10 shrink-0">
+                    <h2 className="text-[25px] font-medium text-(--db-text-primary) text-center mb-2.5">
                         Export Market Intelligence Report
                     </h2>
-                    <p className="text-sm text-[#0B1F3A]/55 text-center leading-relaxed">
+                    <p className="text-sm text-(--db-text-muted) text-center font-normal max-w-97.5 mx-auto">
                         Generate a branded PDF report based on the current<br />
                         analytics and selected market filters.
                     </p>
@@ -111,15 +103,15 @@ export function ExportReportModal({ onClose }: { onClose: () => void }) {
                         <FieldLabel>Time Range</FieldLabel>
                         <Input
                             defaultValue="Last 30 Days"
-                            className="h-auto! bg-[#FEF5EC]! border-[#EAD5B8]! text-[#0B1F3A]! rounded-md! placeholder-[#0B1F3A]/40! focus:border-[#D28A44]/60!"
+                            className="h-auto! bg-(--db-modal-field-bg)! border-(--db-modal-field-border)! text-(--db-text-primary)! rounded-md! placeholder-(--db-text-muted)! focus:border-[#D28A44]/60!"
                         />
                     </div>
 
                     <div>
                         <FieldLabel>Include Sections</FieldLabel>
-                        <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-1">
+                        <div className="flex flex-wrap gap-x-6.25 gap-y-3.75 mt-1">
                             {EXPORT_SECTIONS.map((s) => (
-                                <label key={s} className="flex items-center gap-2 text-xs text-[#0B1F3A] cursor-pointer select-none">
+                                <label key={s} className="flex items-center gap-2 text-sm font-normal text-(--db-text-primary) cursor-pointer select-none">
                                     <input
                                         type="checkbox"
                                         checked={checked.has(s)}
@@ -142,10 +134,8 @@ export function ExportReportModal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 {/* ── Sticky footer ── */}
-                <div className="sticky bottom-0 bg-white rounded-b-2xl px-8 pb-8 pt-4 border-t border-[#F0E8DF] shrink-0">
-                    <button className="w-full bg-[#0B1F3A] text-white text-sm font-bold py-4 rounded-md tracking-widest hover:bg-[#0D2444] transition-colors">
-                        GENERATE PDF REPORT
-                    </button>
+                <div className="sticky bottom-0 bg-(--db-modal-bg) rounded-b-2xl px-8 pb-8 pt-4 border-t border-(--db-modal-divider) shrink-0">
+                    <ModalButton>GENERATE PDF REPORT</ModalButton>
                 </div>
             </div>
         </div>,

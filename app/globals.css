@@ -32,6 +32,13 @@
   --db-chat-area-bg: linear-gradient(to right, #ffffff 0%, #FEFCFA 80%, #F9F0E7 100%);
   --db-chat-dot-opacity: 0.5;
   --db-icon-box-bg: #F9F6EF;
+  --db-modal-bg: #F9F6EF;
+  --db-modal-field-bg: #ffffff;
+  --db-modal-field-border: rgba(210, 138, 68, 0.12);
+  --db-modal-divider: #F0E8DF;
+  --db-modal-btn: #0B1F3A;
+  --db-modal-btn-hover-text: #ffffff;
+  --db-icon-btn-bg: rgba(11, 31, 58, 0.11);
 }
 
 .dark {
@@ -52,6 +59,13 @@
   --db-chat-area-bg: #06121F;
   --db-chat-dot-opacity: 0.1;
   --db-icon-box-bg: rgba(255, 255, 255, 0.08);
+  --db-modal-bg: #0B1F3A;
+  --db-modal-field-bg: rgba(255, 255, 255, 0.05);
+  --db-modal-field-border: rgba(210, 138, 68, 0.2);
+  --db-modal-divider: rgba(255, 255, 255, 0.08);
+  --db-modal-btn: #ffffff;
+  --db-modal-btn-hover-text: #0B1F3A;
+  --db-icon-btn-bg: rgba(255, 255, 255, 0.1);
 }
 /* ────────────────────────────────────────────────────── */
 

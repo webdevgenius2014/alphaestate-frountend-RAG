@@ -37,7 +37,7 @@ export default function Navbar() {
 
                 <button
                     onClick={toggleDrawer}
-                    className="xl:hidden relative z-60 flex min-w-9.75 w-9.75 h-9.75 rounded-sm items-center justify-center bg-[#D28A44] shrink-0"
+                    className={`xl:hidden relative flex min-w-9.75 w-9.75 h-9.75 rounded-sm items-center justify-center bg-[#D28A44] shrink-0 ${isDrawerOpen ? "z-60" : "z-10"}`}
                     aria-label="Toggle menu"
                 >
                     <div className="relative w-9 h-9 flex items-center justify-center">

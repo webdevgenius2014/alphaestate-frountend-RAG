@@ -198,7 +198,17 @@ export default function DashboardPage() {
                             <div className="w-12.5 h-12.5 rounded-md bg-[#D28A441F] flex items-center justify-center mb-7.5">{s.icon}</div>
                             <span className={`text-sm font-normal text-(--db-text-primary)`}>{s.badge}</span>
                             <p className="text-sm md:text-lg font-medium text-(--db-text-primary) leading-snug mb-3 mt-2.25">{s.title}</p>
-                            <button className="self-start text-sm font-semibold text-[#D28A44] border-b-2 pb-1">{s.action}</button>
+                            <button className="group relative overflow-hidden h-6 text-sm max-w-fit font-semibold">
+                                <div className="transition-transform duration-200 will-change-transform ease-[cubic-bezier(0.34,1.15,0.64,1)] group-hover:-translate-y-6 translate-y-0">
+                                    <div className="h-6 flex tems-center border-b-2 text-[#D28A44]">
+                                        {s.action}
+                                    </div>
+
+                                    <div className="h-6 flex tems-center border-b-2 text-(--db-text-primary)">
+                                        {s.action}
+                                    </div>
+                                </div>
+                            </button>
                         </Card>
                     ))}
                 </div>
