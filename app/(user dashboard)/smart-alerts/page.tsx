@@ -14,6 +14,22 @@ import {
     type AlertFeedItem,
 } from "@/app/(user dashboard)/constants";
 
+function Checkbox({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
+    return (
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" checked={checked} onChange={onChange} className="hidden" />
+            <span className={`shrink-0 w-5.75 h-5.75 rounded-[3px] border flex items-center justify-center transition-colors ease-linear ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-sidebar-bg) border-[#D28A4466]"}`}>
+                {checked && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                )}
+            </span>
+            <span className="text-sm font-normal text-(--db-text-primary)">{label}</span>
+        </label>
+    );
+}
+
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
         <div className={`bg-(--db-sidebar-bg) rounded-md p-5 ${className}`}>
@@ -116,18 +132,12 @@ export default function SmartAlertsPage() {
                                     </div>
                                     <div className="space-y-3">
                                         {method.items.map((item) => (
-                                            <label
+                                            <Checkbox
                                                 key={item}
-                                                className="flex items-center gap-2.5 text-sm font-normal text-(--db-text-primary) cursor-pointer select-none"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={checked.has(item)}
-                                                    onChange={() => toggleCheck(item)}
-                                                    className="w-5.75 h-5.75 rounded-sm accent-[#cd8239] cursor-pointer shrink-0"
-                                                />
-                                                {item}
-                                            </label>
+                                                label={item}
+                                                checked={checked.has(item)}
+                                                onChange={() => toggleCheck(item)}
+                                            />
                                         ))}
                                     </div>
                                 </div>

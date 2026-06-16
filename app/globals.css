@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 :root {
   --background: #ffffff;
@@ -39,6 +40,7 @@
   --db-modal-btn: #0B1F3A;
   --db-modal-btn-hover-text: #ffffff;
   --db-icon-btn-bg: rgba(11, 31, 58, 0.11);
+  --db-sub-popular-bg: #FFE9D4;
 }
 
 .dark {
@@ -66,6 +68,7 @@
   --db-modal-btn: #ffffff;
   --db-modal-btn-hover-text: #0B1F3A;
   --db-icon-btn-bg: rgba(255, 255, 255, 0.1);
+  --db-sub-popular-bg: rgba(210, 138, 68, 0.12);
 }
 /* ────────────────────────────────────────────────────── */
 
