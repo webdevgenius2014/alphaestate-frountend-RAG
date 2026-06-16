@@ -47,7 +47,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
                 <Sidebar />
                 <div className="flex flex-col flex-1 overflow-hidden">
                     <Navbar />
-                    <main className="flex-1 p-[20px_21px_20px_20px] overflow-auto bg-(--db-main-bg)">
+                    <main className="flex-1 p-[20px_21px_20px_20px] overflow-auto bg-(--db-main-bg) thin-scroll">
                         {children}
                         <footer className="bg-(--db-sidebar-bg) mt-5 px-5 py-3 flex flex-wrap rounded-[3px] items-center justify-between gap-2">
                             <p className="text-xs inline-flex text-(--db-text-primary)">© Copyright 2025, Alpha Estate | All Rights Reserved</p>

@@ -6,6 +6,7 @@ import { Autoplay } from "swiper/modules";
 import type { Swiper as SwiperInstance } from "swiper";
 import "swiper/css";
 import { MARKET_LOCATIONS, ArrowIcon } from "@/app/(user dashboard)/constants";
+import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 
 function TrendArrow() {
     return (
@@ -62,7 +63,7 @@ export function MarketSlider() {
                                 <span className="text-sm md:text-[15px] font-medium text-(--db-text-primary) truncate">{loc.name}</span>
                             </div>
                             <div className="flex gap-3 items-center justify-between">
-                                <p className="text-sm md:text-[21px] font-semibold text-(--db-text-primary)">{loc.price}</p>
+                                <AnimatedNumber value={loc.price} className="text-sm md:text-[21px] font-semibold text-(--db-text-primary)" />
                                 <div className={`flex items-center gap-1 text-xs font-medium ${loc.up ? "text-green-600" : "text-red-500"}`}>
                                     <span className={`${loc.up ? "bg-[#5E9F621C] text-[#5E9F62]" : "bg-[#C46A6A33] text-[#CF2D48] -rotate-180"} w-6 h-6 rounded-full flex justify-center items-center`}>
                                         <TrendArrow />

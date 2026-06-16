@@ -4,6 +4,7 @@ import { useState } from "react";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import { SUB_PLANS } from "@/app/(user dashboard)/constants";
+import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 
 const CURRENT_PLAN = "essential";
 const EXPIRY_DATE = "02 Jan 2026";
@@ -69,9 +70,10 @@ export default function SubscriptionPage() {
                             <h3 className="text-[23px] font-medium text-(--db-text-primary) mb-3.75">{plan.name}</h3>
 
                             <p className="mb-3.25" style={{ fontFamily: "var(--font-archivo)" }}>
-                                <span className="text-[30px] font-medium leading-[100%] text-[#D28A44]">
-                                    AED {billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice}
-                                </span>
+                                <AnimatedNumber
+                                    value={`AED ${billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice}`}
+                                    className="text-[30px] font-medium leading-[100%] text-[#D28A44]"
+                                />
                                 <span className="text-[20px] text-[#D28A44] ml-1 leading-[100%]">/ month</span>
                             </p>
 

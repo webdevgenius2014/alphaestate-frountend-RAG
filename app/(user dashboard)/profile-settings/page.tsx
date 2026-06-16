@@ -68,12 +68,28 @@ function SectionTitle({ children, showEdit }: { children: ReactNode; showEdit?: 
     );
 }
 
+function Checkbox({ checked, onChange, label, textCls }: { checked: boolean; onChange: () => void; label: string; textCls?: string }) {
+    return (
+        <label className="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={checked} onChange={onChange} className="hidden" />
+            <span className={`shrink-0 w-4.75 h-4.75 rounded-[3px] border flex items-center justify-center transition-colors ease-linear ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-sidebar-bg) border-[#D28A4466]"}`}>
+                {checked && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                )}
+            </span>
+            <span className={textCls ?? "text-[13px] text-(--db-text-primary)"}>{label}</span>
+        </label>
+    );
+}
+
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
     return (
         <button
             type="button"
             onClick={onChange}
-            className={`relative w-13.75 h-6 rounded-full border transition-colors ease-linear shrink-0 ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-main-bg) border-[#E4E4E4]"}`}
+            className={`relative w-13.75 h-6 rounded-full border transition-colors ease-linear shrink-0 ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-main-bg) border-(--db-toggle-border)"}`}
         >
             <div className={`absolute top-px w-5 h-5 rounded-full shadow transition-all ease-linear ${checked ? "right-0.5 bg-(--db-main-bg)" : "left-0.5 bg-[#D28A44]"}`} />
         </button>
@@ -344,15 +360,13 @@ function NotificationsTab() {
                         <p className="text-[17px] font-semibold text-[#D28A44] mb-4">AI Market Alerts</p>
                         <div className="grid grid-cols-1 gap-4.75">
                             {NOTIF_AI_ALERTS.map((label) => (
-                                <label key={label} className="flex items-center gap-2.5 cursor-pointer group">
-                                    <input
-                                        type="checkbox"
-                                        checked={aiAlerts.has(label)}
-                                        onChange={() => toggleAiAlert(label)}
-                                        className="w-4.75 h-4.75 accent-[#cd8239] cursor-pointer shrink-0"
-                                    />
-                                    <span className="text-sm font-normal text-(--db-text-primary) group-hover:text-(--db-text-primary)">{label}</span>
-                                </label>
+                                <Checkbox
+                                    key={label}
+                                    label={label}
+                                    checked={aiAlerts.has(label)}
+                                    onChange={() => toggleAiAlert(label)}
+                                    textCls="text-sm font-normal text-(--db-text-primary)"
+                                />
                             ))}
                         </div>
                     </div>
@@ -409,15 +423,12 @@ function NotificationsTab() {
                             <p className="text-[15px] font-semibold text-(--db-text-primary) mb-3">Preferred District Alerts</p>
                             <div className="flex flex-wrap gap-x-5 gap-y-2">
                                 {NOTIF_DISTRICTS.map((d) => (
-                                    <label key={d} className="flex items-center gap-2.5 cursor-pointer group">
-                                        <input
-                                            type="checkbox"
-                                            checked={districts.has(d)}
-                                            onChange={() => toggleDistrict(d)}
-                                            className="w-4.75 h-4.75 accent-[#cd8239] cursor-pointer shrink-0"
-                                        />
-                                        <span className="text-[13px] text-(--db-text-primary)">{d}</span>
-                                    </label>
+                                    <Checkbox
+                                        key={d}
+                                        label={d}
+                                        checked={districts.has(d)}
+                                        onChange={() => toggleDistrict(d)}
+                                    />
                                 ))}
                             </div>
                         </div>
@@ -454,10 +465,6 @@ function AIPreferencesTab() {
     const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) =>
         setter((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
 
-    const checkboxCls = "w-4.75 h-4.75 accent-[#cd8239] cursor-pointer shrink-0";
-    const checkLabelCls = "flex items-center gap-2.5 cursor-pointer";
-    const checkTextCls = "text-[13px] text-(--db-text-primary)";
-
     return (
         <div>
             <div className="mb-4.5">
@@ -472,15 +479,12 @@ function AIPreferencesTab() {
                         <p className="text-[15px] font-semibold text-[#D28A44] mb-3">Preferred Investment Focus</p>
                         <div className="space-y-2.5">
                             {AI_PREF_INVESTMENT_FOCUS.map((item) => (
-                                <label key={item} className={checkLabelCls}>
-                                    <input
-                                        type="checkbox"
-                                        checked={investmentFocus.has(item)}
-                                        onChange={() => toggleSet(setInvestmentFocus, item)}
-                                        className={checkboxCls}
-                                    />
-                                    <span className={checkTextCls}>{item}</span>
-                                </label>
+                                <Checkbox
+                                    key={item}
+                                    label={item}
+                                    checked={investmentFocus.has(item)}
+                                    onChange={() => toggleSet(setInvestmentFocus, item)}
+                                />
                             ))}
                         </div>
                     </div>
@@ -490,15 +494,12 @@ function AIPreferencesTab() {
                         <p className="text-[13px] text-(--db-text-primary) mb-3">Choose how detailed AI-generated analysis should be across the platform.</p>
                         <div className="flex flex-wrap gap-x-6 gap-y-2.5">
                             {AI_PREF_INSIGHT_LEVELS.map((item) => (
-                                <label key={item} className={checkLabelCls}>
-                                    <input
-                                        type="checkbox"
-                                        checked={insightLevel.has(item)}
-                                        onChange={() => toggleSet(setInsightLevel, item)}
-                                        className={checkboxCls}
-                                    />
-                                    <span className={checkTextCls}>{item}</span>
-                                </label>
+                                <Checkbox
+                                    key={item}
+                                    label={item}
+                                    checked={insightLevel.has(item)}
+                                    onChange={() => toggleSet(setInsightLevel, item)}
+                                />
                             ))}
                         </div>
                     </div>
@@ -508,15 +509,12 @@ function AIPreferencesTab() {
                     <p className="text-[15px] font-semibold text-[#D28A44] mb-3">Preferred Districts</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2.5">
                         {AI_PREF_DISTRICTS.map((d) => (
-                            <label key={d} className={checkLabelCls}>
-                                <input
-                                    type="checkbox"
-                                    checked={aiDistricts.has(d)}
-                                    onChange={() => toggleSet(setAiDistricts, d)}
-                                    className={checkboxCls}
-                                />
-                                <span className={checkTextCls}>{d}</span>
-                            </label>
+                            <Checkbox
+                                key={d}
+                                label={d}
+                                checked={aiDistricts.has(d)}
+                                onChange={() => toggleSet(setAiDistricts, d)}
+                            />
                         ))}
                     </div>
                 </div>
