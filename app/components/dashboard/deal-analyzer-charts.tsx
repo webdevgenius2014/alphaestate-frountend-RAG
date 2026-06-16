@@ -29,20 +29,70 @@ function fmtAED(v: number) {
 
 // ── Deal Score Gauge ──────────────────────────────────────────────────────
 
-function gaugeData(score: number) {
-    return [
-        { value: score, color: "#D28A44" },
-        { value: 100 - score, color: "rgba(210,138,68,0.12)" },
-    ];
+const ACTIVE_COLORS = ["#7A3210", "#963D18", "#B04E22", "#C4622E", "#D28A44", "#DC9E60", "#E5B47E", "#ECC9A0", "#F3DEC2", "#ECC9A0"];
+const INACTIVE_COLOR = "rgba(210, 138, 68, 0.12)";
+
+function buildGaugeSegments(score: number) {
+    const activeCount = Math.round(score / 10);
+    return Array.from({ length: 10 }, (_, i) => ({
+        value: 1,
+        color: i < activeCount ? ACTIVE_COLORS[i] : INACTIVE_COLOR,
+    }));
 }
 
 export function DealScoreGauge({ score = 85 }: { score?: number }) {
-    const animActive = useAnimSync();
-    const data = gaugeData(score);
+    const segments = buildGaugeSegments(score);
 
     return (
-        <div className="relative" style={{ width: 135, height: 135 }}>
-            <ResponsiveContainer width="100%" height={135}>
+        <div className="relative w-full" style={{ height: 160 }}>
+            <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                    <Pie
+                        data={segments}
+                        cx="50%"
+                        cy="100%"
+                        startAngle={180}
+                        endAngle={0}
+                        innerRadius={80}
+                        outerRadius={120}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                        cornerRadius={4}
+                        isAnimationActive={true}
+                        animationBegin={0}
+                        animationDuration={700}
+                        animationEasing="ease-out"
+                    >
+                        {segments.map((entry, i) => (
+                            <Cell key={i} fill={entry.color} />
+                        ))}
+                    </Pie>
+                </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none pb-1">
+                <AnimatedNumber value={`${score}%`} className="text-3xl font-bold text-(--db-text-primary) leading-none" />
+            </div>
+        </div>
+    );
+}
+
+// ── Deal Assessment Gauge (arc 215→-45) ───────────────────────────────────
+
+function assessmentGaugeData(score: number) {
+    return [
+        { value: score, color: "#D28A44" },
+        { value: 100 - score, color: "rgba(210,138,68,0.15)" },
+    ];
+}
+
+export function DealAssessmentGauge({ score = 85 }: { score?: number }) {
+    const animActive = useAnimSync();
+    const data = assessmentGaugeData(score);
+
+    return (
+        <div className="relative" style={{ width: 160, height: 160 }}>
+            <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
                     <Pie
                         data={data}
@@ -50,8 +100,8 @@ export function DealScoreGauge({ score = 85 }: { score?: number }) {
                         cy="50%"
                         startAngle={215}
                         endAngle={-45}
-                        innerRadius={54}
-                        outerRadius={66}
+                        innerRadius={60}
+                        outerRadius={75}
                         dataKey="value"
                         strokeWidth={0}
                         cornerRadius={6}
@@ -66,8 +116,8 @@ export function DealScoreGauge({ score = 85 }: { score?: number }) {
                 </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <AnimatedNumber value={`${score}`} className="text-[36px] font-bold text-(--db-text-primary) leading-none" />
-                <span className="text-[10px] text-(--db-text-muted) mt-1">Score {score}/100</span>
+                <AnimatedNumber value={`${score}`} className="text-[40px] font-bold text-(--db-text-primary) leading-none" />
+                <span className="text-[11px] text-(--db-text-muted) mt-1">Score {score}/100</span>
             </div>
         </div>
     );

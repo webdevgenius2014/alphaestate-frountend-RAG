@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
-import { DealScoreGauge, PriceVsMarketChart, DistrictPriceTrendChart } from "@/app/components/dashboard/deal-analyzer-charts";
+import { DealAssessmentGauge, PriceVsMarketChart, DistrictPriceTrendChart } from "@/app/components/dashboard/deal-analyzer-charts";
 import {
     COMPARABLE_TRANSACTIONS, DEAL_STATUS_CLS, DEAL_ASSESSMENT_STATS, DEAL_MARKET_DATA,
     SelectChevron, SortIcon,
@@ -137,7 +137,7 @@ export default function DealAnalyzerPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
                         {/* Gauge panel */}
                         <div className="bg-[#D28A441F] rounded-lg p-5 flex flex-col items-center gap-3">
-                            <DealScoreGauge score={85} />
+                            <DealAssessmentGauge score={85} />
                             <span className="flex items-center gap-1.5 text-[11px] font-medium text-[#5E9F62] bg-[#5E9F622E] rounded-xs px-1.5 py-0.5 uppercase tracking-wider">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#5E9F62] shrink-0" />
                                 Good Deal

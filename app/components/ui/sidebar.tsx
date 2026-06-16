@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
+import { LogoutModal } from "@/app/components/dashboard/alert-modals";
 import {
     MENU_ITEMS,
     SETTINGS_ITEMS,
@@ -16,6 +17,7 @@ import {
 export default function Sidebar() {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
+    const [logoutOpen, setLogoutOpen] = useState(false);
     const { isDark, toggleTheme, isDrawerOpen, closeDrawer } = useTheme();
 
     const isActive = (href: string) =>
@@ -134,6 +136,21 @@ export default function Sidebar() {
                             );
                         }
 
+                        if (item.label === "Logout") {
+                            return (
+                                <button
+                                    key={item.label}
+                                    type="button"
+                                    onClick={() => setLogoutOpen(true)}
+                                    title={collapsed ? item.label : undefined}
+                                    className={`group flex w-full items-center gap-3 px-4.25 text-[15px] rounded-sm transition-all duration-200 ease-linear text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium hover:font-semibold ${collapsed ? "justify-center py-2" : "py-4"}`}
+                                >
+                                    <item.icon className="shrink-0 text-[#D28A44] group-hover:text-white" />
+                                    {!collapsed && <span className="text-sm truncate">{item.label}</span>}
+                                </button>
+                            );
+                        }
+
                         const active = item.href ? isActive(item.href) : false;
                         return (
                             <Link
@@ -159,6 +176,13 @@ export default function Sidebar() {
                     })}
                 </div>
             </nav>
+
+            {logoutOpen && (
+                <LogoutModal
+                    onClose={() => setLogoutOpen(false)}
+                    onConfirm={() => { setLogoutOpen(false); window.location.href = "/login"; }}
+                />
+            )}
         </aside>
     );
 }

@@ -45,7 +45,7 @@ export function AnimatedNumber({ value, className = "" }: { value: string; class
                 /\d/.test(ch) ? (
                     <DigitRoller key={i} digit={parseInt(ch, 10)} active={active} />
                 ) : (
-                    <span key={i} style={{ lineHeight: "1em" }}>{ch}</span>
+                    <span key={i} style={{ lineHeight: "1em" , minWidth: "10px" }}>{ch}</span>
                 )
             )}
         </span>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
 import { GoogleIcon, FacebookIcon } from "../constants";
@@ -10,6 +11,7 @@ import { GoogleIcon, FacebookIcon } from "../constants";
 export default function LoginPage() {
 
     const [email, setEmail] = useState("");
+    const router = useRouter()
     const [password, setPassword] = useState("");
     const [keepLoggedIn, setKeepLoggedIn] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -88,7 +90,7 @@ export default function LoginPage() {
                             <div className="flex-1 h-px bg-white/10" />
                         </div>
 
-                        <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
+                        <Button type="submit" onClick={()=> router.push("/dashboard")} disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Signing in..." : "Login"}
                         </Button>
 
