@@ -324,7 +324,7 @@ export function CapRateChart() {
                                     {item.name}
                                 </span>
                             </div>
-                            <span className="text-[12px] font-semibold text-(--db-text-primary) shrink-0">{item.value}%</span>
+                            <AnimatedNumber value={`${item.value}%`} className="text-[12px] font-semibold text-(--db-text-primary) shrink-0" />
                         </button>
                     );
                 })}

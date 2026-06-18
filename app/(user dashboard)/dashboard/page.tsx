@@ -147,25 +147,25 @@ export default function DashboardPage() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="bg-(--db-table-header-bg) divide-x divide-(--db-border) text-left text-sm font-semibold text-(--db-text-primary)">
-                                    <th className="min-w-60 px-5.5 py-3 whitespace-nowrap">
+                                    <th className="min-w-60 px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Property
                                     </th>
-                                    <th className="min-w-40 px-5.5 py-3 whitespace-nowrap">
+                                    <th className="min-w-40 px-5.5 font-semibold py-3 whitespace-nowrap">
                                         District
                                     </th>
-                                    <th className="min-w-30 px-5.5 py-3 whitespace-nowrap">
+                                    <th className="min-w-30 px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Price
                                     </th>
-                                    <th className="px-5.5 py-3 whitespace-nowrap">
+                                    <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Price/sqft
                                     </th>
-                                    <th className="px-5.5 py-3 whitespace-nowrap">
+                                    <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Yield
                                     </th>
-                                    <th className="px-5.5 py-3 whitespace-nowrap">
+                                    <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
                                         ROI
                                     </th>
-                                    <th className="px-5.5 py-3 whitespace-nowrap">
+                                    <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Status
                                     </th>
                                 </tr>
