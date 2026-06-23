@@ -25,7 +25,7 @@ function DigitRoller({ digit, active }: { digit: number; active: boolean }) {
                 {Array.from({ length: 10 }, (_, i) => (
                     <span
                         key={i}
-                        style={{ display: "block", height: "1em", lineHeight: "1em" }}
+                        style={{ display: "flex", height: "1em", lineHeight: "1em", justifyContent: "center" }}
                     >
                         {i}
                     </span>
