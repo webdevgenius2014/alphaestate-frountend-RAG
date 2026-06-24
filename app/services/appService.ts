@@ -67,49 +67,6 @@ class AppService {
       return error.response;
     }
   }
-  
-
-  // Could be used further 
-
-  // async verifyTwoFactorOTP(payload: { tempToken: string; otp: string; fcmToken?: string | null }) {
-  //   try {
-  //     return await instance.post(ApiConfig.verifyOTP, payload);
-  //   } catch (error: any) {
-  //     return error.response;
-  //   }
-  // }
-
-  // async resendTwoFactorOTP(tempToken: string) {
-  //   try {
-  //     return await instance.post(ApiConfig.resendOTP, { tempToken });
-  //   } catch (error: any) {
-  //     return error.response;
-  //   }
-  // }
-
-  // async resendEmail(email: string) {
-  //   try {
-  //     return await instance.post(ApiConfig.resendEmail, { email });
-  //   } catch (error: any) {
-  //     return error.response;
-  //   }
-  // }
-
-  // async editUserInfo(payload: any) {
-  //   try {
-  //     return await instance.put(ApiConfig.editUserInfo, payload);
-  //   } catch (error: any) {
-  //     return error.response;
-  //   }
-  // }
-
-  // async exportUserData() {
-  //   try {
-  //     return await instance.get(ApiConfig.exportUserData);
-  //   } catch (error: any) {
-  //     return error.response;
-  //   }
-  // }
 
   async deleteAccount() {
     try {

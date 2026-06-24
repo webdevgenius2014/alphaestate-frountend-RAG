@@ -10,17 +10,8 @@ const ApiConfig = {
   forgotPassword:  `${apiURL}/auth/forgot-password`,
   resetPassword:   `${apiURL}/auth/reset-password`,
   changePassword:  `${apiURL}/auth/change-password`,
-
-  // Could be used further 
-  // verifyOTP:       `${apiURL}/auth/verify-otp`,
-  // resendOTP:       `${apiURL}/auth/resend-otp`,
-  // verifyEmail:     `${apiURL}/auth/verify-email`,
-  // resendEmail:     `${apiURL}/auth/resend-email`,
   deleteAccount:   `${apiURL}/auth/delete`,
 
-  // User
-  // editUserInfo:    `${apiURL}/user/editprofile`,
-  // exportUserData:  `${apiURL}/user/gdpr/export`,
 };
 
 export default ApiConfig;
