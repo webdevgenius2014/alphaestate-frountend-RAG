@@ -443,6 +443,21 @@ export function DeleteReportModal({ report, onClose, onConfirm }: { report: Repo
 
 export function DeleteAccountModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
     useModalEsc(onClose);
+    const [deleting, setDeleting] = useState(false);
+    const [error, setError]       = useState("");
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        setError("");
+        const res = await appService.deleteUserProfile();
+        setDeleting(false);
+        if (res?.status === 200 || res?.status === 201 || res?.status === 204) {
+            clearAuthCookies();
+            onConfirm();
+        } else {
+            setError(res?.data?.message ?? "Failed to delete account. Please try again.");
+        }
+    };
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
@@ -485,17 +500,21 @@ export function DeleteAccountModal({ onClose, onConfirm }: { onClose: () => void
                                 ))}
                             </ul>
                         </div>
+                        {error && (
+                            <p className="text-sm text-[#CF2D48] mt-4">{error}</p>
+                        )}
                     </div>
                 </div>
 
                 <div className="px-7 pb-7 pt-3 flex gap-3 max-w-79.75 mx-auto">
                     <button
-                        onClick={onConfirm}
-                        className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors"
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors disabled:opacity-60"
                     >
-                        DELETE
+                        {deleting ? "DELETING..." : "DELETE"}
                     </button>
-                    <ModalButton onClick={onClose} className="py-3!">CANCEL</ModalButton>
+                    <ModalButton onClick={onClose} className="py-3!" disabled={deleting}>CANCEL</ModalButton>
                 </div>
             </div>
         </div>,

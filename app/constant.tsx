@@ -266,6 +266,29 @@ export const testimonials = [
     },
 ];
 
+export const PHONE_CODES = [
+    { code: "+1",   label: "+1  (US/CA)" },
+    { code: "+7",   label: "+7  (RU)"    },
+    { code: "+20",  label: "+20 (EG)"    },
+    { code: "+27",  label: "+27 (ZA)"    },
+    { code: "+33",  label: "+33 (FR)"    },
+    { code: "+44",  label: "+44 (UK)"    },
+    { code: "+49",  label: "+49 (DE)"    },
+    { code: "+61",  label: "+61 (AU)"    },
+    { code: "+65",  label: "+65 (SG)"    },
+    { code: "+86",  label: "+86 (CN)"    },
+    { code: "+91",  label: "+91 (IN)"    },
+    { code: "+92",  label: "+92 (PK)"    },
+    { code: "+966", label: "+966 (SA)"   },
+    { code: "+971", label: "+971 (AE)"   },
+    { code: "+974", label: "+974 (QA)"   },
+    { code: "+973", label: "+973 (BH)"   },
+    { code: "+968", label: "+968 (OM)"   },
+    { code: "+962", label: "+962 (JO)"   },
+    { code: "+90",  label: "+90 (TR)"    },
+    { code: "+998", label: "+998 (UZ)"   },
+];
+
 
 export function Stars({ rating }: { rating: number }) {
     return (

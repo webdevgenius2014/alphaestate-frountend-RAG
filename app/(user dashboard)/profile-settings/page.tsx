@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, type ReactNode } from "react";
+import React, { useState, useEffect, type ReactNode } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DeleteAccountModal } from "@/app/components/dashboard/alert-modals";
 import appService from "@/app/services/appService";
+import {PHONE_CODES} from "@/app/constant";
 import {
     SETTINGS_TABS,
     PROFILE_COUNTRIES,
@@ -41,12 +42,27 @@ function FormField({ label, children }: { label: string; children: ReactNode }) 
     );
 }
 
-function SelectField({ label, options, defaultValue }: { label: string; options: string[]; defaultValue?: string }) {
+function SelectField({
+    label,
+    options,
+    value,
+    onChange,
+}: {
+    label: string;
+    options: string[];
+    value: string;
+    onChange: (v: string) => void;
+}) {
     return (
         <FormField label={label}>
             <div className="relative">
-                <select defaultValue={defaultValue} className={`${inputCls} appearance-none cursor-pointer`}>
-                    {options.map((o) => <option key={o}>{o}</option>)}
+                <select
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className={`${inputCls} appearance-none cursor-pointer`}
+                >
+                    {!value && <option value="" disabled>Select {label}</option>}
+                    {options.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <SelectChevron />
@@ -121,8 +137,60 @@ function SaveBar({ label = "SAVE CHANGES" }: { label?: string }) {
     );
 }
 
+type ProfileForm = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneCode: string;
+    phone: string;
+    country: string;
+    city: string;
+    bio: string;
+};
 
 function MyProfileTab() {
+    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState<any>(null);
+    const [form, setForm] = useState<ProfileForm>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneCode: '',
+    phone: '',
+    country: '',
+    city: '',
+    bio: '',
+    });
+
+    useEffect(() => {
+        appService.getUserProfile()
+            .then((res) => {
+                if (res?.status === 200 || res?.status === 201) {
+                    const data = res.data?.data ?? res.data;
+                    setProfile(data);
+                    const nameParts = (data.fullName ?? "").trim().split(/\s+/);
+                    setForm({
+                        firstName: nameParts[0] ?? "",
+                        lastName:  nameParts.slice(1).join(" "),
+                        email:     data.email         ?? "",
+                        phoneCode: data.phoneCode     ?? "", 
+                        phone:     data.phoneNumber   ?? "",
+                        country:   data.countryRegion ?? "",
+                        city:      data.cityState     ?? "",
+                        bio:       data.bio           ?? "",
+                    });
+                }
+            })
+            .finally(() => setLoading(false));
+    }, []);
+
+    const handleChange =
+        (key: keyof ProfileForm) =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+            setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+    const location = [profile?.cityState, profile?.countryRegion].filter(Boolean).join(", ") || "—";
+
     return (
         <div>
             <div className="mb-4.5">
@@ -131,12 +199,17 @@ function MyProfileTab() {
             </div>
 
             <div className="bg-(--db-main-bg) p-6.25">
+                {/* Avatar + summary row */}
                 <div className="mb-5 pb-6 border-b border-[#D28A4433]">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-7">
                             <div className="relative shrink-0">
-                                <div className="w-27.25 h-27.25 rounded-full flex items-center justify-center">
-                                    <img src="/favicon.ico" alt="" className="object-cover rounded-full" />
+                                <div className="w-27.25 h-27.25 rounded-full flex items-center justify-center overflow-hidden">
+                                    <img
+                                        src={profile?.avatarUrl ?? "/favicon.ico"}
+                                        alt="Profile avatar"
+                                        className="w-full h-full object-cover rounded-full"
+                                    />
                                 </div>
                                 <button
                                     className="absolute bottom-0.5 right-0.5 w-5.75 h-5.75 bg-[#D28A44] rounded-full flex items-center justify-center text-white shadow-sm"
@@ -145,62 +218,114 @@ function MyProfileTab() {
                                     <SettingsCameraIcon />
                                 </button>
                             </div>
+
+                            {/* Name / role / email / location */}
                             <div>
-                                <h2 className="text-[19px] font-medium text-(--db-text-primary)">Jammy Roy</h2>
-                                <p className="text-[13px] text-(--db-text-primary) font-normal mb-1">User Admin</p>
-                                <p className="text-sm text-(--db-text-primary) font-normal mb-2.25">jammyroy@estatealpha.ai</p>
-                                <div className="flex items-center gap-1 text-[13px] text-[#D28A44]">
-                                    <SavedLocIcon />
-                                    <span>Abu Dhabi, UAE</span>
-                                </div>
+                                {loading ? (
+                                    <div className="space-y-2">
+                                        <div className="h-5 w-36 bg-(--db-sidebar-bg) rounded animate-pulse" />
+                                        <div className="h-4 w-24 bg-(--db-sidebar-bg) rounded animate-pulse" />
+                                        <div className="h-4 w-48 bg-(--db-sidebar-bg) rounded animate-pulse" />
+                                        <div className="h-4 w-32 bg-(--db-sidebar-bg) rounded animate-pulse" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h2 className="text-[19px] font-medium text-(--db-text-primary)">{profile?.fullName || "User"}</h2>
+                                        <p className="text-[13px] text-(--db-text-primary) font-normal mb-1">{profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : "Role"}</p>
+                                        <p className="text-sm text-(--db-text-primary) font-normal mb-2.25">{profile?.email ?? "Email"}</p>
+                                        <div className="flex items-center gap-1 text-[13px] text-[#D28A44]">
+                                            <SavedLocIcon />
+                                            <span>{location ?? "Location"}</span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
+
                         <button className="bg-(--db-icon-btn-bg) text-(--db-modal-btn) hover:text-(--db-modal-btn-hover-text) hover:bg-(--db-modal-btn) w-7.5 h-7.5 rounded-sm flex justify-center items-center">
                             <SettingsPencilIcon />
                         </button>
                     </div>
                 </div>
 
+                {/* Personal information form */}
                 <div className="w-full mb-6.5">
                     <SectionTitle showEdit>Personal Information</SectionTitle>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                         <FormField label="First Name">
-                            <input type="text" placeholder="Jammy" className={inputCls} />
+                            <input
+                                type="text"
+                                value={form.firstName}
+                                onChange={handleChange("firstName")}
+                                placeholder="First name"
+                                className={inputCls}
+                            />
                         </FormField>
                         <FormField label="Last Name">
-                            <input type="text" placeholder="Roy" className={inputCls} />
+                            <input
+                                type="text"
+                                value={form.lastName}
+                                onChange={handleChange("lastName")}
+                                placeholder="Last name"
+                                className={inputCls}
+                            />
                         </FormField>
                         <FormField label="Email Address">
-                            <input type="email" placeholder="jammyroy@estatealpha.ai" className={inputCls} />
+                            <input
+                                type="email"
+                                value={form.email}
+                                onChange={handleChange("email")}
+                                placeholder="Email address"
+                                className={inputCls}
+                            />
                         </FormField>
-                        <FormField label="Phone Number">
-                            <input type="tel" placeholder="+23 8787876888" className={inputCls} />
-                        </FormField>
-                        <SelectField label="Country / Region" options={PROFILE_COUNTRIES} defaultValue="United Arab Emirates" />
-                        <SelectField label="City / State" options={PROFILE_CITIES} defaultValue="Abu Dhabi" />
+                        <SelectField
+                            label="Country / Region"
+                            options={PROFILE_COUNTRIES}
+                            value={form.country}
+                            onChange={(v) => setForm((prev) => ({ ...prev, country: v }))}
+                        />
+                        <SelectField
+                            label="City / State"
+                            options={PROFILE_CITIES}
+                            value={form.city}
+                            onChange={(v) => setForm((prev) => ({ ...prev, city: v }))}
+                        />
                     </div>
 
                     <FormField label="Short Bio">
                         <textarea
                             rows={4}
-                            placeholder="Managing premium real estate investments and market research across Abu Dhabi districts."
+                            value={form.bio}
+                            onChange={handleChange("bio")}
+                            placeholder="Tell us a little about yourself."
                             className={`${inputCls} resize-none`}
                         />
                     </FormField>
 
+                    {/* Account information */}
                     <h3 className="text-[17px] font-semibold text-[#D28A44] mt-7 mb-3.5">Account Information</h3>
                     <div className="bg-(--db-sidebar-bg) p-5 flex flex-wrap gap-20">
-                        {[
-                            { label: "Member Since", value: "January 2025" },
-                            { label: "Last Login", value: "Today · 10:42 AM" },
-                            { label: "Active Sessions", value: "2 Devices Connected" },
-                        ].map((s) => (
-                            <div key={s.label}>
-                                <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">{s.label}</p>
-                                <p className="text-[13px] text-(--db-text-primary)">{s.value}</p>
-                            </div>
-                        ))}
+                        {loading ? (
+                            [1, 2, 3].map((n) => (
+                                <div key={n} className="space-y-1">
+                                    <div className="h-4 w-24 bg-(--db-main-bg) rounded animate-pulse" />
+                                    <div className="h-3 w-32 bg-(--db-main-bg) rounded animate-pulse" />
+                                </div>
+                            ))
+                        ) : (
+                            [
+                                { label: "Member Since",    value: profile?.memberSince    ?? "—" },
+                                { label: "Last Login",      value: profile?.lastLogin      ?? "—" },
+                                { label: "Active Sessions", value: profile?.activeSessions ?? "—" },
+                            ].map((s) => (
+                                <div key={s.label}>
+                                    <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">{s.label}</p>
+                                    <p className="text-[13px] text-(--db-text-primary)">{s.value}</p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -255,8 +380,8 @@ function SecurityTab() {
     const togglePref = (k: keyof typeof prefs) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
 
     const secPrefs: { key: keyof typeof prefs; label: string }[] = [
-        { key: "email", label: "Email Login Alerts" },
-        { key: "newDevice", label: "New Device Notifications" },
+        { key: "email",      label: "Email Login Alerts" },
+        { key: "newDevice",  label: "New Device Notifications" },
         { key: "suspicious", label: "Suspicious Activity Detection" },
     ];
 
@@ -271,7 +396,6 @@ function SecurityTab() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
                     <div className="space-y-5">
-
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-5">Password Security</h3>
                             <div className="space-y-4 mb-5">
@@ -305,7 +429,6 @@ function SecurityTab() {
                     </div>
 
                     <div className="space-y-5">
-
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-4">Two-Factor Authentication</h3>
                             <div className="flex items-center gap-2 mb-2">
@@ -343,8 +466,8 @@ function SecurityTab() {
                                 ))}
                             </div>
                         </div>
-
                     </div>
+
                 </div>
             </div>
         </div>
@@ -359,8 +482,8 @@ function NotificationsTab() {
         () => new Set(["Price Drop Alerts", "New Listings in Saved Areas", "Market Trend Shifts", "ROI Opportunity Flags"])
     );
     const [marketUpdate, setMarketUpdate] = useState("Daily");
-    const [sensitivity, setSensitivity] = useState("Medium");
-    const [summary, setSummary] = useState("Weekly Summary");
+    const [sensitivity, setSensitivity]   = useState("Medium");
+    const [summary, setSummary]           = useState("Weekly Summary");
     const [districts, setDistricts] = useState<Set<string>>(
         () => new Set(["Downtown Dubai", "Dubai Marina"])
     );
@@ -368,11 +491,8 @@ function NotificationsTab() {
         property_saved: true, deal_analyzed: true, report_ready: true, profile_updated: false,
     });
 
-    const toggleAiAlert = (key: string) =>
-        setAiAlerts((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
-
-    const toggleDistrict = (key: string) =>
-        setDistricts((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
+    const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) =>
+        setter((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
 
     return (
         <div>
@@ -406,7 +526,7 @@ function NotificationsTab() {
                                     key={label}
                                     label={label}
                                     checked={aiAlerts.has(label)}
-                                    onChange={() => toggleAiAlert(label)}
+                                    onChange={() => toggleSet(setAiAlerts, label)}
                                     textCls="text-sm font-normal text-(--db-text-primary)"
                                 />
                             ))}
@@ -421,11 +541,7 @@ function NotificationsTab() {
                                     <div>
                                         <p className="block text-[15px] font-medium text-(--db-text-primary) mb-2">Market Updates</p>
                                         <div className="relative">
-                                            <select
-                                                value={marketUpdate}
-                                                onChange={(e) => setMarketUpdate(e.target.value)}
-                                                className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}
-                                            >
+                                            <select value={marketUpdate} onChange={(e) => setMarketUpdate(e.target.value)} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
                                                 {NOTIF_MARKET_UPDATE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                             </select>
                                             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-(--db-text-muted)"><SelectChevron /></span>
@@ -434,11 +550,7 @@ function NotificationsTab() {
                                     <div>
                                         <p className="block text-[15px] font-medium text-(--db-text-primary) mb-2">Alert Sensitivity</p>
                                         <div className="relative">
-                                            <select
-                                                value={sensitivity}
-                                                onChange={(e) => setSensitivity(e.target.value)}
-                                                className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}
-                                            >
+                                            <select value={sensitivity} onChange={(e) => setSensitivity(e.target.value)} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
                                                 {NOTIF_SENSITIVITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                             </select>
                                             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-(--db-text-muted)"><SelectChevron /></span>
@@ -448,11 +560,7 @@ function NotificationsTab() {
                                 <div>
                                     <p className="block text-[15px] font-medium text-(--db-text-primary) mb-2">Weekly Summary</p>
                                     <div className="relative">
-                                        <select
-                                            value={summary}
-                                            onChange={(e) => setSummary(e.target.value)}
-                                            className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}
-                                        >
+                                        <select value={summary} onChange={(e) => setSummary(e.target.value)} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
                                             {NOTIF_SUMMARY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                         </select>
                                         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-(--db-text-muted)"><SelectChevron /></span>
@@ -465,12 +573,7 @@ function NotificationsTab() {
                             <p className="text-[15px] font-semibold text-(--db-text-primary) mb-3">Preferred District Alerts</p>
                             <div className="flex flex-wrap gap-x-5 gap-y-2">
                                 {NOTIF_DISTRICTS.map((d) => (
-                                    <Checkbox
-                                        key={d}
-                                        label={d}
-                                        checked={districts.has(d)}
-                                        onChange={() => toggleDistrict(d)}
-                                    />
+                                    <Checkbox key={d} label={d} checked={districts.has(d)} onChange={() => toggleSet(setDistricts, d)} />
                                 ))}
                             </div>
                         </div>
@@ -515,18 +618,12 @@ function AIPreferencesTab() {
             </div>
 
             <div className="bg-(--db-main-bg) p-6.25">
-                {/* Top 2-col: Investment Focus | AI Insight Level */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                     <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                         <p className="text-[15px] font-semibold text-[#D28A44] mb-3">Preferred Investment Focus</p>
                         <div className="space-y-2.5">
                             {AI_PREF_INVESTMENT_FOCUS.map((item) => (
-                                <Checkbox
-                                    key={item}
-                                    label={item}
-                                    checked={investmentFocus.has(item)}
-                                    onChange={() => toggleSet(setInvestmentFocus, item)}
-                                />
+                                <Checkbox key={item} label={item} checked={investmentFocus.has(item)} onChange={() => toggleSet(setInvestmentFocus, item)} />
                             ))}
                         </div>
                     </div>
@@ -536,12 +633,7 @@ function AIPreferencesTab() {
                         <p className="text-[13px] text-(--db-text-primary) mb-3">Choose how detailed AI-generated analysis should be across the platform.</p>
                         <div className="flex flex-wrap gap-x-6 gap-y-2.5">
                             {AI_PREF_INSIGHT_LEVELS.map((item) => (
-                                <Checkbox
-                                    key={item}
-                                    label={item}
-                                    checked={insightLevel.has(item)}
-                                    onChange={() => toggleSet(setInsightLevel, item)}
-                                />
+                                <Checkbox key={item} label={item} checked={insightLevel.has(item)} onChange={() => toggleSet(setInsightLevel, item)} />
                             ))}
                         </div>
                     </div>
@@ -551,12 +643,7 @@ function AIPreferencesTab() {
                     <p className="text-[15px] font-semibold text-[#D28A44] mb-3">Preferred Districts</p>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2.5">
                         {AI_PREF_DISTRICTS.map((d) => (
-                            <Checkbox
-                                key={d}
-                                label={d}
-                                checked={aiDistricts.has(d)}
-                                onChange={() => toggleSet(setAiDistricts, d)}
-                            />
+                            <Checkbox key={d} label={d} checked={aiDistricts.has(d)} onChange={() => toggleSet(setAiDistricts, d)} />
                         ))}
                     </div>
                 </div>
@@ -565,16 +652,8 @@ function AIPreferencesTab() {
     );
 }
 
-
-const TAB_PANELS: Record<string, ReactNode> = {
-    profile: <MyProfileTab />,
-    security: <SecurityTab />,
-    notifications: <NotificationsTab />,
-    "ai-preferences": <AIPreferencesTab />,
-};
-
 export default function ProfileSettingsPage() {
-    const [activeTab, setActiveTab] = useState("profile");
+    const [activeTab, setActiveTab]       = useState("profile");
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
     const handleTabClick = (id: string) => {
@@ -592,20 +671,31 @@ export default function ProfileSettingsPage() {
                     </p>
                 </div>
             </div>
+
             <div className="bg-(--db-sidebar-bg) p-5 rounded-none! grid grid-cols-[177px_auto] self-start">
                 <nav className="w-full shrink-0 pr-5 h-fit space-y-4 md:sticky top-0">
                     {SETTINGS_TABS.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => handleTabClick(tab.id)}
-                            className={`w-full text-left px-3 py-1.5 text-[13px] rounded-sm transition-colors ease-linear ${tab.isDanger ? "mt-7.5 bg-[#CF2D481A] text-[#CF2D48] hover:bg-[#CF2D4830] font-normal" : activeTab === tab.id ? "bg-[#D28A4438] text-(--db-text-primary) font-medium" : "text-(--db-text-primary) font-normal hover:bg-[#D28A4438] hover:font-medium"}`}
+                            className={`w-full text-left px-3 py-1.5 text-[13px] rounded-sm transition-colors ease-linear ${
+                                tab.isDanger
+                                    ? "mt-7.5 bg-[#CF2D481A] text-[#CF2D48] hover:bg-[#CF2D4830] font-normal"
+                                    : activeTab === tab.id
+                                        ? "bg-[#D28A4438] text-(--db-text-primary) font-medium"
+                                        : "text-(--db-text-primary) font-normal hover:bg-[#D28A4438] hover:font-medium"
+                            }`}
                         >
                             {tab.label}
                         </button>
                     ))}
                 </nav>
+
                 <div className="flex-1 min-w-0 pl-5 border-l border-[#D28A4433]">
-                    {TAB_PANELS[activeTab]}
+                    {activeTab === "profile"         && <MyProfileTab key="profile" />}
+                    {activeTab === "security"        && <SecurityTab key="security" />}
+                    {activeTab === "notifications"   && <NotificationsTab key="notifications" />}
+                    {activeTab === "ai-preferences"  && <AIPreferencesTab key="ai-preferences" />}
                 </div>
             </div>
 
