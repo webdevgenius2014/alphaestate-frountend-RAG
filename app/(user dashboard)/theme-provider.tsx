@@ -1,9 +1,18 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import Link from "next/link";
 import Sidebar from "@/app/components/ui/sidebar";
 import Navbar from "@/app/components/ui/navbar";
+import appService from "@/app/services/appService";
+
+type User = {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+    avatarUrl: string | null;
+};
 
 type ThemeCtx = {
     isDark: boolean;
@@ -11,6 +20,7 @@ type ThemeCtx = {
     isDrawerOpen: boolean;
     toggleDrawer: () => void;
     closeDrawer: () => void;
+    user: User | null;
 };
 
 const ThemeContext = createContext<ThemeCtx>({
@@ -19,6 +29,7 @@ const ThemeContext = createContext<ThemeCtx>({
     isDrawerOpen: false,
     toggleDrawer: () => { },
     closeDrawer: () => { },
+    user: null,
 });
 
 export function useTheme() {
@@ -28,6 +39,13 @@ export function useTheme() {
 export default function ThemeProvider({ children }: { children: ReactNode }) {
     const [isDark, setIsDark] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        appService.getUserInfo().then((res) => {
+            if (res?.status === 200) setUser(res.data?.data ?? null);
+        });
+    }, []);
 
     return (
         <ThemeContext.Provider value={{
@@ -36,6 +54,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
             isDrawerOpen,
             toggleDrawer: () => setIsDrawerOpen((p) => !p),
             closeDrawer: () => setIsDrawerOpen(false),
+            user,
         }}>
             {isDrawerOpen && (
                 <div

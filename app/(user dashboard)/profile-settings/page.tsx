@@ -3,6 +3,7 @@
 import React, { useState, type ReactNode } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DeleteAccountModal } from "@/app/components/dashboard/alert-modals";
+import appService from "@/app/services/appService";
 import {
     SETTINGS_TABS,
     PROFILE_COUNTRIES,
@@ -213,6 +214,43 @@ function SecurityTab() {
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [pwLoading, setPwLoading] = useState(false);
+    const [pwError, setPwError] = useState("");
+    const [pwSuccess, setPwSuccess] = useState("");
+
+    const handleChangePassword = async () => {
+        setPwError("");
+        setPwSuccess("");
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setPwError("All fields are required.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPwError("New passwords do not match.");
+            return;
+        }
+
+        setPwLoading(true);
+        try {
+            const res = await appService.changePassword({ currentPassword, newPassword });
+            if (res?.status === 200 || res?.status === 201) {
+                setPwSuccess("Password updated successfully.");
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+            } else {
+                setPwError(res?.data?.message || "Failed to update password.");
+            }
+        } finally {
+            setPwLoading(false);
+        }
+    };
+
     const [prefs, setPrefs] = useState({ email: true, newDevice: true, suspicious: true });
     const togglePref = (k: keyof typeof prefs) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
 
@@ -237,11 +275,15 @@ function SecurityTab() {
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-5">Password Security</h3>
                             <div className="space-y-4 mb-5">
-                                <PasswordInput label="Current Password" show={showCurrent} onToggle={() => setShowCurrent((p) => !p)} placeholder="****************" />
-                                <PasswordInput label="New Password" show={showNew} onToggle={() => setShowNew((p) => !p)} placeholder="****************" />
-                                <PasswordInput label="Confirm New Password" show={showConfirm} onToggle={() => setShowConfirm((p) => !p)} placeholder="****************" />
+                                <PasswordInput label="Current Password" show={showCurrent} onToggle={() => setShowCurrent((p) => !p)} placeholder="****************" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                                <PasswordInput label="New Password" show={showNew} onToggle={() => setShowNew((p) => !p)} placeholder="****************" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                                <PasswordInput label="Confirm New Password" show={showConfirm} onToggle={() => setShowConfirm((p) => !p)} placeholder="****************" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
-                            <ModalButton className="py-2.25! max-w-fit px-3">UPDATE PASSWORD</ModalButton>
+                            {pwError && <p className="text-red-400 text-sm mb-3">{pwError}</p>}
+                            {pwSuccess && <p className="text-green-400 text-sm mb-3">{pwSuccess}</p>}
+                            <ModalButton className="py-2.25! max-w-fit px-3" onClick={handleChangePassword} disabled={pwLoading}>
+                                {pwLoading ? "UPDATING..." : "UPDATE PASSWORD"}
+                            </ModalButton>
                         </div>
 
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">

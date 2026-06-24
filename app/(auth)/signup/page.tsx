@@ -3,17 +3,41 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
+import appService from "@/app/services/appService";
 
 export default function SignUpPage() {
+    const router = useRouter();
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [keepLoggedIn, setKeepLoggedIn] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+
+        if (!fullName.trim() || !email.trim() || !password.trim()) {
+            setError("All fields are required.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await appService.signUp({ email, password, fullName });
+
+            if (res?.status === 200 || res?.status === 201) {
+                router.push("/dashboard");
+            } else {
+                setError(res?.data?.message || "Signup failed. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -69,6 +93,10 @@ export default function SignUpPage() {
                                 </label>
                             </div>
                         </div>
+
+                        {error && (
+                            <p className="text-red-400 text-sm text-center -mb-1">{error}</p>
+                        )}
 
                         <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Creating account..." : "Sign up"}

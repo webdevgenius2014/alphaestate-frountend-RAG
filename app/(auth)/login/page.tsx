@@ -3,21 +3,45 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
 import { GoogleIcon, FacebookIcon } from "../constants";
+import appService from "@/app/services/appService";
 
 export default function LoginPage() {
 
     const [email, setEmail] = useState("");
-    const router = useRouter()
     const [password, setPassword] = useState("");
     const [keepLoggedIn, setKeepLoggedIn] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+
+        if (!email.trim() || !password.trim()) {
+            setError("Email and password are required.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await appService.login({ email, password });
+
+            if (res?.status === 200 || res?.status === 201) {
+                const { accessToken, refreshToken, user } = res.data.data;
+                const maxAge = keepLoggedIn ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7;
+                document.cookie = `access_token=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
+                document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+                document.cookie = `user_role=${user.role}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+                window.location.href = "/dashboard";
+            } else {
+                setError(res?.data?.message || "Invalid email or password.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -90,7 +114,11 @@ export default function LoginPage() {
                             <div className="flex-1 h-px bg-white/10" />
                         </div>
 
-                        <Button type="submit" onClick={()=> router.push("/dashboard")} disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
+                        {error && (
+                            <p className="text-red-400 text-sm text-center -mb-1">{error}</p>
+                        )}
+
+                        <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Signing in..." : "Login"}
                         </Button>
 

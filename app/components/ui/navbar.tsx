@@ -9,7 +9,7 @@ function formatLabel(segment: string) {
 
 export default function Navbar() {
     const pathname = usePathname();
-    const { toggleDrawer, isDrawerOpen } = useTheme();
+    const { toggleDrawer, isDrawerOpen, user } = useTheme();
     const segment = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
     const pageLabel = formatLabel(segment);
 
@@ -28,11 +28,14 @@ export default function Navbar() {
 
             <div className="flex items-center gap-2.25 ml-auto">
                 <div className="w-8.5 h-8.5 rounded-full flex items-center justify-center overflow-hidden shrink-0">
-                    <img src="/favicon.ico" alt="" className="object-cover" />
+                    {user?.avatarUrl
+                        ? <img src={user.avatarUrl} alt="" className="object-cover w-full h-full" />
+                        : <img src="/favicon.ico" alt="" className="object-cover" />
+                    }
                 </div>
                 <div className="leading-tight xl:mr-0 mr-2">
-                    <p className="text-[15px] font-normal text-(--db-text-primary)">Jammy Roy</p>
-                    <p className="text-xs text-(--db-text-muted) font-normal">User Admin</p>
+                    <p className="text-[15px] font-normal text-(--db-text-primary)">{user?.fullName ?? "User"}</p>
+                    <p className="text-xs text-(--db-text-muted) font-normal capitalize">{user?.role ?? "User Role"}</p>
                 </div>
 
                 <button

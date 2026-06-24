@@ -180,7 +180,6 @@ export default function Sidebar() {
             {logoutOpen && (
                 <LogoutModal
                     onClose={() => setLogoutOpen(false)}
-                    onConfirm={() => { setLogoutOpen(false); window.location.href = "/login"; }}
                 />
             )}
         </aside>

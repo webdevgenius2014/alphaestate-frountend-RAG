@@ -21,12 +21,18 @@ export const LogoTicker = () => {
         const tick = (ts: number) => {
             if (prev !== null && !isPausedRef.current) {
                 const s = swiperRef.current;
-                if (s) {
+                if (s && s.wrapperEl && s.el) {
                     const delta    = ts - prev;
-                    const current  = s.getTranslate();
-                    const endPos   = s.maxTranslate();
-                    const startPos = s.minTranslate();
-
+                    const current  = s.translate;
+                    const endPos   = -((s.wrapperEl as HTMLElement).scrollWidth - (s.el as HTMLElement).offsetWidth);
+                    const startPos = 0;
+                // Initial code 
+                // if (s) {
+                //     const delta    = ts - prev;
+                //     const current  = s.getTranslate();
+                //     const endPos   = s.maxTranslate();
+                //     const startPos = s.minTranslate();
+// 
                     let next = current - delta * SPEED * dirRef.current;
 
                     if (next <= endPos) {
@@ -38,7 +44,8 @@ export const LogoTicker = () => {
                     }
 
                     s.setTranslate(next);
-                    s.updateProgress();
+                    // initial code
+                    // s.updateProgress();
                 }
             }
             prev = isPausedRef.current ? null : ts;
