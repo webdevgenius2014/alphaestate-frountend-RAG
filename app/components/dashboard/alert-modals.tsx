@@ -6,6 +6,13 @@ import Input from "@/app/components/ui/input";
 import ModalButton from "@/app/components/ui/modal-button";
 import { SelectChevron, type AlertFeedItem } from "@/app/(user dashboard)/constants";
 import Button from "../ui/button";
+import appService from "@/app/services/appService";
+
+function clearAuthCookies() {
+  ["access_token", "refresh_token", "user_role"].forEach((name) => {
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+  });
+}
 
 const selectCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-field-border) text-(--db-text-primary) rounded-md px-4 py-3 h-[45.6px] text-sm outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer";
 const inputCls = "h-auto! bg-(--db-modal-field-bg)! border-(--db-modal-field-border)! text-(--db-text-primary)! rounded-md! placeholder-(--db-text-muted)! focus:border-[#D28A44]/60!";
@@ -190,8 +197,19 @@ export function EditAlertModal({ alert, onClose }: { alert: AlertFeedItem; onClo
 
 // ── Logout Modal ─────────────────────────────────────────────────────────
 
-export function LogoutModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+export function LogoutModal({ onClose }: { onClose: () => void }) {
     useModalEsc(onClose);
+    const [loading, setLoading] = useState(false);
+
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            await appService.logout();
+        } finally {
+            clearAuthCookies();
+            window.location.href = "/login";
+        }
+    };
 
     return createPortal(
         <div className="fixed inset-0 z-1000 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
@@ -229,10 +247,11 @@ export function LogoutModal({ onClose, onConfirm }: { onClose: () => void; onCon
 
                     <div className="flex gap-3 max-w-79.75 mx-auto">
                         <button
-                            onClick={onConfirm}
-                            className="w-full bg-[#D28A44] text-white text-base font-semibold py-3 rounded-md tracking-widest hover:bg-[#b8732e] transition-colors"
+                            onClick={handleLogout}
+                            disabled={loading}
+                            className="w-full bg-[#D28A44] text-white text-base font-semibold py-3 rounded-md tracking-widest hover:bg-[#b8732e] transition-colors disabled:opacity-60"
                         >
-                            LOGOUT
+                            {loading ? "Logging out..." : "LOGOUT"}
                         </button>
                         <ModalButton onClick={onClose} className="py-3! text-base!">CANCEL</ModalButton>
                     </div>

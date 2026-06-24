@@ -1,0 +1,17 @@
+const apiURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+const ApiConfig = {
+  // Auth
+  refreshToken:    `${apiURL}/auth/refresh`,
+  signup:          `${apiURL}/auth/signup`,
+  login:           `${apiURL}/auth/login`,
+  logout:          `${apiURL}/auth/logout`,
+  userInfo:        `${apiURL}/auth/me`,
+  forgotPassword:  `${apiURL}/auth/forgot-password`,
+  resetPassword:   `${apiURL}/auth/reset-password`,
+  changePassword:  `${apiURL}/auth/change-password`,
+  deleteAccount:   `${apiURL}/auth/delete`,
+
+};
+
+export default ApiConfig;

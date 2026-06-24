@@ -5,17 +5,34 @@ import Link from "next/link";
 import Image from "next/image";
 import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
+import appService from "@/app/services/appService";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
+    const [error, setError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError("");
+
+        if (!email.trim()) {
+            setError("Please enter your email address.");
+            return;
+        }
+
         setLoading(true);
-        setLoading(false);
-        setSent(true);
+        try {
+            const res = await appService.forgotPassword({ email });
+            if (res?.status === 200 || res?.status === 201) {
+                setSent(true);
+            } else {
+                setError(res?.data?.message || "Something went wrong. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -72,6 +89,10 @@ export default function ForgotPasswordPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
+
+                                {error && (
+                                    <p className="text-red-400 text-sm text-center">{error}</p>
+                                )}
 
                                 <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                                     {loading ? "Sending..." : "Send Reset Link"}

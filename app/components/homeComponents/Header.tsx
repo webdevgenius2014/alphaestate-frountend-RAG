@@ -58,19 +58,22 @@ export const Header = (): React.JSX.Element => {
                         </button>
                      );
                   })}
-               </nav>
-
-               {/* Action Buttons */}
+               </nav>        
+   
+                {/* Action Buttons */}
                <div className="relative flex justify-end gap-2">
-                  <button
-                     type="button"
-                     className="h-10 px-3.75 py-2.25 text-white text-sm font-medium rounded-[64px] border border-solid border-[#ffffff66] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:bg-[#D28A44] hover:border-[#D28A44] hover:text-white ease-linear transition-colors duration-200"
-                     aria-label="Login"
-                  >
-                        LOGIN
-                  </button>
-                  <Button variant="white" className="w-full! max-w-29.75! uppercase py-2.25! text-sm! px-3! rounded-full!">Get Started</Button>
-
+                  <Link href="/login">
+                     <button
+                        type="button"
+                        className="h-10 px-3.75 py-2.25 text-white text-sm font-medium rounded-[64px] border border-solid border-[#ffffff66] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:bg-[#D28A44] hover:border-[#D28A44] hover:text-white ease-linear transition-colors duration-200"
+                        aria-label="Login"
+                     >
+                           LOGIN
+                     </button>
+                  </Link>
+                  <Link href="/signup">
+                     <Button variant="white" className="w-full! max-w-29.75! uppercase py-2.25! text-sm! px-3! rounded-full!">Get Started</Button>
+                  </Link>
                </div>
             </div>
          </header >

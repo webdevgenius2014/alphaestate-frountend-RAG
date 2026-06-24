@@ -1,4 +1,4 @@
-"use client "
+"use client";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import {
     INVESTMENT_SIGNALS,
     SortIcon,
 } from "@/app/(user dashboard)/constants";
+import { useTheme } from "@/app/(user dashboard)/theme-provider";
 
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -29,13 +30,15 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 
 export default function DashboardPage() {
+    const { user } = useTheme();
+
     return (
         <div className="flex flex-col min-h-full">
             <div className="flex-1 space-y-6">
 
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-xl md:text-[25px] mb-2 leading-[100%] font-medium text-(--db-text-primary)">👋 Welcome back, Jammy Roy</h1>
+                        <h1 className="text-xl md:text-[25px] mb-2 leading-[100%] font-medium text-(--db-text-primary)">👋 Welcome back, {user?.fullName ?? "—"}</h1>
                         <p className="text-sm text-(--db-text-primary) leading-5 font-normal max-w-130.75">
                             Track properties, market movements, investment insights, and AI-driven analytics all from one minimal command center.
                         </p>
