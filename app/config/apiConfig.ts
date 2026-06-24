@@ -12,6 +12,10 @@ const ApiConfig = {
   changePassword:  `${apiURL}/auth/change-password`,
   deleteAccount:   `${apiURL}/auth/delete`,
 
+  // User
+  userProfileInfo: `${apiURL}/users/me`,
+  userProfileAvtar:  `${apiURL}/users/me/avatar`,
+
 };
 
 export default ApiConfig;

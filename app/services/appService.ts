@@ -75,6 +75,41 @@ class AppService {
       return error.response;
     }
   }
+
+  // User Profile
+  async getUserProfile() {
+    try {
+      return await instance.get(ApiConfig.userProfileInfo);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateUserProfile(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.userProfileInfo, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteUserProfile() {
+    try {
+      return await instance.delete(ApiConfig.userProfileInfo);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadProfileAvatar(payload: FormData) {
+    try {
+      return await instance.post(ApiConfig.userProfileAvtar, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
 }
 
 const appService = new AppService();

@@ -21,6 +21,7 @@ type ThemeCtx = {
     toggleDrawer: () => void;
     closeDrawer: () => void;
     user: User | null;
+    updateUser: (partial: Partial<User>) => void;
 };
 
 const ThemeContext = createContext<ThemeCtx>({
@@ -30,6 +31,7 @@ const ThemeContext = createContext<ThemeCtx>({
     toggleDrawer: () => { },
     closeDrawer: () => { },
     user: null,
+    updateUser: () => { },
 });
 
 export function useTheme() {
@@ -47,6 +49,9 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
+    const updateUser = (partial: Partial<User>) =>
+        setUser((prev) => prev ? { ...prev, ...partial } : prev);
+
     return (
         <ThemeContext.Provider value={{
             isDark,
@@ -55,6 +60,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
             toggleDrawer: () => setIsDrawerOpen((p) => !p),
             closeDrawer: () => setIsDrawerOpen(false),
             user,
+            updateUser,
         }}>
             {isDrawerOpen && (
                 <div
