@@ -6,8 +6,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import { LogoutModal } from "@/app/components/dashboard/alert-modals";
+import { isAdmin } from "@/lib/roles";
 import {
     MENU_ITEMS,
+    ADMIN_MENU_ITEMS,
     SETTINGS_ITEMS,
     SearchBtnIcon,
     SearchIcon,
@@ -18,7 +20,14 @@ export default function Sidebar() {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
     const [logoutOpen, setLogoutOpen] = useState(false);
-    const { isDark, toggleTheme, isDrawerOpen, closeDrawer } = useTheme();
+    const { isDark, toggleTheme, isDrawerOpen, closeDrawer, user } = useTheme();
+
+    const role = user?.role ?? null;
+    const admin = isAdmin(role);
+    const menuItems = admin ? ADMIN_MENU_ITEMS : MENU_ITEMS;
+    const settingsItems = SETTINGS_ITEMS.filter(
+        (item) => !item.roles || item.roles.includes(role ?? "user")
+    );
 
     const isActive = (href: string) =>
         pathname === href || pathname.startsWith(href + "/");
@@ -67,7 +76,7 @@ export default function Sidebar() {
                 )}
 
                 <div className={`space-y-2.5 mb-5 ${collapsed ? 'px-3' : 'px-5'} pb-5 border-b border-(--db-border)`}>
-                    {MENU_ITEMS.map((item) => {
+                    {menuItems.map((item) => {
                         const active = isActive(item.href);
                         return (
                             <Link
@@ -100,7 +109,7 @@ export default function Sidebar() {
                 )}
 
                 <div className={`space-y-2.5 mb-5 ${collapsed ? 'px-3' : 'px-5'}`}>
-                    {SETTINGS_ITEMS.map((item) => {
+                    {settingsItems.map((item) => {
                         if (item.isToggle) {
                             return (
                                 <button

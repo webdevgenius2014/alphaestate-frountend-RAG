@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ADMIN_ROUTES, USER_ROUTES, isAdmin, getHomePath } from "@/lib/roles";
 
 const publicRoutes = [
   "/login",
@@ -7,20 +8,6 @@ const publicRoutes = [
   "/forgot-password",
   "/reset-password",
 ];
-
-const protectedRoutes = [
-  "/dashboard",
-  "/analytics",
-  "/ai-chat",
-  "/deal-analyzer",
-  "/profile-settings",
-  "/reports",
-  "/saved",
-  "/smart-alerts",
-  "/subscription",
-];
-
-const adminRoutes = ["/admin-dashboard"];
 
 export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -34,27 +21,24 @@ export function middleware(req: NextRequest) {
   /* ── PUBLIC ROUTES ── */
   if (publicRoutes.includes(path)) {
     if (refreshToken) {
-      if (role === "admin") {
-        return NextResponse.redirect(new URL("/admin-dashboard", req.url));
-      }
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL(getHomePath(role), req.url));
     }
     return NextResponse.next();
   }
 
   /* ── ADMIN ROUTES ── */
-  if (adminRoutes.some((p) => path.startsWith(p))) {
+  if (ADMIN_ROUTES.some((p) => path.startsWith(p))) {
     if (!refreshToken) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (role !== "admin") {
+    if (!isAdmin(role)) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }
 
   /* ── PROTECTED ROUTES ── */
-  if (protectedRoutes.some((p) => path.startsWith(p))) {
+  if (USER_ROUTES.some((p) => path.startsWith(p))) {
     if (!refreshToken) {
       const response = NextResponse.redirect(new URL("/login", req.url));
       response.cookies.delete("refresh_token");
