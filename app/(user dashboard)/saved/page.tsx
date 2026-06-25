@@ -1,17 +1,19 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import {
-    SAVED_PROPERTIES, SAVED_COMPARE_ROWS, SAVED_RECOMMENDATIONS,
+    SAVED_COMPARE_ROWS, SAVED_RECOMMENDATIONS,
     SavedTypeIcon, SavedBedIcon, SavedSqftIcon,
     SelectChevron,
     type SavedProperty,
     SortIcon,
     SavedLocIcon,
 } from "@/app/(user dashboard)/constants";
+import appService from "@/app/services/appService";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -23,17 +25,47 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
 
 const filterSelectCls = "text-sm min-w-[98px] border border-(--db-border) rounded-md px-3 py-2 bg-(--db-main-bg) text-(--db-text-primary) outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer pr-8";
 
+function PropertyCardSkeleton() {
+    return (
+        <div className="bg-(--db-main-bg) rounded-md overflow-hidden border border-[#D28A444D] p-2.5 flex flex-col animate-pulse">
+            <div className="relative aspect-313/174 bg-(--db-border) overflow-hidden rounded-sm" />
+            <div className="px-1.5 py-1.5 flex flex-col flex-1">
+                <div className="h-4 bg-(--db-border) rounded mb-2 w-3/4" />
+                <div className="h-3.5 bg-(--db-border) rounded mb-3 w-1/2" />
+                <div className="flex gap-4 mb-3">
+                    <div className="h-3 bg-(--db-border) rounded w-16" />
+                    <div className="h-3 bg-(--db-border) rounded w-12" />
+                    <div className="h-3 bg-(--db-border) rounded w-14" />
+                </div>
+                <div className="h-4 bg-(--db-border) rounded mb-2.5 w-2/5" />
+                <div className="h-3 bg-(--db-border) rounded mb-3.75 w-1/2" />
+                <div className="grid grid-cols-2 gap-1.75 mb-1.75">
+                    <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
+                    <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
+                </div>
+                <div className="grid grid-cols-2 gap-1.75 mb-3.5">
+                    <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
+                    <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
+                </div>
+                <div className="mt-auto h-10 bg-(--db-border) rounded-md" />
+            </div>
+        </div>
+    );
+}
+
 function PropertyCard({ prop }: { prop: SavedProperty }) {
     const router = useRouter();
     return (
         <div className="bg-(--db-main-bg) rounded-md overflow-hidden border border-[#D28A444D] p-2.5 flex flex-col">
             <div className="relative aspect-313/174 bg-(--db-border) overflow-hidden">
-                <img
-                    src={prop.image}
-                    alt={prop.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
+                {prop.image && (
+                    <img
+                        src={prop.image}
+                        alt={prop.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                )}
             </div>
             <div className="px-1.5 py-1.5 flex flex-col flex-1">
                 <h3 className="text-base font-medium text-(--db-text-primary) mb-1">{prop.name}</h3>
@@ -72,7 +104,66 @@ function PropertyCard({ prop }: { prop: SavedProperty }) {
     );
 }
 
+const FILTER_LABELS = ["District", "Property Type", "Investment Signal", "Market Type"] as const;
+type FilterLabel = typeof FILTER_LABELS[number];
+
+const LABEL_TO_KEY: Record<FilterLabel, keyof FilterState> = {
+    "District": "district",
+    "Property Type": "propertyType",
+    "Investment Signal": "investmentSignal",
+    "Market Type": "marketType",
+};
+
+type FilterState = {
+    district: string;
+    propertyType: string;
+    investmentSignal: string;
+    marketType: string;
+};
+
 export default function SavedPage() {
+    const [properties, setProperties] = useState<SavedProperty[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState<FilterState>({
+        district: "",
+        propertyType: "",
+        investmentSignal: "",
+        marketType: "",
+    });
+
+    useEffect(() => {
+        setLoading(true);
+        appService.getListingSavedProperties(1, 20, filters).then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const items = res.data?.data?.items ?? [];
+                setProperties(
+                    items.map((item: any): SavedProperty => {
+                        const p = item.property ?? {};
+                        const m = p.metrics ?? {};
+                        return {
+                            slug: p.id,
+                            name: p.projectName,
+                            district: p.district,
+                            image: p.coverImageUrl ?? "",
+                            type: p.propertyType,
+                            beds: p.layout,
+                            sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
+                            price: p.priceFormatted ?? `AED ${(p.priceAed ?? 0).toLocaleString()}`,
+                            roi: `${(m.roi ?? 0).toFixed(1)}%`,
+                            rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
+                            appreciation: m.appreciationLevel ?? "N/A",
+                            appreciationCls: m.appreciationLevel === "High" ? "text-green-500" : "text-yellow-500",
+                            aiScore: String(m.aiScore ?? "N/A"),
+                            signal: m.investmentSignal ?? "",
+                            signalCls: "text-green-500",
+                        };
+                    })
+                );
+            }
+            setLoading(false);
+        });
+    }, [filters]);
+
     return (
         <div className="flex flex-col min-h-full">
             <div className="flex-1 space-y-6">
@@ -106,11 +197,18 @@ export default function SavedPage() {
                             <span className="text-sm font-medium text-(--db-text-primary) shrink-0">Filter By</span>
                         </div>
                         <div className="flex gap-1 items-center">
-                            {(["District", "Property Type", "Investment Signal", "Market Type"] as const).map((lbl) => (
+                            {FILTER_LABELS.map((lbl) => (
                                 <div key={lbl} className="relative">
-                                    <select className={filterSelectCls} aria-label={lbl}>
-                                        <option>{lbl}</option>
-                                        <option>All</option>
+                                    <select
+                                        className={filterSelectCls}
+                                        aria-label={lbl}
+                                        value={filters[LABEL_TO_KEY[lbl]]}
+                                        onChange={(e) =>
+                                            setFilters((prev) => ({ ...prev, [LABEL_TO_KEY[lbl]]: e.target.value }))
+                                        }
+                                    >
+                                        <option value="">{lbl}</option>
+                                        <option value="">All</option>
                                     </select>
                                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                                         <SelectChevron />
@@ -128,9 +226,10 @@ export default function SavedPage() {
                         Your shortlisted properties ranked by AI investment performance in real time.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                        {SAVED_PROPERTIES.map((prop) => (
-                            <PropertyCard key={prop.name} prop={prop} />
-                        ))}
+                        {loading
+                            ? Array.from({ length: 6 }).map((_, i) => <PropertyCardSkeleton key={i} />)
+                            : properties.map((prop) => <PropertyCard key={prop.name} prop={prop} />)
+                        }
                     </div>
                 </Card>
 
@@ -147,7 +246,7 @@ export default function SavedPage() {
                                     <th className="px-5.5 py-3 whitespace-nowrap w-45">
                                         Investment Metrics
                                     </th>
-                                    {SAVED_PROPERTIES.map((p) => (
+                                    {properties.map((p) => (
                                         <th key={p.name} className="px-5.5 py-3">
                                             {p.name}
                                         </th>
