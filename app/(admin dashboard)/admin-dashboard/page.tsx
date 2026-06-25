@@ -1,0 +1,256 @@
+"use client";
+
+import type { ReactNode } from "react";
+import Button from "@/app/components/ui/button";
+import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
+import { UserActivityChart, SubscriptionPieChart } from "@/app/components/dashboard/admin-charts";
+import { useTheme } from "@/app/(user dashboard)/theme-provider";
+import {
+    ADMIN_STATS,
+    OPERATIONAL_ITEMS,
+    AI_METRICS,
+    RECENT_ACTIVITY,
+    LIVE_ACTIVITY,
+    SYSTEM_SERVICES,
+    SERVICE_STATUS_STYLES,
+} from "@/app/(admin dashboard)/constants";
+import ModalButton from "@/app/components/ui/modal-button";
+import { SortIcon } from "@/app/(user dashboard)/constants";
+
+function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+    return (
+        <div className={`bg-(--db-sidebar-bg) rounded-md p-5 ${className}`}>
+            {children}
+        </div>
+    );
+}
+
+function TrendArrow() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
+            <path fillRule="evenodd" clipRule="evenodd" d="M5.28731 4.99392C5.28731 4.60272 5.60445 4.28558 5.99565 4.28558H12.0059H12.0062H12.0165C12.4077 4.28558 12.7248 4.60272 12.7248 4.99392V11.0147C12.7248 11.4059 12.4077 11.7231 12.0165 11.7231C11.6253 11.7231 11.3082 11.4059 11.3082 11.0147V6.69357L5.49478 12.5069C5.21816 12.7835 4.76966 12.7835 4.49304 12.5069C4.21643 12.2303 4.21643 11.7818 4.49304 11.5052L10.296 5.70224H5.99565C5.60445 5.70224 5.28731 5.38513 5.28731 4.99392Z" fill="currentColor" />
+        </svg>
+    );
+}
+
+function CardTitle({ title, sub }: { title: string; sub?: string }) {
+    return (
+        <div className="mb-4">
+            <h2 className="text-base font-semibold text-(--db-text-primary)">{title}</h2>
+            {sub && <p className="text-xs text-(--db-text-muted) mt-0.5 leading-4">{sub}</p>}
+        </div>
+    );
+}
+
+export default function AdminDashboardPage() {
+    const { user } = useTheme();
+
+    return (
+        <div className="flex flex-col min-h-full">
+            <div className="flex-1 space-y-5">
+
+                {/* ── Header ── */}
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h1 className="text-xl md:text-[25px] mb-1.5 leading-none font-medium text-(--db-text-primary)">Admin Overview</h1>
+                        <p className="text-sm text-(--db-text-primary) leading-5 font-normal max-w-130">
+                            Monitor platform performance, user activity, AI usage, and market intelligence operations across the platform.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                        <Button variant="navy" className="w-auto! py-2.5!">
+                            EXPORT DASHBOARD
+                        </Button>
+                        <ModalButton className="py-2.5! max-w-fit px-5 text-sm!">
+                            SYSTEM STATUS
+                        </ModalButton>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    {ADMIN_STATS.map((s) => (
+                        <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-[13px_14px_21px] flex flex-col">
+                            <div className="flex items-center justify-start gap-2 mb-2.5">
+                                <div className="shrink-0 bg-[#D28A441F] p-1.75 rounded-sm">{s.icon}</div>
+                                <p className="text-sm font-medium text-(--db-text-primary)">{s.label}</p>
+                            </div>
+                            <AnimatedNumber value={s.value} className="text-2xl mb-2 mt-1 md:text-[42px] font-semibold text-(--db-text-primary) leading-none" />
+                            <div className="flex gap-2 items-center">
+                                <div className={`flex items-center gap-1 text-xs font-medium ${s.up ? "text-green-600" : "text-red-500"}`}>
+                                    <span className={`${s.up ? "bg-[#5E9F621C] text-[#5E9F62]" : "bg-[#C46A6A33] text-[#CF2D48] -rotate-180"} w-6 h-6 rounded-full flex justify-center items-center`}>
+                                        <TrendArrow />
+                                    </span>
+                                </div>
+                                <p className={`text-[13px] font-semibold ${s.up ? "text-green-600" : "text-red-500"}`}>{s.change}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ── Operational Intelligence + User Activity chart ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[40%_auto] gap-4">
+                    <Card className="rounded-none!">
+                        <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">Operational Intelligence</h2>
+                        <p className="text-[13px] text-(--db-text-primary) mb-5">
+                            Monitor activities, market intelligence, alerts, and overall platform performance
+                        </p>
+                        <div className="flex flex-col gap-5">
+                            {OPERATIONAL_ITEMS.map((item) => (
+                                <div key={item.label}>
+                                    <div className="flex bg-(--db-main-bg) items-center justify-between p-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-sm bg-[#D28A441F] flex items-center justify-center shrink-0">
+                                                {item.icon}
+                                            </div>
+                                            <span className="text-sm font-medium text-(--db-text-primary)">{item.label}</span>
+                                        </div>
+                                        <AnimatedNumber value={item.value} className="text-[20px] font-semibold text-(--db-text-primary)" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <Card className="rounded-none!">
+
+                        <div className="flex items-end justify-between gap-4 mb-5">
+                            <div>
+                                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">User Activity & Platform Usage</h2>
+                                <p className="text-[13px] text-(--db-text-primary)">
+                                    Track user engagement and platform activity trends
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none shrink-0">
+                                    <option>Last Year</option>
+                                    <option>6 months</option>
+                                </select>
+                                <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
+                                    <SortIcon />
+                                </button>
+                            </div>
+                        </div>
+                        <UserActivityChart />
+                    </Card>
+                </div>
+
+                {/* ── Subscription Performance + AI Intelligence ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[30%_auto] gap-4">
+                    <Card className="rounded-none!">
+                        <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">Subscription Performance</h2>
+                        <p className="text-[13px] text-(--db-text-primary) mb-5">
+                            Monitor plan adoption, subscription growth, and recurring revenue performance.
+                        </p>
+                        <SubscriptionPieChart />
+                    </Card>
+
+                    <Card className="rounded-none!">
+                        <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">AI Intelligence Performance</h2>
+                        <p className="text-[13px] text-(--db-text-primary) mb-5">
+                            Monitor AI activity and system performance
+                        </p>
+                        <div className="grid grid-cols-2 gap-4">
+                            {AI_METRICS.map((m) => (
+                                <div key={m.label}>
+                                    <div className="flex flex-col bg-(--db-main-bg) gap-5 justify-between p-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-sm bg-[#D28A441F] flex items-center justify-center shrink-0">
+                                                {m.icon}
+                                            </div>
+                                            <span className="text-sm font-medium text-(--db-text-primary)">{m.label}</span>
+                                        </div>
+                                        <div className="flex gap-14 items-center">
+                                            <AnimatedNumber value={m.value} className="text-[26px] font-semibold text-(--db-text-primary)" />
+                                            {m.progress && (
+                                                <div className="h-1.25 bg-[#FFE7CF] rounded-sm flex items-center w-full">
+                                                    <div className="w-5 h-full bg-[#D28A44] rounded-sm" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+
+                {/* ── Recent Platform Activity ── */}
+                <Card className="grid grid-cols-1 overflow-hidden lg:grid-cols-[1fr_220px] xl:grid-cols-[1fr_262px] gap-4">
+                    <Card className="overflow-hidden p-0!">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+                            <div>
+                                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">Recent Platform Activity</h2>
+                                <p className="text-[13px] text-(--db-text-primary)">Track the latest actions across the platform.</p>
+                            </div>
+                            <button className="w-full max-w-fit flex items-center justify-center gap-2 text-[14px] font-semibold text-[#D28A44] border border-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm px-4.75 py-2 transition-colors">
+                                VIEW ALL
+                            </button>
+                        </div>
+                        <div className="overflow-x-auto border border-(--db-border) rounded-md">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-(--db-table-header-bg) divide-x divide-(--db-border) text-left font-semibold text-(--db-text-primary)">
+                                        <th className="min-w-36 px-5 py-3 font-semibold whitespace-nowrap">User</th>
+                                        <th className="min-w-72 px-5 py-3 font-semibold whitespace-nowrap">Action</th>
+                                        <th className="min-w-36 px-5 py-3 font-semibold whitespace-nowrap">Module</th>
+                                        <th className="min-w-28 px-5 py-3 font-semibold whitespace-nowrap">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {RECENT_ACTIVITY.map((row, i) => (
+                                        <tr key={i} className="border-b divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
+                                            <td className="px-5 py-3.5 font-medium whitespace-nowrap">{row.user}</td>
+                                            <td className="px-5 py-3.5">{row.action}</td>
+                                            <td className="px-5 py-3.5 whitespace-nowrap">{row.module}</td>
+                                            <td className="px-5 py-3.5 whitespace-nowrap">{row.time}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Card className="rounded-none! bg-[#D28A4421]! flex flex-col">
+                        <div className="flex relative p-[15px_16px] justify-between rounded-sm items-center gap-2 mb-3">
+                            <div className="bg-(--db-main-bg) opacity-75 inset-0 w-full h-full absolute" />
+                            <h3 className="text-[13px] relative z-1 font-medium text-(--db-text-primary)">Live Activity Status</h3>
+                            <span className="w-3.25 relative z-1 h-3.25 rounded-full bg-[#5E9F62]" />
+                        </div>
+                        <div className="flex h-full relative p-[15px_16px] rounded-sm flex-col gap-3">
+                            <div className="bg-(--db-main-bg) opacity-75 inset-0 w-full h-full absolute" />
+                            <p className="text-lg relative z-1 font-semibold text-(--db-text-primary) mb-1 uppercase tracking-wide">Today's Activity</p>
+                            {LIVE_ACTIVITY.map((item) => (
+                                <div key={item.label} className="flex relative z-1 text-[15px] text-(--db-text-primary) items-center gap-4">
+                                    <span>{item.label}</span>
+                                    <span>{item.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </Card>
+
+                {/* ── System Monitoring ── */}
+                <Card className="rounded-none!">
+                    <div className="mb-5">
+                        <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">System Monitoring</h2>
+                        <p className="text-[13px] text-(--db-text-primary)">Monitor platform services, integrations, and system health.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {SYSTEM_SERVICES.map((svc) => (
+                            <div key={svc.name} className="flex bg-(--db-main-bg) p-5 rounded-sm flex-col gap-3">
+                                <p className="text-[15px] font-medium text-(--db-text-primary)">{svc.name}</p>
+
+                                <span className={`flex w-full items-center gap-1.5 px-3.75 py-4.5 rounded-sm text-[15px] font-semibold ${SERVICE_STATUS_STYLES[svc.type]}`}>
+                                    <span className="w-3.25 h-3.25 rounded-full block bg-current" />
+                                    {svc.status}
+                                </span>
+                                <p className="text-[12px] text-(--db-text-primary) mt-0.5">{svc.sub}</p>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+            </div>
+        </div>
+    );
+}
