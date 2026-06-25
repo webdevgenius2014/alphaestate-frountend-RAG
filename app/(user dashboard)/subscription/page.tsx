@@ -1,17 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
-import { SUB_PLANS } from "@/app/(user dashboard)/constants";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
+import appService from "@/app/services/appService";
 
-const CURRENT_PLAN = "essential";
-const EXPIRY_DATE = "02 Jan 2026";
-const DAYS_LEFT = 20;
+function formatDate(iso: string) {
+    return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+const PLAN_META: Record<string, { description: string; cta: string; popular: boolean }> = {
+    essential: {
+        description: "Designed for individual investors exploring AI-powered market intelligence and basic deal validation tools.",
+        cta: "GET STARTED",
+        popular: false,
+    },
+    professional: {
+        description: "Unlock deeper market analytics, AI-powered deal scoring, district comparison tools, and unlimited reporting.",
+        cta: "UPGRADE NOW",
+        popular: true,
+    },
+    enterprise: {
+        description: "Built for agencies, investment firms, and professional teams requiring scalable market intelligence tools.",
+        cta: "GET ENTERPRISE",
+        popular: false,
+    },
+};
+
+type Plan = {
+    id: string;
+    name: string;
+    monthlyPrice: number;
+    yearlyPrice: number;
+    description: string;
+    cta: string;
+    popular: boolean;
+    features: string[];
+};
+
+function transformPlans(data: any[]): Plan[] {
+    const grouped: Record<string, Partial<Plan>> = {};
+
+    for (const item of data) {
+        const baseName = item.name.replace(/ (Monthly|Annual)$/i, "").toLowerCase();
+        if (!grouped[baseName]) {
+            grouped[baseName] = {
+                id: baseName,
+                name: item.name.replace(/ (Monthly|Annual)$/i, ""),
+                features: item.featuresJson ?? [],
+                ...PLAN_META[baseName],
+            };
+        }
+        if (item.billingInterval === "monthly") {
+            grouped[baseName].monthlyPrice = parseFloat(item.priceAed);
+        } else if (item.billingInterval === "annual") {
+            grouped[baseName].yearlyPrice = parseFloat(item.priceAed);
+        }
+    }
+
+    return Object.values(grouped) as Plan[];
+}
 
 export default function SubscriptionPage() {
     const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+    const [plans, setPlans] = useState<Plan[]>([]);
+    const [mySub, setMySub] = useState<any>(null);
+
+    useEffect(() => {
+        appService.getSubscriptionPlans().then((res) => {
+            if (res?.data?.success && Array.isArray(res.data.data)) {
+                setPlans(transformPlans(res.data.data));
+            }
+        });
+        appService.getMySubscription().then((res) => {
+            if (res?.data?.success && res.data.data) {
+                setMySub(res.data.data);
+            }
+        });
+    }, []);
 
     return (
         <div className="w-full">
@@ -25,12 +92,19 @@ export default function SubscriptionPage() {
                 <div className="text-right shrink-0">
                     <p className="text-sm text-(--db-text-primary)">
                         Your Current Plan{" "}
-                        <span className="text-[#D28A44] font-semibold">{CURRENT_PLAN.toUpperCase()}</span>
+                        <span className="text-[#D28A44] font-semibold">
+                            {mySub?.plan?.name ?? "—"}
+                        </span>
                     </p>
-                    <p className="text-sm text-(--db-text-primary) mt-1 font-normal">
-                        Expires on{" "}
-                        <span>{EXPIRY_DATE} ({DAYS_LEFT} days remaining)</span>
-                    </p>
+                    {mySub?.endsAt && (
+                        <p className="text-sm text-(--db-text-primary) mt-1 font-normal">
+                            Expires on{" "}
+                            <span>
+                                {formatDate(mySub.endsAt)}{" "}
+                                ({mySub.daysRemaining} days remaining)
+                            </span>
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -56,7 +130,7 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3.75">
-                    {SUB_PLANS.map((plan) => (
+                    {plans.map((plan) => (
                         <div
                             key={plan.id}
                             className={`relative rounded-[10px] p-6.25 hover:p-6 flex flex-col overflow-hidden border transition-all ease-linear ${plan.popular ? "bg-(--db-sub-popular-bg) border-[#D28A4466] hover:shadow-[0px_16px_36px_0px_#E8B3821A,0px_66px_66px_0px_#E8B38217,0px_148px_89px_0px_#E8B3820D,0px_262px_105px_0px_#E8B38203,0px_410px_115px_0px_#E8B38200]" : "bg-(--db-main-bg) border-[#D28A4466] hover:shadow-[0px_16px_36px_0px_#A1A1A11A,0px_65px_65px_0px_#A1A1A117,0px_147px_88px_0px_#A1A1A10D,0px_261px_105px_0px_#A1A1A103,0px_408px_114px_0px_#A1A1A100]"}`}

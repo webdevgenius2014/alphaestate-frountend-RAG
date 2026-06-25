@@ -16,6 +16,10 @@ const ApiConfig = {
   userProfileInfo: `${apiURL}/users/me`,
   userProfileAvtar:  `${apiURL}/users/me/avatar`,
 
+  // Subscription
+  subsriptionPlans: `${apiURL}/subscriptions/plans`,
+  mySubsriptionPlans: `${apiURL}/subscriptions/me`,
+
 };
 
 export default ApiConfig;
