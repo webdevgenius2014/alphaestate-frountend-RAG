@@ -210,7 +210,6 @@ export default function PropertyDetailPage() {
 
         </div>
     );
-
     if (!property) return notFound();
 
     const images: string[] = [property.coverImageUrl, ...(property.galleryImageUrls ?? [])].filter(Boolean);

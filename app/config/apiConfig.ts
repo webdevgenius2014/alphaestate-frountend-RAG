@@ -20,6 +20,14 @@ const ApiConfig = {
   subsriptionPlans: `${apiURL}/subscriptions/plans`,
   mySubsriptionPlans: `${apiURL}/subscriptions/me`,
 
+  // Property Listing
+  listingProperties: `${apiURL}/properties`,
+  propertyById: `${apiURL}/properties/{id}`,
+  similarProperties: `${apiURL}/properties/{id}/similar`,
+  // Saver Property
+  listingSavedProperties: `${apiURL}/users/me/saved`,
+  savedPropertyById: `${apiURL}/properties/{id}/save`,
+
 };
 
 export default ApiConfig;

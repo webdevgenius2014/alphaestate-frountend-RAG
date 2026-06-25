@@ -127,6 +127,92 @@ class AppService {
       return error.response;
     }
   }
+
+  // Property Listing
+  async getListingProperties(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
+    try {
+      return await instance.get(ApiConfig.listingProperties, {
+        params: { page, limit, ...filters },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getPropertyById(id: string) {
+    try {
+      const url = ApiConfig.propertyById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getSimilarProperties(id: string) {
+    try {
+      const url = ApiConfig.similarProperties.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Saved Property
+  async getListingSavedProperties(
+  page: number = 1,
+  limit: number = 20,
+  filters?: {
+    district?: string;
+    propertyType?: string;
+    investmentSignal?: string;
+    marketType?: string;
+  }
+) {
+  try {
+    // Strip out undefined/empty values so they don't pollute the query string
+    const cleanFilters = filters
+      ? Object.fromEntries(
+          Object.entries(filters).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ""
+          )
+        )
+      : {};
+
+    return await instance.get(ApiConfig.listingSavedProperties, {
+      params: { page, limit, ...cleanFilters },
+    });
+  } catch (error: any) {
+    return error.response;
+  }
+}
+
+  async getSavedPropertyById(id: string) {
+    try {
+      const url = ApiConfig.savedPropertyById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async saveProperty(id: string) {
+    try {
+      const url = ApiConfig.savedPropertyById.replace("{id}", id);
+      return await instance.post(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async unsaveProperty(id: string) {
+    try {
+      const url = ApiConfig.savedPropertyById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
 }
 
 const appService = new AppService();
