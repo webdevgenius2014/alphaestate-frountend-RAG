@@ -110,6 +110,23 @@ class AppService {
       return error.response;
     }
   }
+
+  // Subscriptions
+  async getSubscriptionPlans() {
+    try {
+      return await instance.get(ApiConfig.subsriptionPlans);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getMySubscription() {
+    try {
+      return await instance.get(ApiConfig.mySubsriptionPlans);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
 }
 
 const appService = new AppService();
