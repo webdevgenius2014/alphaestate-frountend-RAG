@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
                         <div className="flex flex-col gap-5">
                             {OPERATIONAL_ITEMS.map((item) => (
                                 <div key={item.label}>
-                                    <div className="flex bg-(--db-main-bg) items-center justify-between p-5">
+                                    <div className="flex bg-(--db-main-bg) hover:bg-(--db-drawer-header-bg) ease-linear transition-all items-center justify-between p-5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-sm bg-[#D28A441F] flex items-center justify-center shrink-0">
                                                 {item.icon}

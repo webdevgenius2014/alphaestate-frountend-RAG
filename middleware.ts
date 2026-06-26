@@ -14,11 +14,14 @@ export function middleware(req: NextRequest) {
   const role = req.cookies.get("user_role")?.value;
   const refreshToken = req.cookies.get("refresh_token")?.value;
 
-  if (path.startsWith("/_next") || path.startsWith("/api")) {
+  if (
+    path.startsWith("/_next") ||
+    path.startsWith("/api") ||
+    /\.\w+$/.test(path)
+  ) {
     return NextResponse.next();
   }
 
-  /* ── PUBLIC ROUTES ── */
   if (publicRoutes.includes(path)) {
     if (refreshToken) {
       return NextResponse.redirect(new URL(getHomePath(role), req.url));
@@ -26,7 +29,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  /* ── ADMIN ROUTES ── */
   if (ADMIN_ROUTES.some((p) => path.startsWith(p))) {
     if (!refreshToken) {
       return NextResponse.redirect(new URL("/login", req.url));
@@ -37,7 +39,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  /* ── PROTECTED ROUTES ── */
   if (USER_ROUTES.some((p) => path.startsWith(p))) {
     if (!refreshToken) {
       const response = NextResponse.redirect(new URL("/login", req.url));
@@ -47,6 +48,10 @@ export function middleware(req: NextRequest) {
       return response;
     }
     return NextResponse.next();
+  }
+
+  if (!refreshToken && path !== "/") {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   return NextResponse.next();
