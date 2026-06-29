@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import ModalButton from "@/app/components/ui/modal-button";
 import { SelectChevron } from "@/app/(user dashboard)/constants";
+import { DELETE_USER_LOSE_ITEMS } from "@/app/(admin dashboard)/constants";
 
 const selectCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-field-border) text-(--db-text-primary) rounded-md px-4 py-3 h-[45.6px] text-sm outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer";
 
@@ -19,14 +20,7 @@ function useModalEsc(onClose: () => void) {
     }, [onClose]);
 }
 
-const DELETE_USER_LOSE_ITEMS = [
-    "User Account",
-    "Subscription History",
-    "Saved Properties",
-    "Smart Alerts",
-    "AI Chat History",
-    "Generated Reports",
-];
+
 
 // ── Delete User Modal ─────────────────────────────────────────────────────────
 

@@ -702,3 +702,12 @@ export const USER_DETAILS = [
     { email: "sinia@email.com", userId: "USR-2051", phone: "+971 XX XXX XXXX", memberSince: "18 Jan 2026", renewalDate: "18 Aug 2026", registrationDate: "18 Jan 2026", billingCycle: "Monthly", totalPayments: "AED 1,860", aiQueries: 88, reportsGenerated: 6, smartAlerts: 2, dealAnalyses: 4 },
     { email: "jack@email.com", userId: "USR-2052", phone: "+971 XX XXX XXXX", memberSince: "02 Apr 2026", renewalDate: "02 Nov 2026", registrationDate: "02 Apr 2026", billingCycle: "Monthly", totalPayments: "AED 2,480", aiQueries: 312, reportsGenerated: 24, smartAlerts: 15, dealAnalyses: 22 },
 ];
+
+export const DELETE_USER_LOSE_ITEMS = [
+    "User Account",
+    "Subscription History",
+    "Saved Properties",
+    "Smart Alerts",
+    "AI Chat History",
+    "Generated Reports",
+];
