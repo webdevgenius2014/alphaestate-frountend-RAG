@@ -1,7 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import Button from "@/app/components/ui/button";
+import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import { UserActivityChart, SubscriptionPieChart } from "@/app/components/dashboard/admin-charts";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
@@ -44,6 +45,7 @@ function CardTitle({ title, sub }: { title: string; sub?: string }) {
 
 export default function AdminDashboardPage() {
     const { user } = useTheme();
+
 
     return (
         <div className="flex flex-col min-h-full">

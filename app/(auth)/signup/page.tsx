@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
 import appService from "@/app/services/appService";
+import { toast } from "react-hot-toast";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -15,14 +16,12 @@ export default function SignUpPage() {
     const [password, setPassword] = useState("");
     const [keepLoggedIn, setKeepLoggedIn] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
 
         if (!fullName.trim() || !email.trim() || !password.trim()) {
-            setError("All fields are required.");
+            toast.error("All fields are required.");
             return;
         }
 
@@ -33,7 +32,7 @@ export default function SignUpPage() {
             if (res?.status === 200 || res?.status === 201) {
                 router.push("/dashboard");
             } else {
-                setError(res?.data?.message || "Signup failed. Please try again.");
+                toast.error(res?.data?.message || "Signup failed. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -93,10 +92,6 @@ export default function SignUpPage() {
                                 </label>
                             </div>
                         </div>
-
-                        {error && (
-                            <p className="text-red-400 text-sm text-center -mb-1">{error}</p>
-                        )}
 
                         <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Creating account..." : "Sign up"}

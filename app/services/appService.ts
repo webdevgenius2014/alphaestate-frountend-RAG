@@ -169,7 +169,6 @@ class AppService {
   }
 ) {
   try {
-    // Strip out undefined/empty values so they don't pollute the query string
     const cleanFilters = filters
       ? Object.fromEntries(
           Object.entries(filters).filter(
@@ -207,6 +206,42 @@ class AppService {
   async unsaveProperty(id: string) {
     try {
       const url = ApiConfig.savedPropertyById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Admin
+  async getAdminUsers(page: number = 1, limit: number = 10) {
+    try {
+      return await instance.get(ApiConfig.adminUsers, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminUserById(id: string) {
+    try {
+      const url = ApiConfig.adminUsersById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async suspendAdminUser(id: string) {
+    try {
+      const url = ApiConfig.suspendAdminUsers.replace("{id}", id);
+      return await instance.patch(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteAdminUser(id: string) {
+    try {
+      const url = ApiConfig.deleteAdminUsers.replace("{id}", id);
       return await instance.delete(url);
     } catch (error: any) {
       return error.response;

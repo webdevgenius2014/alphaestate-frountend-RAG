@@ -7,6 +7,7 @@ import ModalButton from "@/app/components/ui/modal-button";
 import { SelectChevron, type AlertFeedItem } from "@/app/(user dashboard)/constants";
 import Button from "../ui/button";
 import appService from "@/app/services/appService";
+import { toast } from "react-hot-toast";
 
 function clearAuthCookies() {
   ["access_token", "refresh_token", "user_role"].forEach((name) => {
@@ -444,18 +445,16 @@ export function DeleteReportModal({ report, onClose, onConfirm }: { report: Repo
 export function DeleteAccountModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
     useModalEsc(onClose);
     const [deleting, setDeleting] = useState(false);
-    const [error, setError]       = useState("");
 
     const handleDelete = async () => {
         setDeleting(true);
-        setError("");
         const res = await appService.deleteUserProfile();
         setDeleting(false);
         if (res?.status === 200 || res?.status === 201 || res?.status === 204) {
             clearAuthCookies();
             onConfirm();
         } else {
-            setError(res?.data?.message ?? "Failed to delete account. Please try again.");
+            toast.error(res?.data?.message ?? "Failed to delete account. Please try again.");
         }
     };
 
@@ -500,9 +499,6 @@ export function DeleteAccountModal({ onClose, onConfirm }: { onClose: () => void
                                 ))}
                             </ul>
                         </div>
-                        {error && (
-                            <p className="text-sm text-[#CF2D48] mt-4">{error}</p>
-                        )}
                     </div>
                 </div>
 

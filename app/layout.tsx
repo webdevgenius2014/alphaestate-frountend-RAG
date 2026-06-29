@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ToastProvider from "@/app/components/ui/toast-provider";
 import { Geist, Geist_Mono, Poppins, Archivo } from "next/font/google";
 import "./globals.css";
 
@@ -39,7 +40,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} ${archivo.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ToastProvider />
+      </body>
     </html>
   );
 }

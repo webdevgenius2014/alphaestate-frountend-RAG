@@ -24,7 +24,7 @@ function useModalEsc(onClose: () => void) {
 
 // ── Delete User Modal ─────────────────────────────────────────────────────────
 
-export function DeleteUserModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function DeleteUserModal({ isOpen, onClose, onConfirm }: { isOpen: boolean; onClose: () => void; onConfirm?: () => void }) {
     useModalEsc(onClose);
     if (!isOpen) return null;
 
@@ -68,7 +68,7 @@ export function DeleteUserModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 
                 <div className="px-7 pb-7 pt-3 flex gap-3 max-w-79.75 mx-auto">
                     <button
-                        onClick={onClose}
+                        onClick={onConfirm ?? onClose}
                         className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors"
                     >
                         DELETE
@@ -83,9 +83,10 @@ export function DeleteUserModal({ isOpen, onClose }: { isOpen: boolean; onClose:
 
 // ── Suspend User Modal ────────────────────────────────────────────────────────
 
-export function SuspendUserModal({ isOpen, onClose, userName, userEmail, userStatus }: {
+export function SuspendUserModal({ isOpen, onClose, onConfirm, userName, userEmail, userStatus }: {
     isOpen: boolean;
     onClose: () => void;
+    onConfirm?: () => void;
     userName: string;
     userEmail: string;
     userStatus: "active" | "suspended";
@@ -158,7 +159,7 @@ export function SuspendUserModal({ isOpen, onClose, userName, userEmail, userSta
                     {/* Action buttons */}
                     <div className="flex gap-3 max-w-95.5 mx-auto">
                         <button
-                            onClick={onClose}
+                            onClick={onConfirm ?? onClose}
                             className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3.5 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors"
                         >
                             SUSPEND ACCOUNT

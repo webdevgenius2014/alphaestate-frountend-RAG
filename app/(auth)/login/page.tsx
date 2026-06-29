@@ -35,7 +35,7 @@ export default function LoginPage() {
                 document.cookie = `access_token=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
                 document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
                 document.cookie = `user_role=${user.role}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
-                window.location.href = "/dashboard";
+                window.location.href = user.role === "admin" ? "/admin-dashboard" : "/dashboard";
             } else {
                 setError(res?.data?.message || "Invalid email or password.");
             }

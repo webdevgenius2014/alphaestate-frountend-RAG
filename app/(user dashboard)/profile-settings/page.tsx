@@ -27,6 +27,7 @@ import {
     AI_PREF_DISTRICTS,
 } from "@/app/(user dashboard)/constants";
 import Button from "@/app/components/ui/button";
+import { toast } from "react-hot-toast";
 
 const inputCls =
     "w-full border border-[#D28A441F] rounded-[3px] p-[12px_14px] bg-(--db-sidebar-bg) text-(--db-text-primary) text-[13px] outline-none focus:border-[#D28A44]/60 transition-colors placeholder-(--db-text-primary)";
@@ -344,19 +345,14 @@ function SecurityTab() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [pwLoading, setPwLoading] = useState(false);
-    const [pwError, setPwError] = useState("");
-    const [pwSuccess, setPwSuccess] = useState("");
 
     const handleChangePassword = async () => {
-        setPwError("");
-        setPwSuccess("");
-
         if (!currentPassword || !newPassword || !confirmPassword) {
-            setPwError("All fields are required.");
+            toast.error("All fields are required.");
             return;
         }
         if (newPassword !== confirmPassword) {
-            setPwError("New passwords do not match.");
+            toast.error("New passwords do not match.");
             return;
         }
 
@@ -364,12 +360,12 @@ function SecurityTab() {
         try {
             const res = await appService.changePassword({ currentPassword, newPassword });
             if (res?.status === 200 || res?.status === 201) {
-                setPwSuccess("Password updated successfully.");
+                toast.success("Password updated successfully.");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
-                setPwError(res?.data?.message || "Failed to update password.");
+                toast.error(res?.data?.message || "Failed to update password.");
             }
         } finally {
             setPwLoading(false);
@@ -403,8 +399,6 @@ function SecurityTab() {
                                 <PasswordInput label="New Password" show={showNew} onToggle={() => setShowNew((p) => !p)} placeholder="****************" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                                 <PasswordInput label="Confirm New Password" show={showConfirm} onToggle={() => setShowConfirm((p) => !p)} placeholder="****************" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                             </div>
-                            {pwError && <p className="text-red-400 text-sm mb-3">{pwError}</p>}
-                            {pwSuccess && <p className="text-green-400 text-sm mb-3">{pwSuccess}</p>}
                             <ModalButton className="py-2.25! max-w-fit px-3" onClick={handleChangePassword} disabled={pwLoading}>
                                 {pwLoading ? "UPDATING..." : "UPDATE PASSWORD"}
                             </ModalButton>

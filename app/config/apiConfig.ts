@@ -28,6 +28,16 @@ const ApiConfig = {
   listingSavedProperties: `${apiURL}/users/me/saved`,
   savedPropertyById: `${apiURL}/properties/{id}/save`,
 
+  // Admin
+  adminUsers: `${apiURL}/admin/users`,
+  adminUsersById: `${apiURL}/admin/users/{id}`, 
+  suspendAdminUsers: `${apiURL}/admin/users/{id}/suspend`,  
+  deleteAdminUsers: `${apiURL}/admin/users/{id}`, 
+
+
+  
+
+
 };
 
 export default ApiConfig;
