@@ -6,6 +6,7 @@ import Image from "next/image";
 import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
 import appService from "@/app/services/appService";
+import { toast } from "react-hot-toast";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -28,7 +29,7 @@ export default function ForgotPasswordPage() {
             if (res?.status === 200 || res?.status === 201) {
                 setSent(true);
             } else {
-                setError(res?.data?.message || "Something went wrong. Please try again.");
+                toast.error(res?.data?.message || "Something went wrong. Please try again.");
             }
         } finally {
             setLoading(false);

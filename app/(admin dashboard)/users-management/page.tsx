@@ -1,13 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import { SortIcon } from "@/app/(user dashboard)/constants";
 import {
     UM_STATS,
-    UM_DIRECTORY,
-    UM_RECENT,
     UM_ACTIVITY,
     SearchIcon,
     EyeIcon,
@@ -27,18 +26,38 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
     );
 }
 
-const PAGES = [1, 2, 3, 4];
-
 export default function UsersManagementPage() {
     const [activePage, setActivePage] = useState(1);
+    const [adminUsers, setAdminUsers] = useState<any[]>([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [apiStats, setApiStats] = useState<any>(null);
+    const [recentRegistrations, setRecentRegistrations] = useState<any[]>([]);
+    const [activitySnapshot, setActivitySnapshot] = useState<any>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const refresh = () => setRefreshKey((k) => k + 1);
+
+    useEffect(() => {
+        appService.getAdminUsers(activePage).then((res) => {
+            if (res?.data?.data) {
+                const d = res.data.data;
+                setAdminUsers(Array.isArray(d.items) ? d.items : []);
+                setTotalPages(Math.ceil((d.total ?? 1) / (d.limit ?? 10)));
+                setApiStats(d.stats ?? null);
+                setRecentRegistrations(Array.isArray(d.recentRegistrations) ? d.recentRegistrations : []);
+                setActivitySnapshot(d.activitySnapshot ?? null);
+            }
+        });
+    }, [activePage, refreshKey]);
+
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
+    const [selectedUserDetail, setSelectedUserDetail] = useState<any>(null);
     const drawerOpen = selectedUser !== null;
-    const closeDrawer = () => setSelectedUser(null);
+    const closeDrawer = () => { setSelectedUser(null); setSelectedUserDetail(null); };
 
     const [suspendIdx, setSuspendIdx] = useState<number | null>(null);
     const closeSuspend = () => setSuspendIdx(null);
 
-    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
     return (
         <>
@@ -91,18 +110,26 @@ export default function UsersManagementPage() {
                 </Card>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {UM_STATS.map((s) => (
-                        <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col gap-3">
-                            <div className="flex items-center gap-2.5">
-                                <div className="shrink-0 bg-[#D28A441F] p-2 rounded-sm">{s.icon}</div>
-                                <p className="text-sm font-medium text-(--db-text-primary)">{s.label}</p>
+                    {UM_STATS.map((s, i) => {
+                        const apiValues = [
+                            String(apiStats?.totalUsers ?? s.value),
+                            String(apiStats?.activeUsers ?? s.value),
+                            String(apiStats?.paidSubscribers ?? s.value),
+                            String(apiStats?.suspendedAccounts ?? s.value),
+                        ];
+                        return (
+                            <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col gap-3">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="shrink-0 bg-[#D28A441F] p-2 rounded-sm">{s.icon}</div>
+                                    <p className="text-sm font-medium text-(--db-text-primary)">{s.label}</p>
+                                </div>
+                                <AnimatedNumber
+                                    value={apiValues[i]}
+                                    className="text-[38px] font-semibold text-(--db-text-primary) leading-none"
+                                />
                             </div>
-                            <AnimatedNumber
-                                value={s.value}
-                                className="text-[38px] font-semibold text-(--db-text-primary) leading-none"
-                            />
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 <Card className="rounded-none!">
@@ -132,38 +159,42 @@ export default function UsersManagementPage() {
                             <thead>
                                 <tr className="bg-(--db-table-header-bg) divide-x divide-(--db-border) text-left text-(--db-text-primary)">
                                     <th className="min-w-40 px-5 py-3 font-semibold whitespace-nowrap">User</th>
+                                    <th className="min-w-32 px-5 py-3 font-semibold whitespace-nowrap">Role</th>
                                     <th className="min-w-32 px-5 py-3 font-semibold whitespace-nowrap">Plan</th>
-                                    <th className="min-w-32 px-5 py-3 font-semibold whitespace-nowrap">Reports</th>
                                     <th className="min-w-36 px-5 py-3 font-semibold whitespace-nowrap">Last Active</th>
                                     <th className="min-w-28 px-5 py-3 font-semibold whitespace-nowrap">Status</th>
                                     <th className="min-w-28 px-5 py-3 font-semibold whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {UM_DIRECTORY.map((row, i) => (
+                                {adminUsers.map((user, i) => (
                                     <tr
-                                        key={i}
+                                        key={user.id ?? i}
                                         className="border-b divide-x divide-(--db-border) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors"
                                     >
-                                        <td className="px-5 py-3.5 font-medium whitespace-nowrap text-(--db-text-primary)">{row.user}</td>
-                                        <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{row.plan}</td>
-                                        <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{row.reports}</td>
-                                        <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{row.lastActive}</td>
+                                        <td className="px-5 py-3.5 font-medium whitespace-nowrap text-(--db-text-primary)">{user.fullName}</td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary) uppercase">{user.role}</td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{user.planName}</td>
+                                        <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{user.lastActive}</td>
                                         <td className="px-5 py-3.5">
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold bg-[#5E9F622E] text-[#5E9F62]">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold ${user.isActive ? "bg-[#5E9F622E] text-[#5E9F62]" : "bg-[#CF2D482E] text-[#CF2D48]"}`}>
                                                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                                {row.status === "active" ? "Active" : "Suspended"}
+                                                {user.isActive ? "Active" : "Suspended"}
                                             </span>
                                         </td>
                                         <td className="px-5 py-3.5">
                                             <div className="flex items-center gap-2">
-                                                <button onClick={() => setSelectedUser(i)} className="w-5.75 h-5.75 rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear" title="View">
+                                                <button onClick={() => {
+                                                    setSelectedUser(i);
+                                                    const userId = user.id;
+                                                    if (userId) appService.getAdminUserById(userId).then((res) => { if (res?.data?.data) setSelectedUserDetail(res.data.data); });
+                                                }} className="w-5.75 h-5.75 rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear" title="View">
                                                     <EyeIcon />
                                                 </button>
                                                 <button onClick={() => setSuspendIdx(i)} className="w-5.75 h-5.75 rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear" title="Suspend">
                                                     <BanIcon />
                                                 </button>
-                                                <button onClick={() => setDeleteOpen(true)} className="w-5.75 h-5.75 rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear" title="Delete">
+                                                <button onClick={() => setDeleteUserId(user.id ?? null)} className="w-5.75 h-5.75 rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear" title="Delete">
                                                     <TrashIcon />
                                                 </button>
                                             </div>
@@ -175,7 +206,7 @@ export default function UsersManagementPage() {
                     </div>
 
                     <div className="flex items-center justify-center gap-1.5 mt-4">
-                        {PAGES.map((p) => (
+                        {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setActivePage(p)}
@@ -209,13 +240,13 @@ export default function UsersManagementPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {UM_RECENT.map((row, i) => (
+                                    {recentRegistrations.map((row, i) => (
                                         <tr
-                                            key={i}
+                                            key={row.id ?? i}
                                             className="border-b divide-x divide-(--db-border) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors"
                                         >
-                                            <td className="px-5 py-3.5 font-medium whitespace-nowrap text-(--db-text-primary)">{row.user}</td>
-                                            <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{row.plan}</td>
+                                            <td className="px-5 py-3.5 font-medium whitespace-nowrap text-(--db-text-primary)">{row.fullName}</td>
+                                            <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{row.planName}</td>
                                             <td className="px-5 py-3.5 whitespace-nowrap text-(--db-text-primary)">{row.joinedDate}</td>
                                         </tr>
                                     ))}
@@ -232,18 +263,24 @@ export default function UsersManagementPage() {
                             Monitor platform engagement across registered users.
                         </p>
                         <div className="flex flex-col gap-3">
-                            {UM_ACTIVITY.map((item) => (
-                                <div key={item.label} className="flex items-center justify-between gap-4 bg-(--db-main-bg) p-5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="shrink-0 bg-[#D28A441F] p-2 rounded-sm">{item.icon}</div>
-                                        <span className="text-sm font-medium text-(--db-text-primary)">{item.label}</span>
+                            {UM_ACTIVITY.map((item, i) => {
+                                const activityValues = [
+                                    String(activitySnapshot?.dailyActiveUsers ?? item.value),
+                                    item.value,
+                                ];
+                                return (
+                                    <div key={item.label} className="flex items-center justify-between gap-4 bg-(--db-main-bg) p-5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="shrink-0 bg-[#D28A441F] p-2 rounded-sm">{item.icon}</div>
+                                            <span className="text-sm font-medium text-(--db-text-primary)">{item.label}</span>
+                                        </div>
+                                        <AnimatedNumber
+                                            value={activityValues[i]}
+                                            className="text-[26px] font-semibold text-(--db-text-primary) shrink-0"
+                                        />
                                     </div>
-                                    <AnimatedNumber
-                                        value={item.value}
-                                        className="text-[26px] font-semibold text-(--db-text-primary) shrink-0"
-                                    />
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </Card>
 
@@ -257,7 +294,8 @@ export default function UsersManagementPage() {
 
             <div className={`fixed top-0 right-0 h-full w-full max-w-121.25 bg-(--db-sidebar-bg) z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
                 {selectedUser !== null && (() => {
-                    const row = UM_DIRECTORY[selectedUser];
+                    const listUser = adminUsers[selectedUser] ?? {};
+                    const user = selectedUserDetail ? { ...listUser, ...selectedUserDetail } : listUser;
                     const det = USER_DETAILS[selectedUser] ?? USER_DETAILS[0];
                     return (
                         <div className="px-6 py-8 ">
@@ -283,21 +321,21 @@ export default function UsersManagementPage() {
                                         <img src="/favicon.ico" alt="" />
                                     </div>
                                     <div className="min-w-0 my-auto">
-                                        <p className="font-medium text-(--db-text-primary) text-lg leading-tight">{row.user}</p>
-                                        <p className="text-sm text-(--db-text-primary) mt-0.5">{det.email}</p>
+                                        <p className="font-medium text-(--db-text-primary) text-lg leading-tight">{user.fullName}</p>
+                                        <p className="text-sm text-(--db-text-primary) mt-0.5">{user.email}</p>
                                     </div>
-                                    <span className="ml-auto mt-0 mb-auto shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold bg-[#5E9F622E] text-[#5E9F62]">
+                                    <span className={`ml-auto mt-0 mb-auto shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold ${user.isActive ? "bg-[#5E9F622E] text-[#5E9F62]" : "bg-[#CF2D482E] text-[#CF2D48]"}`}>
                                         <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                        {row.status === "active" ? "Active" : "Suspended"}
+                                        {user.isActive ? "Active" : "Suspended"}
                                     </span>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-(--db-drawer-section-bg) p-5 space-y-3.75">
                                         {[
-                                            { label: "Member Since", value: det.memberSince },
-                                            { label: "Current Plan", value: row.plan },
-                                            { label: "Renewal Date", value: det.renewalDate },
+                                            { label: "Member Since", value: user.memberSince ?? det.memberSince },
+                                            { label: "Current Plan", value: user.planName ?? "N/A" },
+                                            { label: "Renewal Date", value: user.subscription?.renewalDate ?? det.renewalDate ?? "N/A" },
                                         ].map((f) => (
                                             <div key={f.label}>
                                                 <p className="text-[15px] text-(--db-text-primary) font-light mb-0.5">{f.label}</p>
@@ -307,9 +345,9 @@ export default function UsersManagementPage() {
                                     </div>
                                     <div className="bg-(--db-drawer-section-bg) p-5 space-y-3.75">
                                         {[
-                                            { label: "User ID", value: det.userId },
-                                            { label: "Phone Number", value: det.phone },
-                                            { label: "Registration Date", value: det.registrationDate },
+                                            { label: "User ID", value: user.id ?? det.userId },
+                                            { label: "Phone Number", value: user.phoneNumber ?? det.phone },
+                                            { label: "Registration Date", value: user.registrationDate ?? det.registrationDate },
                                         ].map((f) => (
                                             <div key={f.label}>
                                                 <p className="text-[15px] text-(--db-text-primary) font-light mb-0.5">{f.label}</p>
@@ -323,10 +361,10 @@ export default function UsersManagementPage() {
                                     <h3 className="text-lg font-medium text-(--db-text-primary) mb-3">Subscription Details</h3>
                                     <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                                         {[
-                                            { label: "Current Plan", value: row.plan },
-                                            { label: "Subscription Status", value: row.status === "active" ? "Active" : "Suspended" },
-                                            { label: "Billing Cycle", value: det.billingCycle },
-                                            { label: "Total Payments", value: det.totalPayments },
+                                            { label: "Current Plan", value: user.planName ?? user.subscription?.planName ?? "N/A" },
+                                            { label: "Subscription Status", value: user.isActive ? "Active" : "Suspended" },
+                                            { label: "Billing Cycle", value: user.subscription?.billingCycle ?? det.billingCycle ?? "N/A" },
+                                            { label: "Total Payments", value: user.subscription?.totalPayments ?? det.totalPayments ?? "N/A" },
                                         ].map((f) => (
                                             <div key={f.label}>
                                                 <p className="text-[15px] text-(--db-text-primary) font-light">{f.label}</p>
@@ -341,10 +379,10 @@ export default function UsersManagementPage() {
                                     <h3 className="text-lg font-medium text-(--db-text-primary) mb-3">Platform Activity</h3>
                                     <div className="grid grid-cols-2 gap-3">
                                         {[
-                                            { label: "AI Queries", value: det.aiQueries },
-                                            { label: "Reports Generated", value: det.reportsGenerated },
-                                            { label: "Smart Alerts", value: det.smartAlerts },
-                                            { label: "Deal Analyses", value: det.dealAnalyses },
+                                            { label: "AI Queries", value: String(user.activity?.aiQueries ?? det.aiQueries ?? 0) },
+                                            { label: "Reports Generated", value: String(user.activity?.reportsGenerated ?? det.reportsGenerated ?? 0) },
+                                            { label: "Smart Alerts", value: String(user.activity?.smartAlerts ?? det.smartAlerts ?? 0) },
+                                            { label: "Deal Analyses", value: String(user.activity?.dealAnalyses ?? det.dealAnalyses ?? 0) },
                                         ].map((m) => (
                                             <div key={m.label} className="bg-(--db-main-bg) rounded-md p-5">
                                                 <p className="text-sm text-(--db-text-primary) font-medium mb-1">{m.label}</p>
@@ -377,11 +415,21 @@ export default function UsersManagementPage() {
             <SuspendUserModal
                 isOpen={suspendIdx !== null}
                 onClose={closeSuspend}
-                userName={suspendIdx !== null ? UM_DIRECTORY[suspendIdx].user : ""}
-                userEmail={suspendIdx !== null ? (USER_DETAILS[suspendIdx]?.email ?? "") : ""}
-                userStatus={suspendIdx !== null ? UM_DIRECTORY[suspendIdx].status : "active"}
+                onConfirm={() => {
+                    const id = suspendIdx !== null ? adminUsers[suspendIdx]?.id : null;
+                    if (id) appService.suspendAdminUser(id).then(() => { refresh(); closeSuspend(); });
+                }}
+                userName={suspendIdx !== null ? (adminUsers[suspendIdx]?.fullName ?? "") : ""}
+                userEmail={suspendIdx !== null ? (adminUsers[suspendIdx]?.email ?? "") : ""}
+                userStatus={suspendIdx !== null ? (adminUsers[suspendIdx]?.isActive ? "active" : "suspended") : "active"}
             />
-            <DeleteUserModal isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+            <DeleteUserModal
+                isOpen={deleteUserId !== null}
+                onClose={() => setDeleteUserId(null)}
+                onConfirm={() => {
+                    if (deleteUserId) appService.deleteAdminUser(deleteUserId).then(() => { refresh(); setDeleteUserId(null); });
+                }}
+            />
         </>
     );
 }
