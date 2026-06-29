@@ -626,8 +626,8 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
 export type DashboardStat = {
   label: string;
   value: string;
-  sub: string;
-  icon: React.ReactNode;
+  sub?: string;
+  icon?: React.ReactNode;
   up?: boolean;
 };
 export type MarketLocation = { name: string; price: string; up: boolean };
