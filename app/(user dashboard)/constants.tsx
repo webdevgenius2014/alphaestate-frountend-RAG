@@ -588,6 +588,7 @@ export type NavItem = {
 export type SettingsItem = {
     label: string;
     href: string | null;
+    adminHref?: string;
     icon: React.FC<IconProps>;
     isToggle?: boolean;
     roles?: string[];
@@ -617,7 +618,7 @@ export const ADMIN_MENU_ITEMS: NavItem[] = [
 export const SETTINGS_ITEMS: SettingsItem[] = [
     { label: "Dark Mode", href: null, icon: DarkModeIcon, isToggle: true },
     { label: "Subscription Plan", href: "/subscription", icon: SubscriptionIcon, roles: ["user"] },
-    { label: "Profile Settings", href: "/profile-settings", icon: ProfileSettingsIcon },
+    { label: "Profile Settings", href: "/profile-settings", adminHref: "/admin-profile", icon: ProfileSettingsIcon },
     { label: "Logout", href: "/logout", icon: LogoutIcon },
 ];
 
