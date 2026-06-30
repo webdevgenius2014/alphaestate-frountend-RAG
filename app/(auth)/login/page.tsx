@@ -7,6 +7,7 @@ import Button from "@/app/components/ui/button";
 import Input from "@/app/components/ui/input";
 import { GoogleIcon, FacebookIcon } from "../constants";
 import appService from "@/app/services/appService";
+import { toast } from "react-hot-toast";
 
 export default function LoginPage() {
 
@@ -14,14 +15,12 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [keepLoggedIn, setKeepLoggedIn] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
 
         if (!email.trim() || !password.trim()) {
-            setError("Email and password are required.");
+            toast.error("Email and password are required.");
             return;
         }
 
@@ -37,7 +36,7 @@ export default function LoginPage() {
                 document.cookie = `user_role=${user.role}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
                 window.location.href = user.role === "admin" ? "/admin-dashboard" : "/dashboard";
             } else {
-                setError(res?.data?.message || "Invalid email or password.");
+                toast.error(res?.data?.message || "Invalid email or password.");
             }
         } finally {
             setLoading(false);
@@ -113,10 +112,6 @@ export default function LoginPage() {
                             <span className="text-white text-xs leading-6.5">Instant login</span>
                             <div className="flex-1 h-px bg-white/10" />
                         </div>
-
-                        {error && (
-                            <p className="text-red-400 text-sm text-center -mb-1">{error}</p>
-                        )}
 
                         <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Signing in..." : "Login"}

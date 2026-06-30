@@ -36,8 +36,27 @@ export default function UsersManagementPage() {
     const [refreshKey, setRefreshKey] = useState(0);
     const refresh = () => setRefreshKey((k) => k + 1);
 
+    const [searchInput, setSearchInput] = useState("");
+    const [activeSearch, setActiveSearch] = useState("");
+    const [planFilter, setPlanFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+    const [periodFilter, setPeriodFilter] = useState("");
+
     useEffect(() => {
-        appService.getAdminUsers(activePage).then((res) => {
+        const t = setTimeout(() => {
+            setActivePage(1);
+            setActiveSearch(searchInput);
+        }, 500);
+        return () => clearTimeout(t);
+    }, [searchInput]);
+
+    const triggerSearch = () => {
+        setActivePage(1);
+        setActiveSearch(searchInput);
+    };
+
+    useEffect(() => {
+        appService.getAdminUsers(activePage, 10, activeSearch || undefined, planFilter || undefined, statusFilter || undefined, periodFilter || undefined).then((res) => {
             if (res?.data?.data) {
                 const d = res.data.data;
                 setAdminUsers(Array.isArray(d.items) ? d.items : []);
@@ -47,7 +66,7 @@ export default function UsersManagementPage() {
                 setActivitySnapshot(d.activitySnapshot ?? null);
             }
         });
-    }, [activePage, refreshKey]);
+    }, [activePage, refreshKey, activeSearch, planFilter, statusFilter, periodFilter]);
 
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
     const [selectedUserDetail, setSelectedUserDetail] = useState<any>(null);
@@ -83,26 +102,37 @@ export default function UsersManagementPage() {
                             <input
                                 type="text"
                                 placeholder="Search by name, email"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && triggerSearch()}
                                 className="flex-1 text-[11px] text-(--db-text-primary) placeholder-(--db-text-muted) bg-transparent outline-none px-3 py-2.5"
                             />
-                            <button className="flex items-center justify-center w-6.75 h-6.75 bg-[#D28A44] hover:bg-[#0B1F3A] rounded-[3px] text-white shrink-0">
+                            <button onClick={triggerSearch} className="flex items-center justify-center w-6.75 h-6.75 bg-[#D28A44] hover:bg-[#0B1F3A] rounded-[3px] text-white shrink-0">
                                 <SearchIcon />
                             </button>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             <div className="relative">
-                                <select className="text-xs border border-(--db-border) rounded-sm px-1.5 py-2 font-medium bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                                    <option>Subscription Plan</option>
-                                    <option>Professional</option>
-                                    <option>Essential</option>
-                                    <option>Enterprise</option>
+                                <select
+                                    value={planFilter}
+                                    onChange={(e) => { setPlanFilter(e.target.value); setActivePage(1); }}
+                                    className="text-xs border border-(--db-border) rounded-sm px-1.5 py-2 font-medium bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                                >
+                                    <option value="">Subscription Plan</option>
+                                    <option value="Professional">Professional</option>
+                                    <option value="Essential">Essential</option>
+                                    <option value="Enterprise">Enterprise</option>
                                 </select>
                             </div>
                             <div className="relative">
-                                <select className="text-xs border border-(--db-border) rounded-sm px-1.5 py-2 font-medium bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                                    <option>Account Status</option>
-                                    <option>Active</option>
-                                    <option>Suspended</option>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => { setStatusFilter(e.target.value); setActivePage(1); }}
+                                    className="text-xs border border-(--db-border) rounded-sm px-1.5 py-2 font-medium bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                                >
+                                    <option value="">Account Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="suspended">Suspended</option>
                                 </select>
                             </div>
                         </div>
@@ -143,10 +173,15 @@ export default function UsersManagementPage() {
                             </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                                <option>Last Year</option>
-                                <option>6 Months</option>
-                                <option>30 Days</option>
+                            <select
+                                value={periodFilter}
+                                onChange={(e) => { setPeriodFilter(e.target.value); setActivePage(1); }}
+                                className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                            >
+                                <option value="">All Time</option>
+                                <option value="last_year">Last Year</option>
+                                <option value="last_6months">6 Months</option>
+                                <option value="last_month">Last Month</option>
                             </select>
                             <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                                 <SortIcon />
