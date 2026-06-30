@@ -29,10 +29,21 @@ const ApiConfig = {
   savedPropertyById: `${apiURL}/properties/{id}/save`,
 
   // Admin
+  //user-managment
   adminUsers: `${apiURL}/admin/users`,
   adminUsersById: `${apiURL}/admin/users/{id}`, 
   suspendAdminUsers: `${apiURL}/admin/users/{id}/suspend`,  
   deleteAdminUsers: `${apiURL}/admin/users/{id}`, 
+
+  //admin-analytics
+  overview: `${apiURL}/admin/analytics/overview`,
+  platformGrowth: `${apiURL}/admin/analytics/platform-growth`,
+  districtPerformance: `${apiURL}/admin/analytics/district-performance`,  
+  subscriptionPerformance: `${apiURL}/admin/analytics/subscription-performance`,
+  investmentMovement: `${apiURL}/admin/analytics/investment-movement`,
+  appreciationPotential: `${apiURL}/admin/analytics/appreciation-potential`,
+  marketIntelligence: `${apiURL}/admin/analytics/market-intelligence`,  
+  usage: `${apiURL}/admin/analytics/usage`,
 
 
   

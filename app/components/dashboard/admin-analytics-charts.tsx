@@ -49,15 +49,16 @@ function GrowthTooltip({ active, payload, label }: { active?: boolean; payload?:
     );
 }
 
-export function AdminPlatformGrowthChart() {
+export function AdminPlatformGrowthChart({ data: apiData }: { data?: any[] }) {
     const animActive = useAnimSync();
     const [showTotalUsers, setShowTotalUsers] = useState(true);
     const [showSubscribers, setShowSubscribers] = useState(true);
+    const chartData = apiData ?? ADMIN_PLATFORM_GROWTH_DATA;
 
     return (
         <div className="bg-(--db-main-bg) p-[24px_21px]">
             <ResponsiveContainer width="100%" height={450}>
-                <AreaChart data={ADMIN_PLATFORM_GROWTH_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
                         <linearGradient id="adminTotalUsersGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%"  stopColor="#D28A44" stopOpacity={0.32} />
@@ -80,8 +81,7 @@ export function AdminPlatformGrowthChart() {
                         tickMargin={10}
                         tickFormatter={(v) => v.toLocaleString()}
                         width={60}
-                        domain={[1000, 4200]}
-                        ticks={[1000, 1400, 1800, 2200, 2600, 3000, 3400, 3800, 4200]}
+                        domain={[0, 'auto']}
                     />
                     <Tooltip content={<GrowthTooltip />} cursor={{ stroke: "var(--db-border)", strokeWidth: 1 }} />
                     <Area
@@ -131,7 +131,7 @@ export function AdminPlatformGrowthChart() {
 
 // ── District Performance Analytics (Horizontal Bar — mirrors DistrictROIChart) ──
 
-export function AdminPlanGrowthChart() {
+export function AdminPlanGrowthChart({ data: apiData }: { data?: Array<{ district: string; avgRoi: number }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<number>>(new Set());
     const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -143,7 +143,14 @@ export function AdminPlanGrowthChart() {
             return next;
         });
 
-    const chartData = ADMIN_DISTRICT_DATA.map((d, i) => ({
+    const baseRows = apiData
+        ? apiData.map((d, i) => {
+            const match = ADMIN_DISTRICT_DATA.find(r => r.district.toLowerCase() === d.district.toLowerCase());
+            return { district: d.district, roi: d.avgRoi, color: match?.color ?? ADMIN_DISTRICT_DATA[i]?.color ?? "#D28A44" };
+          })
+        : ADMIN_DISTRICT_DATA;
+
+    const chartData = baseRows.map((d, i) => ({
         district: d.district,
         roi: hidden.has(i) ? 0 : d.roi,
     }));
@@ -206,7 +213,7 @@ export function AdminPlanGrowthChart() {
                             {chartData.map((_, i) => (
                                 <Cell
                                     key={i}
-                                    fill={hoverIdx === i ? ADMIN_DISTRICT_DATA[i].color : "url(#adminPlanStripe)"}
+                                    fill={hoverIdx === i ? baseRows[i].color : "url(#adminPlanStripe)"}
                                 />
                             ))}
                         </Bar>
@@ -214,7 +221,7 @@ export function AdminPlanGrowthChart() {
                 </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 justify-center">
-                {ADMIN_DISTRICT_DATA.map((item, idx) => {
+                {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
                         <button
@@ -244,7 +251,7 @@ const INVESTMENT_SERIES = [
 
 const fmtAED = (v: number) => v >= 1000 ? `AED ${v / 1000}B` : `AED ${v}M`;
 
-export function AdminSubscriberGrowthChart() {
+export function AdminSubscriberGrowthChart({ data: apiData }: { data?: { months: string[]; series: { district: string; data: number[] }[] } }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -255,11 +262,40 @@ export function AdminSubscriberGrowthChart() {
             return next;
         });
 
-    const chartData = ADMIN_INVESTMENT_DATA.map((d) => ({
-        month: d.month,
-        yasIsland:    hidden.has("yasIsland")    ? 0 : d.yasIsland,
-        alReemIsland: hidden.has("alReemIsland") ? 0 : d.alReemIsland,
-    }));
+    const seriesDef = apiData
+        ? apiData.series.map((s, i) => ({
+            key: `s${i}`,
+            name: s.district,
+            color: INVESTMENT_SERIES[i]?.color ?? "#D28A44",
+          }))
+        : INVESTMENT_SERIES;
+
+    const chartData = apiData
+        ? apiData.months.map((month, mi) => {
+            const row: Record<string, string | number> = { month };
+            apiData.series.forEach((s, i) => {
+                const key = `s${i}`;
+                row[key] = hidden.has(key) ? 0 : Math.round((s.data[mi] ?? 0) / 1_000_000);
+            });
+            return row;
+          })
+        : ADMIN_INVESTMENT_DATA.map((d) => ({
+            month: d.month,
+            yasIsland:    hidden.has("yasIsland")    ? 0 : d.yasIsland,
+            alReemIsland: hidden.has("alReemIsland") ? 0 : d.alReemIsland,
+          }));
+
+    const yConfig = apiData
+        ? (() => {
+            const allVals = apiData.series.flatMap(s => s.data.map(v => Math.round(v / 1_000_000)));
+            const maxVal = Math.max(...allVals);
+            const step = maxVal <= 2000 ? 500 : 1000;
+            const top = Math.ceil(maxVal / step) * step;
+            const ticks: number[] = [];
+            for (let t = 0; t <= top; t += step) ticks.push(t);
+            return { domain: [0, top] as [number, number], ticks };
+          })()
+        : { domain: [200, 1200] as [number, number], ticks: [200, 400, 600, 800, 1000, 1200] };
 
     return (
         <div>
@@ -283,8 +319,8 @@ export function AdminSubscriberGrowthChart() {
                             tickLine={false}
                             tickFormatter={fmtAED}
                             width={76}
-                            domain={[200, 1200]}
-                            ticks={[200, 400, 600, 800, 1000, 1200]}
+                            domain={yConfig.domain}
+                            ticks={yConfig.ticks}
                         />
                         <Tooltip
                             formatter={(v, name) => [fmtAED(Number(v)), name]}
@@ -292,7 +328,7 @@ export function AdminSubscriberGrowthChart() {
                             labelStyle={tooltipStyle.labelStyle}
                             cursor={{ stroke: "var(--db-border)", strokeWidth: 1 }}
                         />
-                        {INVESTMENT_SERIES.map((s) => (
+                        {seriesDef.map((s) => (
                             <Line
                                 key={s.key}
                                 type="monotone"
@@ -311,7 +347,7 @@ export function AdminSubscriberGrowthChart() {
                 </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 justify-center">
-                {INVESTMENT_SERIES.map((s) => {
+                {seriesDef.map((s) => {
                     const isHidden = hidden.has(s.key);
                     return (
                         <button
@@ -334,7 +370,7 @@ export function AdminSubscriberGrowthChart() {
 
 // ── Appreciation Potential Donut ──────────────────────────────────────────────
 
-export function AdminRevenueBreakdownChart() {
+export function AdminRevenueBreakdownChart({ data: apiData }: { data?: { avgSqft: number; districts: { district: string; yoyGrowth: number; percentage: number }[] } }) {
     const [hidden, setHidden] = useState<Set<number>>(new Set());
 
     const toggle = (idx: number) =>
@@ -344,7 +380,26 @@ export function AdminRevenueBreakdownChart() {
             return next;
         });
 
-    const chartData = ADMIN_REVENUE_BREAKDOWN.map((d, i) => ({
+    const baseRows = apiData
+        ? apiData.districts.map((d, i) => {
+            const match = ADMIN_REVENUE_BREAKDOWN.find(r => r.name.toLowerCase() === d.district.toLowerCase());
+            return {
+                name: d.district,
+                value: d.percentage,
+                displayValue: d.yoyGrowth,
+                color: match?.color ?? ADMIN_REVENUE_BREAKDOWN[i]?.color ?? "#D28A44",
+            };
+          })
+        : ADMIN_REVENUE_BREAKDOWN.map(r => ({ ...r, displayValue: r.value }));
+
+    const centerPct = apiData
+        ? (apiData.districts.reduce((sum, d) => sum + d.yoyGrowth, 0) / apiData.districts.length).toFixed(1)
+        : "8.1";
+    const centerSqft = apiData
+        ? `${apiData.avgSqft.toLocaleString()} sqft avg`
+        : "1,342 sqft avg";
+
+    const chartData = baseRows.map((d, i) => ({
         ...d,
         value: hidden.has(i) ? 0.0001 : d.value,
     }));
@@ -366,19 +421,19 @@ export function AdminRevenueBreakdownChart() {
                             cornerRadius={8}
                             animationEasing="ease-in-out"
                         >
-                            {ADMIN_REVENUE_BREAKDOWN.map((entry, i) => (
+                            {baseRows.map((entry, i) => (
                                 <Cell key={i} fill={entry.color} />
                             ))}
                         </Pie>
                     </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-2xl font-bold text-(--db-text-primary) leading-none">8.1%</span>
-                    <span className="text-[10px] text-(--db-text-primary) mt-1.5 leading-tight text-center">1,342 sqft avg</span>
+                    <span className="text-2xl font-bold text-(--db-text-primary) leading-none">{centerPct}%</span>
+                    <span className="text-[10px] text-(--db-text-primary) mt-1.5 leading-tight text-center">{centerSqft}</span>
                 </div>
             </div>
             <div className="flex flex-col gap-2.5 w-full min-w-0">
-                {ADMIN_REVENUE_BREAKDOWN.map((item, idx) => {
+                {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
                         <button
@@ -399,7 +454,7 @@ export function AdminRevenueBreakdownChart() {
                                     {item.name}
                                 </span>
                             </div>
-                            <span className="text-[12px] font-semibold text-(--db-text-primary) shrink-0">{item.value}%</span>
+                            <span className="text-[12px] font-semibold text-(--db-text-primary) shrink-0">{item.displayValue}%</span>
                         </button>
                     );
                 })}
@@ -410,7 +465,7 @@ export function AdminRevenueBreakdownChart() {
 
 // ── Tool Usage (Vertical Bar — one bar per tool) ──────────────────────────────
 
-export function AdminToolUsageChart() {
+export function AdminToolUsageChart({ data: apiData }: { data?: { tool: string; count: number }[] }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<number>>(new Set());
     const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -422,10 +477,28 @@ export function AdminToolUsageChart() {
             return next;
         });
 
-    const chartData = ADMIN_TOOL_USAGE_DATA.map((d, i) => ({
+    const baseRows = apiData
+        ? apiData.map((d, i) => {
+            const match = ADMIN_TOOL_USAGE_DATA.find(r => r.tool.toLowerCase() === d.tool.toLowerCase());
+            return { tool: d.tool, usage: d.count, color: match?.color ?? ADMIN_TOOL_USAGE_DATA[i]?.color ?? "#D28A44" };
+          })
+        : ADMIN_TOOL_USAGE_DATA;
+
+    const chartData = baseRows.map((d, i) => ({
         tool: d.tool,
         usage: hidden.has(i) ? 0 : d.usage,
     }));
+
+    const yConfig = apiData
+        ? (() => {
+            const maxVal = Math.max(...apiData.map(d => d.count));
+            const step = maxVal <= 1000 ? 200 : 500;
+            const top = Math.ceil(maxVal / step) * step;
+            const ticks: number[] = [];
+            for (let t = 0; t <= top; t += step) ticks.push(t);
+            return { domain: [0, top] as [number, number], ticks, fmt: (v: number) => v.toLocaleString() };
+          })()
+        : { domain: [0, 8] as [number, number], ticks: [0, 1, 2, 3, 4, 5, 6, 7, 8], fmt: (v: number) => `${v}%` };
 
     return (
         <div>
@@ -456,13 +529,13 @@ export function AdminToolUsageChart() {
                             tick={{ fill: "var(--db-text-primary)", fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
-                            tickFormatter={(v) => `${v}%`}
-                            width={36}
-                            domain={[0, 8]}
-                            ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8]}
+                            tickFormatter={yConfig.fmt}
+                            width={apiData ? 48 : 36}
+                            domain={yConfig.domain}
+                            ticks={yConfig.ticks}
                         />
                         <Tooltip
-                            formatter={(v) => [`${v}%`, "Usage"]}
+                            formatter={(v) => [apiData ? Number(v).toLocaleString() : `${v}%`, "Usage"]}
                             contentStyle={tooltipStyle.contentStyle}
                             labelStyle={tooltipStyle.labelStyle}
                             cursor={false}
@@ -479,7 +552,7 @@ export function AdminToolUsageChart() {
                             {chartData.map((_, i) => (
                                 <Cell
                                     key={i}
-                                    fill={hoverIdx === i ? ADMIN_TOOL_USAGE_DATA[i].color : "url(#adminToolStripe)"}
+                                    fill={hoverIdx === i ? baseRows[i].color : "url(#adminToolStripe)"}
                                 />
                             ))}
                         </Bar>
@@ -487,7 +560,7 @@ export function AdminToolUsageChart() {
                 </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 justify-center">
-                {ADMIN_TOOL_USAGE_DATA.map((item, idx) => {
+                {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
                         <button
@@ -516,7 +589,7 @@ const RINGS = [
     [65, 55],
 ] as const;
 
-export function SubscriptionPieChart() {
+export function SubscriptionPieChart({ data: apiData }: { data?: { planName: string; count: number; percentage: number }[] }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -527,15 +600,22 @@ export function SubscriptionPieChart() {
             return next;
         });
 
-    const activeData = SUB_PLAN_DATA[activeIndex];
+    const planData = apiData
+        ? apiData.map((d, i) => {
+            const match = SUB_PLAN_DATA.find(r => r.name.toLowerCase() === d.planName.toLowerCase());
+            return { name: d.planName, value: d.percentage, color: match?.color ?? SUB_PLAN_DATA[i]?.color ?? "#D28A44" };
+          })
+        : SUB_PLAN_DATA;
+
+    const activeData = planData[activeIndex] ?? planData[0];
 
     return (
         <div className="flex flex-col">
             <div className="relative" style={{ height: 150 }}>
                 <ResponsiveContainer width="100%" height={150}>
                     <PieChart>
-                        {SUB_PLAN_DATA.map((d, i) => {
-                            const [outerR, innerR] = RINGS[i];
+                        {planData.map((d, i) => {
+                            const [outerR, innerR] = RINGS[i] ?? RINGS[RINGS.length - 1];
                             const isHidden = hidden.has(d.name);
                             const val = isHidden ? 0 : d.value;
                             return (
@@ -572,7 +652,7 @@ export function SubscriptionPieChart() {
             </div>
 
             <div className="flex flex-col gap-3 mt-2">
-                {SUB_PLAN_DATA.map((d, i) => (
+                {planData.map((d, i) => (
                     <button
                         key={d.name}
                         onClick={() => togglePlan(d.name)}

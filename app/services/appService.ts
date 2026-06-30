@@ -213,9 +213,14 @@ class AppService {
   }
 
   // Admin
-  async getAdminUsers(page: number = 1, limit: number = 10) {
+  async getAdminUsers(page: number = 1, limit: number = 10, search?: string, plan?: string, status?: string, period?: string) {
     try {
-      return await instance.get(ApiConfig.adminUsers, { params: { page, limit } });
+      const params: Record<string, any> = { page, limit };
+      if (search) params.search = search;
+      if (plan) params.plan = plan;
+      if (status) params.status = status;
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.adminUsers, { params });
     } catch (error: any) {
       return error.response;
     }
@@ -243,6 +248,78 @@ class AppService {
     try {
       const url = ApiConfig.deleteAdminUsers.replace("{id}", id);
       return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Admin Analytics
+  async getAnalyticsOverview(period?: string, district?: string, propertyType?: string) {
+    try {
+      const params: Record<string, any> = {};
+      if (period) params.period = period;
+      if (district) params.district = district;
+      if (propertyType) params.propertyType = propertyType;
+      return await instance.get(ApiConfig.overview, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsPlatformGrowth(period?: string) {
+    try {
+      return await instance.get(ApiConfig.platformGrowth, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsDistrictPerformance(period?: string, district?: string) {
+    try {
+      const params: Record<string, any> = {};
+      if (period) params.period = period;
+      if (district && district !== "all") params.district = district;
+      return await instance.get(ApiConfig.districtPerformance, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsSubscriptionPerformance() {
+    try {
+      return await instance.get(ApiConfig.subscriptionPerformance);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsInvestmentMovement() {
+    try {
+      return await instance.get(ApiConfig.investmentMovement);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsAppreciationPotential() {
+    try {
+      return await instance.get(ApiConfig.appreciationPotential);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsMarketIntelligence() {
+    try {
+      return await instance.get(ApiConfig.marketIntelligence);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAnalyticsUsage() {
+    try {
+      return await instance.get(ApiConfig.usage);
     } catch (error: any) {
       return error.response;
     }

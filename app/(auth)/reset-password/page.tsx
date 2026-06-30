@@ -17,24 +17,22 @@ function ResetPasswordForm() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [error, setError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
 
         if (!password.trim() || !confirmPassword.trim()) {
-            setError("Both fields are required.");
+            toast.error("Both fields are required.");
             return;
         }
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match.");
+            toast.error("Passwords do not match.");
             return;
         }
 
         if (!token) {
-            setError("Invalid or expired reset link.");
+            toast.error("Invalid or expired reset link.");
             return;
         }
 
@@ -95,10 +93,6 @@ function ResetPasswordForm() {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                         />
-
-                        {error && (
-                            <p className="text-red-400 text-sm text-center">{error}</p>
-                        )}
 
                         <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                             {loading ? "Resetting..." : "Reset Password"}

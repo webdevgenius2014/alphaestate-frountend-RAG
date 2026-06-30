@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import appService from "@/app/services/appService";
+import { toast } from "react-hot-toast";
 
 function clearAuthCookies() {
   document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
@@ -32,23 +33,21 @@ export function useLogoutAction() {
 
 export function useDeleteAccountAction() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleDeleteAccount = async () => {
     setLoading(true);
-    setError("");
     try {
       const res = await appService.deleteAccount();
       if (res?.status === 200 || res?.status === 204) {
         clearAuthCookies();
         window.location.href = "/login";
       } else {
-        setError(res?.data?.message || "Failed to delete account.");
+        toast.error(res?.data?.message || "Failed to delete account.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  return { handleDeleteAccount, loading, error };
+  return { handleDeleteAccount, loading };
 }

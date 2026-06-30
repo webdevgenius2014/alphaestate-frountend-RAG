@@ -12,14 +12,12 @@ export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
-    const [error, setError] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
 
         if (!email.trim()) {
-            setError("Please enter your email address.");
+            toast.error("Please enter your email address.");
             return;
         }
 
@@ -90,10 +88,6 @@ export default function ForgotPasswordPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
-
-                                {error && (
-                                    <p className="text-red-400 text-sm text-center">{error}</p>
-                                )}
 
                                 <Button type="submit" disabled={loading} className="text-base! max-w-full! font-bold! py-3.75!">
                                     {loading ? "Sending..." : "Send Reset Link"}
