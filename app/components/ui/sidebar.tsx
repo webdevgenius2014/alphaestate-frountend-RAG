@@ -160,11 +160,12 @@ export default function Sidebar() {
                             );
                         }
 
-                        const active = item.href ? isActive(item.href) : false;
+                        const resolvedHref = (admin && item.adminHref) ? item.adminHref : (item.href ?? "#");
+                        const active = resolvedHref !== "#" ? isActive(resolvedHref) : false;
                         return (
                             <Link
                                 key={item.label}
-                                href={item.href ?? "#"}
+                                href={resolvedHref}
                                 onClick={handleNavClick}
                                 title={collapsed ? item.label : undefined}
                                 className={`group flex items-center gap-3 px-4.25 text-[15px] rounded-sm transition-all duration-200 ease-linear ${active

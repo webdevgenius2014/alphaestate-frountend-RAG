@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { AIChatMonitoring } from "@/app/components/dashboard/ai-chat-monitoring";
 import { AIIntelligenceEngine } from "@/app/components/dashboard/ai-intelligence-engine";
-import { TABS } from "../constants";
-
-
+import { DistrictDataManagement } from "@/app/components/dashboard/district-data-management";
+import { MarketAnalyticsData } from "@/app/components/dashboard/market-analytics-data";
+import { DealAnalyzerRecords } from "@/app/components/dashboard/deal-analyzer-records";
+import { PropertyDetailDrawer } from "@/app/components/dashboard/property-detail-drawer";
+import { TABS, type DrawerRecord } from "../constants";
 
 type TabId = typeof TABS[number]["id"];
 
 export default function AIDataPage() {
     const [activeTab, setActiveTab] = useState<TabId>("chat-monitoring");
+    const [drawerRecord, setDrawerRecord] = useState<DrawerRecord | null>(null);
 
     return (
         <div className="flex flex-col gap-6">
@@ -46,21 +49,11 @@ export default function AIDataPage() {
 
             {activeTab === "chat-monitoring" && <AIChatMonitoring />}
             {activeTab === "intelligence-engine" && <AIIntelligenceEngine />}
-            {activeTab === "data-management" && (
-                <div className="flex items-center justify-center min-h-64 bg-(--db-sidebar-bg) rounded-md">
-                    <p className="text-(--db-text-muted) text-sm">Model Performance — coming soon</p>
-                </div>
-            )}
-            {activeTab === "market-analytics" && (
-                <div className="flex items-center justify-center min-h-64 bg-(--db-sidebar-bg) rounded-md">
-                    <p className="text-(--db-text-muted) text-sm">Data Management — coming soon</p>
-                </div>
-            )}
-            {activeTab === "deal-analyzer" && (
-                <div className="flex items-center justify-center min-h-64 bg-(--db-sidebar-bg) rounded-md">
-                    <p className="text-(--db-text-muted) text-sm">Data Management — coming soon</p>
-                </div>
-            )}
+            {activeTab === "data-management" && <DistrictDataManagement onEye={(d) => setDrawerRecord(d)} />}
+            {activeTab === "market-analytics" && <MarketAnalyticsData />}
+            {activeTab === "deal-analyzer" && <DealAnalyzerRecords />}
+
+            {drawerRecord && <PropertyDetailDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
         </div>
     );
 }
