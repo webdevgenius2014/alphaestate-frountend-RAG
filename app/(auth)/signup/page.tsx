@@ -32,7 +32,8 @@ export default function SignUpPage() {
             if (res?.status === 200 || res?.status === 201) {
                 router.push("/dashboard");
             } else {
-                toast.error(res?.data?.message || "Signup failed. Please try again.");
+                const data = res?.data;
+                toast.error(data?.error || data?.message || "Signup failed. Please try again.");
             }
         } finally {
             setLoading(false);

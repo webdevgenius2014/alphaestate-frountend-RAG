@@ -325,6 +325,84 @@ class AppService {
     }
   }
 
+  // Admin Subscriptions & Billing
+  async getSubscriptionDashboard() {
+    try {
+      return await instance.get(ApiConfig.dashboardSubscription);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getActiveSubscriptions(page: number = 1, limit: number = 10) {
+    try {
+      return await instance.get(ApiConfig.activeSubscription, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getBillingHistory(period?: string, page: number = 1, limit: number = 10) {
+    try {
+      const params: Record<string, any> = { page, limit };
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.billingHistory, { params });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getUpcomingRenewals(limit: number = 100) {
+    try {
+      return await instance.get(ApiConfig.upcoming, { params: { limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminSubscriptionPlans() {
+    try {
+      return await instance.get(ApiConfig.plans);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getSubscriptionPlanById(id: string) {
+    try {
+      const url = ApiConfig.plansById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateSubscriptionPlanById(id: string, payload: any) {
+    try {
+      const url = ApiConfig.plansById.replace("{id}", id);
+      return await instance.patch(url, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getRevenueInsights() {
+    try {
+      return await instance.get(ApiConfig.revenueInsights);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getBillingHistoryById(id: string) {
+    try {
+      const url = ApiConfig.billingHistoryById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
 }
 
 const appService = new AppService();
