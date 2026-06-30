@@ -85,8 +85,8 @@ export default function Sidebar() {
                                 onClick={handleNavClick}
                                 title={collapsed ? item.label : undefined}
                                 className={`group flex items-center gap-3 px-4.25 text-[15px] rounded-sm transition-all duration-200 ease-linear ${active
-                                        ? "bg-[#D28A44] text-white font-semibold"
-                                        : "bg-(--db-item-bg) text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium hover:font-semibold"
+                                    ? "bg-[#D28A44] text-white font-semibold"
+                                    : "bg-(--db-item-bg) text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium hover:font-semibold"
                                     } ${collapsed ? "justify-center py-2" : "py-4"}`}
                             >
                                 <item.icon
@@ -118,8 +118,8 @@ export default function Sidebar() {
                                     onClick={toggleTheme}
                                     title={collapsed ? item.label : undefined}
                                     className={`group flex w-full items-center gap-3 px-4.25 text-[15px] rounded-sm transition-all duration-200 ease-linear ${isDark
-                                            ? "bg-[#D28A44] text-white font-semibold"
-                                            : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium hover:font-semibold"
+                                        ? "bg-[#D28A44] text-white font-semibold"
+                                        : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium hover:font-semibold"
                                         } ${collapsed ? "justify-center py-2" : "py-4"}`}
                                 >
                                     <item.icon
@@ -131,11 +131,13 @@ export default function Sidebar() {
                                                 {item.label}
                                             </span>
                                             <div
-                                                className={`relative w-13.75 h-6 rounded-full border transition-colors duration-200 shrink-0 ${isDark ? "bg-white border-[#D28A44]" : "bg-white border-[#E4E4E4]"
+                                                className={`relative w-13.75 h-6.5 rounded-full border transition-colors duration-200 shrink-0 ${isDark ? "bg-white border-[#D28A44]" : "bg-white border-[#E4E4E4]"
                                                     }`}
                                             >
                                                 <div
-                                                    className={`absolute top-0.5 w-5 h-5 bg-[#D28A44] rounded-full shadow transition-all duration-200 ${isDark ? "left-0.5" : "left-0.5"
+                                                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform duration-200 ${isDark
+                                                            ? "translate-x-7.5 bg-[#D28A44]"
+                                                            : "translate-x-0 bg-[#D28A44]"
                                                         }`}
                                                 />
                                             </div>
@@ -169,8 +171,8 @@ export default function Sidebar() {
                                 onClick={handleNavClick}
                                 title={collapsed ? item.label : undefined}
                                 className={`group flex items-center gap-3 px-4.25 text-[15px] rounded-sm transition-all duration-200 ease-linear ${active
-                                        ? "bg-[#D28A44] text-white font-semibold"
-                                        : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium  hover:font-semibold"
+                                    ? "bg-[#D28A44] text-white font-semibold"
+                                    : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white font-medium  hover:font-semibold"
                                     } ${collapsed ? "justify-center py-2" : "py-4"}`}
                             >
                                 <item.icon
