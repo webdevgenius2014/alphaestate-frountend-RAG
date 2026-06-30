@@ -23,11 +23,11 @@ export const Footer = () => {
         const tick = (ts: number) => {
             if (prev !== null && !isPausedRef.current) {
                 const s = swiperRef.current;
-                if (s) {
+                if (s && s.snapGrid && s.snapGrid.length > 0) {
                     const delta    = ts - prev;
                     const current  = s.getTranslate();
-                    const endPos   = s.maxTranslate();
-                    const startPos = s.minTranslate();
+                    const endPos   = -s.snapGrid[s.snapGrid.length - 1];
+                    const startPos = -s.snapGrid[0];
 
                     let next = current - delta * SPEED * dirRef.current;
 

@@ -45,6 +45,19 @@ const ApiConfig = {
   marketIntelligence: `${apiURL}/admin/analytics/market-intelligence`,  
   usage: `${apiURL}/admin/analytics/usage`,
 
+  // admin subscriptions-billing
+  dashboardSubscription: `${apiURL}/admin/subscriptions/dashboard`,
+  activeSubscription: `${apiURL}/admin/subscriptions/active`,
+  billingHistory: `${apiURL}/admin/subscriptions/billing-history`,
+  billingHistoryById: `${apiURL}/admin/subscriptions/billing-history/{id}`,
+  upcoming: `${apiURL}/admin/subscriptions/upcoming`,
+  plans: `${apiURL}/admin/subscriptions/plans`,
+  revenueInsights: `${apiURL}/admin/subscriptions/revenue-insights`,
+  plansById: `${apiURL}/admin/subscriptions/plans/{id}`,
+
+
+
+
 
   
 
