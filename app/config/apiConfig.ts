@@ -30,6 +30,9 @@ const ApiConfig = {
   savedPropertyById: `${apiURL}/properties/{id}/save`,
 
   // Admin
+  // Dashbord 
+  admindashboard: `${apiURL}/admin/dashboard`,
+
   //user-managment
   adminUsers: `${apiURL}/admin/users`,
   adminUsersById: `${apiURL}/admin/users/{id}`, 

@@ -26,7 +26,7 @@ const UA_SERIES = [
     { key: "reports",     label: "Reports Generated", color: "#5E9F62", grad: "uaReportsGrad" },
 ] as const;
 
-export function UserActivityChart() {
+export function UserActivityChart({ data: apiData }: { data?: { month: string; activeUsers?: number; queries?: number; reports?: number }[] }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -37,12 +37,15 @@ export function UserActivityChart() {
             return next;
         });
 
+    const chartData = apiData?.length ? apiData : USER_ACTIVITY_DATA;
+    const series = apiData?.length ? UA_SERIES.filter(s => s.key in chartData[0]) : UA_SERIES;
+
     return (
         <div className="bg-(--db-main-bg) p-[8px_4px_4px]">
             <ResponsiveContainer width="100%" height={380}>
-                <AreaChart data={USER_ACTIVITY_DATA} margin={{ top: 10, right: 16, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 16, left: -20, bottom: 0 }}>
                     <defs>
-                        {UA_SERIES.map(s => (
+                        {series.map(s => (
                             <linearGradient key={s.grad} id={s.grad} x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%"   stopColor={s.color} stopOpacity={0.16} />
                                 <stop offset="100%" stopColor={s.color} stopOpacity={0.01} />
@@ -65,7 +68,7 @@ export function UserActivityChart() {
                         {...tooltipStyle}
                         formatter={(v) => [Number(v).toLocaleString(), undefined]}
                     />
-                    {UA_SERIES.map(s => (
+                    {series.map(s => (
                         <Area
                             key={s.key}
                             type="monotone"
@@ -83,7 +86,7 @@ export function UserActivityChart() {
             </ResponsiveContainer>
 
             <div className="flex items-center gap-5 mt-3 justify-center">
-                {UA_SERIES.map(s => (
+                {series.map(s => (
                     <button
                         key={s.key}
                         onClick={() => toggle(s.key)}
@@ -106,7 +109,7 @@ const RINGS = [
     [65, 55],
 ] as const;
 
-export function SubscriptionPieChart() {
+export function SubscriptionPieChart({ data: apiData }: { data?: { planName: string; count: number; percentage: number }[] }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -117,15 +120,22 @@ export function SubscriptionPieChart() {
             return next;
         });
 
-    const activeData = SUB_PLAN_DATA[activeIndex];
+    const planData = apiData?.length
+        ? apiData.map((d, i) => {
+            const match = SUB_PLAN_DATA.find(r => r.name.toLowerCase() === d.planName.toLowerCase());
+            return { name: d.planName, value: d.percentage, color: match?.color ?? SUB_PLAN_DATA[i]?.color ?? "#D28A44" };
+          })
+        : SUB_PLAN_DATA;
+
+    const activeData = planData[activeIndex] ?? planData[0];
 
     return (
         <div className="flex flex-col">
             <div className="relative" style={{ height: 150 }}>
                 <ResponsiveContainer width="100%" height={150}>
                     <PieChart>
-                        {SUB_PLAN_DATA.map((d, i) => {
-                            const [outerR, innerR] = RINGS[i];
+                        {planData.map((d, i) => {
+                            const [outerR, innerR] = RINGS[i] ?? RINGS[RINGS.length - 1];
                             const isHidden = hidden.has(d.name);
                             // animating to 0 lets recharts smoothly retract the arc
                             const val = isHidden ? 0 : d.value;
@@ -163,7 +173,7 @@ export function SubscriptionPieChart() {
             </div>
 
             <div className="flex flex-col gap-3 mt-2">
-                {SUB_PLAN_DATA.map((d, i) => (
+                {planData.map((d, i) => (
                     <button
                         key={d.name}
                         onClick={() => togglePlan(d.name)}
