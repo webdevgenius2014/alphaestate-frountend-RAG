@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
+import { ChangePasswordModal } from "@/app/components/dashboard/admin-modals";
 import {
     PROFILE_COUNTRIES,
     PROFILE_CITIES,
@@ -27,6 +28,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 
 export default function AdminProfilePage() {
     const [formOpen, setFormOpen] = useState(true);
+    const [pwModalOpen, setPwModalOpen] = useState(false);
 
     const [form, setForm] = useState({
         firstName: "",
@@ -180,7 +182,7 @@ export default function AdminProfilePage() {
                         <div className="bg-(--db-main-bg) rounded-md p-5">
                             <h3 className="text-[18px] font-medium text-(--db-text-primary) mb-4">Account Security</h3>
 
-                            <div className="bg-[#F9F6EF] rounded-md p-5 mb-3">
+                            <div className="bg-(--db-section-bg) rounded-md p-5 mb-3">
                                 <div className="flex items-center gap-2 mb-1.75">
                                     <span className="w-2 h-2 rounded-full bg-[#5E9F62] shrink-0" />
                                     <p className="text-sm font-semibold text-(--db-text-primary)">Two-Factor Authentication</p>
@@ -191,7 +193,7 @@ export default function AdminProfilePage() {
                                 <ModalButton className="max-w-fit px-7 py-2! rounded-md!">ENABLE 2FA</ModalButton>
                             </div>
 
-                            <div className="bg-[#F9F6EF] rounded-md p-5">
+                            <div className="bg-(--db-section-bg) rounded-md p-5">
                                 <div className="flex items-center gap-2 mb-1.75">
                                     <span className="w-2 h-2 rounded-full bg-[#5E9F62] shrink-0" />
                                     <p className="text-sm font-semibold text-(--db-text-primary)">Password Management</p>
@@ -199,7 +201,7 @@ export default function AdminProfilePage() {
                                 <p className="text-[13px] text-(--db-text-primary) mb-3.5">
                                     Update your password and review recent security activity.
                                 </p>
-                                <ModalButton className="max-w-fit px-7 py-2! rounded-md!">CHANGE PASSWORD</ModalButton>
+                                <ModalButton className="max-w-fit px-7 py-2! rounded-md!" onClick={() => setPwModalOpen(true)}>CHANGE PASSWORD</ModalButton>
                             </div>
                         </div>
 
@@ -212,7 +214,7 @@ export default function AdminProfilePage() {
                                     { key: "systemHealthAlerts", label: "System Health Alerts" },
                                     { key: "activitySummary", label: "Activity Summary" },
                                 ] as { key: keyof typeof prefs; label: string }[]).map(({ key, label }) => (
-                                    <div key={key} className="flex items-center justify-between gap-4 border border-[#D28A441F] bg-[#F9F6EF] rounded-md p-4">
+                                    <div key={key} className="flex items-center justify-between gap-4 border border-[#D28A441F] bg-(--db-section-bg) rounded-md p-4">
                                         <span className="text-sm text-(--db-text-primary) font-normal">{label}</span>
                                         <Toggle checked={prefs[key]} onChange={() => togglePref(key)} />
                                     </div>
@@ -225,7 +227,7 @@ export default function AdminProfilePage() {
                 {/* Account Information — full width */}
                 <div className="mt-5 bg-(--db-main-bg) rounded-md p-5">
                     <h3 className="text-[18px] font-medium text-(--db-text-primary) mb-4">Account Information</h3>
-                    <div className="flex flex-wrap border border-[#D28A441F] bg-[#F9F6EF] rounded-md p-4 gap-x-20 gap-y-4">
+                    <div className="flex flex-wrap border border-[#D28A441F] bg-(--db-section-bg) rounded-md p-4 gap-x-20 gap-y-4">
                         {[
                             { label: "Member Since", value: "January 2025" },
                             { label: "Last Login", value: "January 2025" },
@@ -240,6 +242,8 @@ export default function AdminProfilePage() {
                 </div>
 
             </div>
+
+            <ChangePasswordModal isOpen={pwModalOpen} onClose={() => setPwModalOpen(false)} />
         </div>
     );
 }

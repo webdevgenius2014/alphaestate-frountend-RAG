@@ -43,6 +43,7 @@
   --db-sub-popular-bg: #FFE9D4;
   --db-drawer-header-bg: #FFE6CE;
   --db-drawer-section-bg: #FFF0E2;
+  --db-section-bg: #F9F6EF;
 }
 
 .dark {
@@ -73,6 +74,7 @@
   --db-sub-popular-bg: rgba(210, 138, 68, 0.12);
   --db-drawer-header-bg: rgba(210, 138, 68, 0.15);
   --db-drawer-section-bg: rgba(210, 138, 68, 0.08);
+  --db-section-bg: #0b1f3a;
 }
 /* ────────────────────────────────────────────────────── */
 
