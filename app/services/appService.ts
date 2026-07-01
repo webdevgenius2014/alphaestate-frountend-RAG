@@ -111,6 +111,14 @@ class AppService {
     }
   }
 
+  async toggleUserProfile2Fa(payload: any) {
+    try {
+      return await instance.post(ApiConfig.userProfile2Fa, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Subscriptions
   async getSubscriptionPlans() {
     try {
@@ -224,6 +232,50 @@ class AppService {
   async getAdminDashboard(period?: string) {
     try {
       return await instance.get(ApiConfig.admindashboard, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Admin Profile
+  
+  async getAdminProfile() {
+    try {
+      return await instance.get(ApiConfig.adminProfile);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAdminProfile(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.adminProfile, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadAdminProfileAvatar(payload: FormData) {
+    try {
+      return await instance.post(ApiConfig.adminProfileAvtar, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async toggleAdminProfile2Fa(payload: any) {
+    try {
+      return await instance.post(ApiConfig.adminProfile2Fa, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async changeAdminPassword(payload: any) {
+    try {
+      return await instance.post(ApiConfig.adminChangePassword, payload);
     } catch (error: any) {
       return error.response;
     }

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "react-hot-toast";
 import ModalButton from "@/app/components/ui/modal-button";
+import appService from "@/app/services/appService";
 import { SelectChevron, SecurityEyeIcon, SecurityEyeOffIcon } from "@/app/(user dashboard)/constants";
 import { DELETE_USER_LOSE_ITEMS } from "@/app/(admin dashboard)/constants";
 
@@ -87,6 +89,7 @@ export function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onCl
     useModalEsc(onClose);
     const [show, setShow] = useState({ current: false, next: false, confirm: false });
     const [vals, setVals] = useState({ current: "", next: "", confirm: "" });
+    const [loading, setLoading] = useState(false);
 
     const toggle = (k: keyof typeof show) => setShow((p) => ({ ...p, [k]: !p[k] }));
     const set = (k: keyof typeof vals) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -94,13 +97,38 @@ export function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onCl
 
     const fieldCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-field-border) text-(--db-text-primary) rounded-md px-4 py-3 text-sm outline-none focus:border-[#D28A44]/60 transition placeholder-(--db-text-muted)";
 
+    const handleUpdatePassword = async () => {
+        if (!vals.current || !vals.next || !vals.confirm) {
+            toast.error("All fields are required.");
+            return;
+        }
+        if (vals.next !== vals.confirm) {
+            toast.error("New passwords do not match.");
+            return;
+        }
+
+        setLoading(true);
+        const res = await appService.changeAdminPassword({
+            currentPassword: vals.current,
+            newPassword: vals.next,
+        });
+        setLoading(false);
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 201) {
+            toast.success("Password updated successfully.");
+            setVals({ current: "", next: "", confirm: "" });
+            onClose();
+        } else {
+            toast.error(res?.data?.message || "Failed to update password.");
+        }
+    };
+
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4">
             <div
                 className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-100.75 shadow-2xl relative px-7 pt-8 pb-7"
-                onClick={(e) => e.stopPropagation()}
             >
                 <button onClick={onClose} className="absolute top-4 right-4 z-20">
                     <img src="/close.svg" alt="" />
@@ -137,7 +165,9 @@ export function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onCl
                 </div>
 
                 <div className="flex justify-center">
-                    <ModalButton className="max-w-fit px-4 py-3!">UPDATE PASSWORD</ModalButton>
+                    <ModalButton className="max-w-fit px-4 py-3!" disabled={loading} onClick={handleUpdatePassword}>
+                        {loading ? "UPDATING..." : "UPDATE PASSWORD"}
+                    </ModalButton>
                 </div>
             </div>
         </div>,

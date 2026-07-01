@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import { ChangePasswordModal } from "@/app/components/dashboard/admin-modals";
+import appService from "@/app/services/appService";
+import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import {
     PROFILE_COUNTRIES,
     PROFILE_CITIES,
@@ -27,8 +30,15 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
 }
 
 export default function AdminProfilePage() {
+    const { updateUser } = useTheme();
     const [formOpen, setFormOpen] = useState(true);
     const [pwModalOpen, setPwModalOpen] = useState(false);
+    const [profile, setProfile] = useState<any>(null);
+    const [saving, setSaving] = useState(false);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+    const [twoFaLoading, setTwoFaLoading] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement>(null);
 
     const [form, setForm] = useState({
         firstName: "",
@@ -46,10 +56,94 @@ export default function AdminProfilePage() {
         activitySummary: false,
     });
 
+    const loadProfile = () => {
+        appService.getAdminProfile().then((res) => {
+            if (res?.data?.success && res.data.data) {
+                const data = res.data.data;
+                setProfile(data);
+                const nameParts = (data.fullName ?? "").trim().split(/\s+/);
+                setForm({
+                    firstName: data.firstName ?? nameParts[0] ?? "",
+                    lastName: data.lastName ?? nameParts.slice(1).join(" "),
+                    email: data.email ?? "",
+                    phone: data.phoneNumber ?? data.phone ?? "",
+                    country: data.countryRegion ?? data.country ?? "",
+                    city: data.cityState ?? data.city ?? "",
+                    bio: data.bio ?? "",
+                });
+                setTwoFaEnabled(!!(data.isTwoFactorEnabled ?? data.twoFactorEnabled ?? data.is2FAEnabled));
+                if (data.avatarUrl ?? data.avatar) {
+                    updateUser({ avatarUrl: data.avatarUrl ?? data.avatar });
+                }
+            }
+        });
+    };
+
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
     const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((p) => ({ ...p, [key]: e.target.value }));
 
     const togglePref = (key: keyof typeof prefs) => setPrefs((p) => ({ ...p, [key]: !p[key] }));
+
+    const handleSaveProfile = async () => {
+        setSaving(true);
+        const res = await appService.updateAdminProfile({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            fullName: [form.firstName, form.lastName].filter(Boolean).join(" "),
+            email: form.email,
+            phoneNumber: form.phone,
+            countryRegion: form.country,
+            cityState: form.city,
+            bio: form.bio,
+        });
+        setSaving(false);
+
+        if (res?.data?.success) {
+            toast.success("Profile updated successfully.");
+            setFormOpen(false);
+            loadProfile();
+        } else {
+            toast.error(res?.data?.message || "Failed to update profile.");
+        }
+    };
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+
+        setAvatarUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await appService.uploadAdminProfileAvatar(formData);
+        setAvatarUploading(false);
+
+        if (res?.data?.success) {
+            const newAvatarUrl = res.data.data?.avatarUrl ?? res.data.data?.avatar;
+            if (newAvatarUrl) updateUser({ avatarUrl: newAvatarUrl });
+            toast.success("Profile photo updated successfully.");
+            loadProfile();
+        } else {
+            toast.error(res?.data?.message || "Failed to upload photo.");
+        }
+    };
+
+    const handleToggle2Fa = async () => {
+        setTwoFaLoading(true);
+        const res = await appService.toggleAdminProfile2Fa({ enabled: !twoFaEnabled });
+        setTwoFaLoading(false);
+
+        if (res?.data?.success) {
+            setTwoFaEnabled((prev) => !prev);
+            toast.success(!twoFaEnabled ? "Two-factor authentication enabled." : "Two-factor authentication disabled.");
+        } else {
+            toast.error(res?.data?.message || "Failed to update two-factor authentication.");
+        }
+    };
 
     return (
         <div className="flex flex-col gap-6">
@@ -72,15 +166,21 @@ export default function AdminProfilePage() {
                             <div className="flex items-center gap-5">
                                 <div className="relative shrink-0">
                                     <div className="w-20 h-20 rounded-full overflow-hidden bg-(--db-sidebar-bg)">
-                                        <img src="/favicon.ico" alt="Admin avatar" className="w-full h-full object-cover" />
+                                        <img src={profile?.avatarUrl ?? profile?.avatar ?? "/favicon.ico"} alt="Admin avatar" className="w-full h-full object-cover" />
                                     </div>
-                                    <button className="absolute bottom-0.5 right-0.5 w-5.75 h-5.75 bg-[#D28A44] rounded-full flex items-center justify-center text-white shadow-sm" title="Change photo">
+                                    <button
+                                        onClick={() => avatarInputRef.current?.click()}
+                                        disabled={avatarUploading}
+                                        className="absolute bottom-0.5 right-0.5 w-5.75 h-5.75 bg-[#D28A44] rounded-full flex items-center justify-center text-white shadow-sm disabled:opacity-60"
+                                        title="Change photo"
+                                    >
                                         <SettingsCameraIcon />
                                     </button>
+                                    <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                                 </div>
                                 <div>
                                     <h2 className="text-[19px] font-medium text-(--db-text-primary)">{[form.firstName, form.lastName].filter(Boolean).join(" ") || "Admin Name"}</h2>
-                                    <p className="text-[13px] text-(--db-text-primary) mb-1">Fully Admin</p>
+                                    <p className="text-[13px] text-(--db-text-primary) mb-1">{profile?.role ?? "Fully Admin"}</p>
                                     <p className="text-sm text-(--db-text-primary) mb-2">{form.email || "admin@alphaestate.ai"}</p>
                                     <div className="flex items-center gap-1 text-[13px] text-[#D28A44]">
                                         <SavedLocIcon />
@@ -169,7 +269,9 @@ export default function AdminProfilePage() {
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <Button variant="primary" className="py-2.5!">SAVE CHANGES</Button>
+                                <Button variant="primary" className="py-2.5!" disabled={saving} onClick={handleSaveProfile}>
+                                    {saving ? "SAVING..." : "SAVE CHANGES"}
+                                </Button>
                                 <ModalButton className="max-w-fit px-5 py-2.5!" onClick={() => setFormOpen(false)}>CANCEL</ModalButton>
                             </div>
                         </div>
@@ -184,13 +286,15 @@ export default function AdminProfilePage() {
 
                             <div className="bg-(--db-section-bg) rounded-md p-5 mb-3">
                                 <div className="flex items-center gap-2 mb-1.75">
-                                    <span className="w-2 h-2 rounded-full bg-[#5E9F62] shrink-0" />
+                                    <span className={`w-2 h-2 rounded-full shrink-0 ${twoFaEnabled ? "bg-[#5E9F62]" : "bg-[#CF2D48]"}`} />
                                     <p className="text-sm font-semibold text-(--db-text-primary)">Two-Factor Authentication</p>
                                 </div>
                                 <p className="text-[13px] text-(--db-text-primary) mb-3.5">
                                     Add an extra layer of protection to your administrator account.
                                 </p>
-                                <ModalButton className="max-w-fit px-7 py-2! rounded-md!">ENABLE 2FA</ModalButton>
+                                <ModalButton className="max-w-fit px-7 py-2! rounded-md!" disabled={twoFaLoading} onClick={handleToggle2Fa}>
+                                    {twoFaLoading ? "UPDATING..." : twoFaEnabled ? "DISABLE 2FA" : "ENABLE 2FA"}
+                                </ModalButton>
                             </div>
 
                             <div className="bg-(--db-section-bg) rounded-md p-5">
@@ -229,9 +333,9 @@ export default function AdminProfilePage() {
                     <h3 className="text-[18px] font-medium text-(--db-text-primary) mb-4">Account Information</h3>
                     <div className="flex flex-wrap border border-[#D28A441F] bg-(--db-section-bg) rounded-md p-4 gap-x-20 gap-y-4">
                         {[
-                            { label: "Member Since", value: "January 2025" },
-                            { label: "Last Login", value: "January 2025" },
-                            { label: "Active Sessions", value: "January 2025" },
+                            { label: "Member Since", value: profile?.memberSince ?? "January 2025" },
+                            { label: "Last Login", value: profile?.lastLogin ?? "January 2025" },
+                            { label: "Active Sessions", value: profile?.activeSessions ?? "January 2025" },
                         ].map((s) => (
                             <div key={s.label}>
                                 <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">{s.label}</p>
