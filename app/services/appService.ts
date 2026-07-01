@@ -128,6 +128,14 @@ class AppService {
     }
   }
 
+  async createCheckoutSession(planId: string) {
+    try {
+      return await instance.post(ApiConfig.checkoutSession, { planId });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Property Listing
   async getListingProperties(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
     try {
@@ -317,9 +325,9 @@ class AppService {
     }
   }
 
-  async getAnalyticsUsage() {
+  async getAnalyticsUsage(period?: string) {
     try {
-      return await instance.get(ApiConfig.usage);
+      return await instance.get(ApiConfig.usage, { params: period ? { period } : undefined });
     } catch (error: any) {
       return error.response;
     }

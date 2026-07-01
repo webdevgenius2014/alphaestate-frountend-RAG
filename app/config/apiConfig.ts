@@ -19,6 +19,7 @@ const ApiConfig = {
   // Subscription
   subsriptionPlans: `${apiURL}/subscriptions/plans`,
   mySubsriptionPlans: `${apiURL}/subscriptions/me`,
+  checkoutSession: `${apiURL}/subscriptions/checkout-session`,
 
   // Property Listing
   listingProperties: `${apiURL}/properties`,
@@ -54,6 +55,7 @@ const ApiConfig = {
   plans: `${apiURL}/admin/subscriptions/plans`,
   revenueInsights: `${apiURL}/admin/subscriptions/revenue-insights`,
   plansById: `${apiURL}/admin/subscriptions/plans/{id}`,
+  upgradeSubscription: `${apiURL}/admin/subscriptions/checkout-session`,
 
 
 

@@ -41,6 +41,7 @@ export default function AnalyticsPage() {
     const [appreciationPotential, setAppreciationPotential]     = useState<any>(null);
     const [marketIntelligence, setMarketIntelligence]           = useState<any>(null);
     const [usage, setUsage]                                     = useState<any>(null);
+    const [usagePeriod, setUsagePeriod]                         = useState("last_year");
 
     useEffect(() => {
         appService.getAnalyticsOverview(
@@ -71,10 +72,13 @@ export default function AnalyticsPage() {
         appService.getAnalyticsMarketIntelligence().then((res) => {
             if (res?.data?.data) setMarketIntelligence(res.data.data);
         });
-        appService.getAnalyticsUsage().then((res) => {
+    }, []);
+
+    useEffect(() => {
+        appService.getAnalyticsUsage(usagePeriod || undefined).then((res) => {
             if (res?.data?.data) setUsage(res.data.data);
         });
-    }, []);
+    }, [usagePeriod]);
 
     useEffect(() => {
         appService.getAnalyticsPlatformGrowth(platformGrowthPeriod).then((res) => {
@@ -308,9 +312,14 @@ export default function AnalyticsPage() {
                                 <p className="text-xs text-(--db-text-primary) mt-0.5">Track how investors use Alpha Estate's intelligence and reporting tools.</p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                                <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                                    <option>Last Year</option>
-                                    <option>6 months</option>
+                                <select
+                                    value={usagePeriod}
+                                    onChange={(e) => setUsagePeriod(e.target.value)}
+                                    className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                                >
+                                    <option value="last_year">Last Year</option>
+                                    <option value="last_6months">6 Months</option>
+                                    <option value="last_month">Last Month</option>
                                 </select>
                                 <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                                     <SortIcon />
