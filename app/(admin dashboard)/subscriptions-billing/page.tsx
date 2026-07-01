@@ -531,7 +531,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                 </SectionCard>
 
                 <SectionCard title="Revenue Insights" sub="Key financial metrics and growth indicators">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(revenueInsights ?? dashboardStats ? [
                             { label: "Monthly Revenue", value: String((revenueInsights ?? dashboardStats)?.monthlyRevenue ?? "") },
                             { label: "Yearly Revenue", value: String((revenueInsights ?? dashboardStats)?.annualRevenue ?? "") },

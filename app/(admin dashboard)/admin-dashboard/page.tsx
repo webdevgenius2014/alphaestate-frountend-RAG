@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import Button from "@/app/components/ui/button";
 import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
@@ -45,7 +45,70 @@ function CardTitle({ title, sub }: { title: string; sub?: string }) {
 
 export default function AdminDashboardPage() {
     const { user } = useTheme();
+    const [period, setPeriod] = useState("last_year");
+    const [dashboard, setDashboard] = useState<any>(null);
 
+    useEffect(() => {
+        appService.getAdminDashboard(period).then((res) => {
+            if (res?.data?.success && res.data.data) {
+                setDashboard(res.data.data);
+            }
+        });
+    }, [period]);
+
+    const topStats = dashboard?.topStats;
+    const adminStats = topStats
+        ? ADMIN_STATS.map((s) => {
+            const key = s.label === "Total Registered Users" ? "totalUsers"
+                : s.label === "Active Subscriptions" ? "activeSubscriptions"
+                : s.label === "AI Queries Processed" ? "aiQueriesProcessed"
+                : null;
+            const stat = key ? topStats[key] : null;
+            if (!stat) return s;
+            const up = stat.growthPercent >= 0;
+            return {
+                ...s,
+                value: String(stat.count),
+                up,
+                change: `${up ? "+" : ""}${stat.growthPercent}% vs last period`,
+            };
+          })
+        : ADMIN_STATS;
+
+    const operationalIntelligence = dashboard?.operationalIntelligence;
+    const operationalItems = operationalIntelligence
+        ? OPERATIONAL_ITEMS.map((item) => {
+            if (item.label === "Active Smart Alerts") return { ...item, value: String(operationalIntelligence.activeSmartAlerts) };
+            if (item.label === "Deal Analyses Completed") return { ...item, value: String(operationalIntelligence.dealAnalysesCompleted) };
+            if (item.label === "Districts Tracked") return { ...item, value: String(operationalIntelligence.districtsTracked) };
+            return item;
+          })
+        : OPERATIONAL_ITEMS;
+
+    const userActivityData = dashboard?.userActivityChart
+        ? dashboard.userActivityChart.months.map((month: string, i: number) => ({
+            month,
+            activeUsers: dashboard.userActivityChart.activeUsers[i],
+            queries: dashboard.userActivityChart.aiQueries[i],
+          }))
+        : undefined;
+
+    const aiMetrics = AI_METRICS.map((m) =>
+        m.label === "AI Requests Today" && dashboard?.aiIntelligence?.requestsToday != null
+            ? { ...m, value: String(dashboard.aiIntelligence.requestsToday) }
+            : m
+    );
+
+    const recentActivity = dashboard?.recentActivity?.length ? dashboard.recentActivity : RECENT_ACTIVITY;
+
+    const liveActivity = dashboard?.todaysActivity
+        ? LIVE_ACTIVITY.map((item) => {
+            if (item.label === "New Users") return { ...item, value: String(dashboard.todaysActivity.newUsers ?? item.value) };
+            if (item.label === "AI Queries") return { ...item, value: String(dashboard.todaysActivity.aiQueries ?? item.value) };
+            if (item.label === "Alerts Triggered") return { ...item, value: String(dashboard.todaysActivity.alertsTriggered ?? item.value) };
+            return item;
+          })
+        : LIVE_ACTIVITY;
 
     return (
         <div className="flex flex-col min-h-full">
@@ -70,7 +133,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {ADMIN_STATS.map((s) => (
+                    {adminStats.map((s) => (
                         <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-[13px_14px_21px] flex flex-col">
                             <div className="flex items-center justify-start gap-2 mb-2.5">
                                 <div className="shrink-0 bg-[#D28A441F] p-1.75 rounded-sm">{s.icon}</div>
@@ -97,7 +160,7 @@ export default function AdminDashboardPage() {
                             Monitor activities, market intelligence, alerts, and overall platform performance
                         </p>
                         <div className="flex flex-col gap-5">
-                            {OPERATIONAL_ITEMS.map((item) => (
+                            {operationalItems.map((item) => (
                                 <div key={item.label}>
                                     <div className="flex bg-(--db-main-bg) hover:bg-(--db-drawer-header-bg) ease-linear transition-all items-center justify-between p-5">
                                         <div className="flex items-center gap-3">
@@ -115,7 +178,7 @@ export default function AdminDashboardPage() {
 
                     <Card className="rounded-none!">
 
-                        <div className="flex items-end justify-between gap-4 mb-5">
+                        <div className="flex items-end flex-wrap justify-between gap-4 mb-5">
                             <div>
                                 <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">User Activity & Platform Usage</h2>
                                 <p className="text-[13px] text-(--db-text-primary)">
@@ -123,16 +186,21 @@ export default function AdminDashboardPage() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                                <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none shrink-0">
-                                    <option>Last Year</option>
-                                    <option>6 months</option>
+                                <select
+                                    value={period}
+                                    onChange={(e) => setPeriod(e.target.value)}
+                                    className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none shrink-0"
+                                >
+                                    <option value="last_year">Last Year</option>
+                                    <option value="last_6months">6 Months</option>
+                                    <option value="last_month">Last Month</option>
                                 </select>
                                 <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                                     <SortIcon />
                                 </button>
                             </div>
                         </div>
-                        <UserActivityChart />
+                        <UserActivityChart data={userActivityData} />
                     </Card>
                 </div>
 
@@ -143,7 +211,7 @@ export default function AdminDashboardPage() {
                         <p className="text-[13px] text-(--db-text-primary) mb-5">
                             Monitor plan adoption, subscription growth, and recurring revenue performance.
                         </p>
-                        <SubscriptionPieChart />
+                        <SubscriptionPieChart data={dashboard?.subscriptionPerformance} />
                     </Card>
 
                     <Card className="rounded-none!">
@@ -151,8 +219,8 @@ export default function AdminDashboardPage() {
                         <p className="text-[13px] text-(--db-text-primary) mb-5">
                             Monitor AI activity and system performance
                         </p>
-                        <div className="grid grid-cols-2 gap-4">
-                            {AI_METRICS.map((m) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {aiMetrics.map((m) => (
                                 <div key={m.label}>
                                     <div className="flex flex-col bg-(--db-main-bg) gap-5 justify-between p-5">
                                         <div className="flex items-center gap-3">
@@ -199,7 +267,7 @@ export default function AdminDashboardPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {RECENT_ACTIVITY.map((row, i) => (
+                                    {recentActivity.map((row: any, i: number) => (
                                         <tr key={i} className="border-b divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
                                             <td className="px-5 py-3.5 font-medium whitespace-nowrap">{row.user}</td>
                                             <td className="px-5 py-3.5">{row.action}</td>
@@ -221,7 +289,7 @@ export default function AdminDashboardPage() {
                         <div className="flex h-full relative p-[15px_16px] rounded-sm flex-col gap-3">
                             <div className="bg-(--db-main-bg) opacity-75 inset-0 w-full h-full absolute" />
                             <p className="text-lg relative z-1 font-semibold text-(--db-text-primary) mb-1 uppercase tracking-wide">Today's Activity</p>
-                            {LIVE_ACTIVITY.map((item) => (
+                            {liveActivity.map((item) => (
                                 <div key={item.label} className="flex relative z-1 text-[15px] text-(--db-text-primary) items-center gap-4">
                                     <span>{item.label}</span>
                                     <span>{item.value}</span>

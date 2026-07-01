@@ -221,6 +221,14 @@ class AppService {
   }
 
   // Admin
+  async getAdminDashboard(period?: string) {
+    try {
+      return await instance.get(ApiConfig.admindashboard, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async getAdminUsers(page: number = 1, limit: number = 10, search?: string, plan?: string, status?: string, period?: string) {
     try {
       const params: Record<string, any> = { page, limit };

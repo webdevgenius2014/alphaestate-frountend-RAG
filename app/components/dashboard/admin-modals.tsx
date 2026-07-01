@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import ModalButton from "@/app/components/ui/modal-button";
-import { SelectChevron } from "@/app/(user dashboard)/constants";
+import { SelectChevron, SecurityEyeIcon, SecurityEyeOffIcon } from "@/app/(user dashboard)/constants";
 import { DELETE_USER_LOSE_ITEMS } from "@/app/(admin dashboard)/constants";
 
 const selectCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-field-border) text-(--db-text-primary) rounded-md px-4 py-3 h-[45.6px] text-sm outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer";
@@ -74,6 +74,70 @@ export function DeleteUserModal({ isOpen, onClose, onConfirm }: { isOpen: boolea
                         DELETE
                     </button>
                     <ModalButton onClick={onClose} className="py-3!">CANCEL</ModalButton>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+}
+
+// ── Change Password Modal ─────────────────────────────────────────────────────
+
+export function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    useModalEsc(onClose);
+    const [show, setShow] = useState({ current: false, next: false, confirm: false });
+    const [vals, setVals] = useState({ current: "", next: "", confirm: "" });
+
+    const toggle = (k: keyof typeof show) => setShow((p) => ({ ...p, [k]: !p[k] }));
+    const set = (k: keyof typeof vals) => (e: React.ChangeEvent<HTMLInputElement>) =>
+        setVals((p) => ({ ...p, [k]: e.target.value }));
+
+    const fieldCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-field-border) text-(--db-text-primary) rounded-md px-4 py-3 text-sm outline-none focus:border-[#D28A44]/60 transition placeholder-(--db-text-muted)";
+
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+            <div
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-100.75 shadow-2xl relative px-7 pt-8 pb-7"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button onClick={onClose} className="absolute top-4 right-4 z-20">
+                    <img src="/close.svg" alt="" />
+                </button>
+
+                <h2 className="text-[25px] font-medium text-(--db-text-primary) text-center mb-6">Password Security</h2>
+
+                <div className="space-y-4 mb-6">
+                    {([
+                        { key: "current", label: "Current Password" },
+                        { key: "next",    label: "New Password" },
+                        { key: "confirm", label: "Confirm New Password" },
+                    ] as { key: keyof typeof vals; label: string }[]).map(({ key, label }) => (
+                        <div key={key}>
+                            <label className="block text-[15px] font-medium text-(--db-text-primary) mb-2">{label}</label>
+                            <div className="relative">
+                                <input
+                                    type={show[key] ? "text" : "password"}
+                                    value={vals[key]}
+                                    onChange={set(key)}
+                                    placeholder="••••••••••••••••"
+                                    className={fieldCls}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => toggle(key)}
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-(--db-text-muted) hover:text-(--db-text-primary) transition-colors"
+                                >
+                                    {show[key] ? <SecurityEyeOffIcon /> : <SecurityEyeIcon />}
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex justify-center">
+                    <ModalButton className="max-w-fit px-4 py-3!">UPDATE PASSWORD</ModalButton>
                 </div>
             </div>
         </div>,

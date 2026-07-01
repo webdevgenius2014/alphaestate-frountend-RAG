@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
                                 <SortIcon />
                             </button> Filter By
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex flex-wrap items-center gap-2">
                             <div className="relative">
                                 <select
                                     value={overviewPeriod}
@@ -274,7 +274,7 @@ export default function AnalyticsPage() {
                         <p className="text-[13px] text-(--db-text-primary) mb-5">
                             AI-powered insights generated from platform and market activity.
                         </p>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {AI_METRICSANALAYTCS.map((m, i) => {
                                 const apiValues = [
                                     marketIntelligence?.strongestInvestmentDistrict,
