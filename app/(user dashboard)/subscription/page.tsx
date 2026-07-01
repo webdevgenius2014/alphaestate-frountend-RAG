@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
@@ -34,6 +36,8 @@ const PLAN_META: Record<string, { description: string; cta: string; popular: boo
 
 type Plan = {
     id: string;
+    monthlyId: string;
+    yearlyId: string;
     name: string;
     monthlyPrice: number;
     yearlyPrice: number;
@@ -53,23 +57,30 @@ function transformPlans(data: any[]): Plan[] {
                 id: baseName,
                 name: item.name.replace(/ (Monthly|Annual)$/i, ""),
                 features: item.featuresJson ?? [],
+                monthlyId: "",
+                yearlyId: "",
                 ...PLAN_META[baseName],
             };
         }
         if (item.billingInterval === "monthly") {
             grouped[baseName].monthlyPrice = parseFloat(item.priceAed);
+            grouped[baseName].monthlyId = item.id;
         } else if (item.billingInterval === "annual") {
             grouped[baseName].yearlyPrice = parseFloat(item.priceAed);
+            grouped[baseName].yearlyId = item.id;
         }
     }
 
     return Object.values(grouped) as Plan[];
 }
 
-export default function SubscriptionPage() {
+function SubscriptionPageContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
     const [plans, setPlans] = useState<Plan[]>([]);
     const [mySub, setMySub] = useState<any>(null);
+    const [checkoutLoadingId, setCheckoutLoadingId] = useState<string | null>(null);
 
     useEffect(() => {
         appService.getSubscriptionPlans().then((res) => {
@@ -83,6 +94,27 @@ export default function SubscriptionPage() {
             }
         });
     }, []);
+
+    useEffect(() => {
+        if (searchParams.get("success") === "true") {
+            toast.success("Subscription upgraded successfully!");
+            router.replace("/subscription");
+        }
+    }, [searchParams, router]);
+
+    const currentPlanId = mySub?.planId ?? mySub?.plan?.id ?? mySub?.subscriptionPlanId ?? null;
+
+    async function handleUpgrade(planId: string) {
+        if (!planId || checkoutLoadingId) return;
+        setCheckoutLoadingId(planId);
+        const res = await appService.createCheckoutSession(planId);
+        setCheckoutLoadingId(null);
+
+        const url = typeof res?.data?.data === "string" ? res.data.data : res?.data?.data?.url;
+        if (res?.data?.success && url) {
+            window.location.href = url;
+        }
+    }
 
     return (
         <div className="w-full">
@@ -119,18 +151,30 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3.75">
-                    {plans.map((plan) => (
+                    {plans.map((plan) => {
+                        const selectedPriceId = billing === "monthly" ? plan.monthlyId : plan.yearlyId;
+                        const isCurrentPlan = !!currentPlanId && currentPlanId === selectedPriceId;
+                        const isLoading = checkoutLoadingId === selectedPriceId;
+
+                        return (
                         <div
                             key={plan.id}
-                            className={`relative rounded-[10px] p-6.25 hover:p-6 flex flex-col overflow-hidden border transition-all ease-linear ${plan.popular ? "bg-(--db-sub-popular-bg) border-[#D28A4466] hover:shadow-[0px_16px_36px_0px_#E8B3821A,0px_66px_66px_0px_#E8B38217,0px_148px_89px_0px_#E8B3820D,0px_262px_105px_0px_#E8B38203,0px_410px_115px_0px_#E8B38200]" : "bg-(--db-main-bg) border-[#D28A4466] hover:shadow-[0px_16px_36px_0px_#A1A1A11A,0px_65px_65px_0px_#A1A1A117,0px_147px_88px_0px_#A1A1A10D,0px_261px_105px_0px_#A1A1A103,0px_408px_114px_0px_#A1A1A100]"}`}
+                            className={`relative rounded-[10px] p-6.25 hover:p-6 flex flex-col overflow-hidden border transition-all ease-linear ${plan.popular ? "bg-(--db-sub-popular-bg) border-[#D28A4466] hover:shadow-[0px_16px_36px_0px_#E8B3821A,0px_66px_66px_0px_#E8B38217,0px_148px_89px_0px_#E8B3820D,0px_262px_105px_0px_#E8B38203,0px_410px_115px_0px_#E8B38200]" : "bg-(--db-main-bg) border-[#D28A4466] hover:shadow-[0px_16px_36px_0px_#A1A1A11A,0px_65px_65px_0px_#A1A1A117,0px_147px_88px_0px_#A1A1A10D,0px_261px_105px_0px_#A1A1A103,0px_408px_114px_0px_#A1A1A100]"} ${isCurrentPlan ? "ring-2 ring-[#D28A44]" : ""}`}
                         >
-                            {plan.popular && (
+                            {plan.popular && !isCurrentPlan && (
                                 <div className="absolute py-15 rounded-[10px] px-9.5 pb-3.75 -top-11.25 -right-14 bg-[#D28A44] text-white text-base font-medium text-center leading-tight rotate-45">
                                     Most <br /> Popular
                                 </div>
                             )}
 
-                            <h3 className="text-[23px] font-medium text-(--db-text-primary) mb-3.75">{plan.name}</h3>
+                            <div className="flex items-center gap-2 mb-3.75">
+                                <h3 className="text-[23px] font-medium text-(--db-text-primary)">{plan.name}</h3>
+                                {isCurrentPlan && (
+                                    <span className="text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-sm bg-[#D28A442E] text-[#D28A44]">
+                                        Current Plan
+                                    </span>
+                                )}
+                            </div>
 
                             <p className="mb-3.25" style={{ fontFamily: "var(--font-archivo)" }}>
                                 <AnimatedNumber
@@ -143,8 +187,25 @@ export default function SubscriptionPage() {
                             <p className="text-[13px] text-(--db-text-primary) mb-5">{plan.description}</p>
 
                             {plan.popular
-                                ? <Button variant="navy" className="max-w-full! py-3.5! mb-6">{plan.cta}</Button>
-                                : <ModalButton className="mb-6 py-3.5!">{plan.cta}</ModalButton>
+                                ? (
+                                    <Button
+                                        variant="navy"
+                                        className="max-w-full! py-3.5! mb-6"
+                                        disabled={isCurrentPlan || isLoading}
+                                        onClick={() => handleUpgrade(selectedPriceId)}
+                                    >
+                                        {isCurrentPlan ? "CURRENT PLAN" : isLoading ? "PROCESSING..." : plan.cta}
+                                    </Button>
+                                )
+                                : (
+                                    <ModalButton
+                                        className="mb-6 py-3.5!"
+                                        disabled={isCurrentPlan || isLoading}
+                                        onClick={() => handleUpgrade(selectedPriceId)}
+                                    >
+                                        {isCurrentPlan ? "CURRENT PLAN" : isLoading ? "PROCESSING..." : plan.cta}
+                                    </ModalButton>
+                                )
                             }
 
                             <div>
@@ -159,9 +220,18 @@ export default function SubscriptionPage() {
                                 </ul>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SubscriptionPage() {
+    return (
+        <Suspense fallback={null}>
+            <SubscriptionPageContent />
+        </Suspense>
     );
 }
