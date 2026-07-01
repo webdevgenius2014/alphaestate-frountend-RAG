@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
 
                     <Card className="rounded-none!">
 
-                        <div className="flex items-end justify-between gap-4 mb-5">
+                        <div className="flex items-end flex-wrap justify-between gap-4 mb-5">
                             <div>
                                 <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">User Activity & Platform Usage</h2>
                                 <p className="text-[13px] text-(--db-text-primary)">
@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
                         <p className="text-[13px] text-(--db-text-primary) mb-5">
                             Monitor AI activity and system performance
                         </p>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {AI_METRICS.map((m) => (
                                 <div key={m.label}>
                                     <div className="flex flex-col bg-(--db-main-bg) gap-5 justify-between p-5">
