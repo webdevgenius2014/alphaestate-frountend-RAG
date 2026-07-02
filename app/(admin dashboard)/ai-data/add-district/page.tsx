@@ -145,12 +145,14 @@ export default function AddDistrictPage() {
                     <div className="flex flex-wrap gap-x-7 gap-y-3 mt-1">
                         {DISTRICT_SETTINGS_OPTIONS.map((opt) => (
                             <label key={opt} className="flex items-center gap-2 text-sm text-(--db-text-primary) cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    checked={settings[opt]}
-                                    onChange={() => setSettings((prev) => ({ ...prev, [opt]: !prev[opt] }))}
-                                    className="w-4 h-4 rounded-sm accent-[#cd8239] cursor-pointer shrink-0"
-                                />
+                                <input type="checkbox" checked={settings[opt]} onChange={() => setSettings((prev) => ({ ...prev, [opt]: !prev[opt] }))} className="hidden" />
+                                <span className={`shrink-0 w-4.75 h-4.75 rounded-[3px] border flex items-center justify-center transition-colors ease-linear ${settings[opt] ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-sidebar-bg) border-[#D28A4466]"}`}>
+                                    {settings[opt] && (
+                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                    )}
+                                </span>
                                 {opt}
                             </label>
                         ))}
