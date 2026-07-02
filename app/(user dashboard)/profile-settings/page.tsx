@@ -75,12 +75,12 @@ function SelectField({
     );
 }
 
-function SectionTitle({ children, showEdit }: { children: ReactNode; showEdit?: boolean }) {
+function SectionTitle({ children, showEdit, onEdit }: { children: ReactNode; showEdit?: boolean; onEdit?: () => void }) {
     return (
         <div className="flex items-center justify-between mb-5">
             <h3 className="text-[17px] font-semibold text-[#D28A44]">{children}</h3>
             {showEdit && (
-                <button className="bg-(--db-icon-btn-bg) text-(--db-modal-btn) hover:text-(--db-modal-btn-hover-text) hover:bg-(--db-modal-btn) w-7.5 h-7.5 rounded-sm flex justify-center items-center">
+                <button onClick={onEdit} className="bg-(--db-icon-btn-bg) text-(--db-modal-btn) hover:text-(--db-modal-btn-hover-text) hover:bg-(--db-modal-btn) w-7.5 h-7.5 rounded-sm flex justify-center items-center">
                     <SettingsPencilIcon />
                 </button>
             )}
@@ -129,13 +129,13 @@ function PasswordInput({ label, show, onToggle, ...rest }: { label: string; show
     );
 }
 
-function SaveBar({ label = "SAVE CHANGES" }: { label?: string }) {
+function SaveBar({ label = "SAVE CHANGES", onCancel }: { label?: string; onCancel?: () => void }) {
     return (
         <div className="flex items-center gap-4 mt-2">
             <Button variant="primary" className="py-2.5!">
                 {label}
             </Button>
-            <ModalButton className="max-w-fit px-5 py-2.5!">CANCEL</ModalButton>
+            <ModalButton className="max-w-fit px-5 py-2.5!" onClick={onCancel}>CANCEL</ModalButton>
         </div>
     );
 }
@@ -152,6 +152,7 @@ type ProfileForm = {
 };
 
 function MyProfileTab() {
+    const [formOpen, setFormOpen] = useState(true);
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
     const [form, setForm] = useState<ProfileForm>({
@@ -195,7 +196,7 @@ function MyProfileTab() {
     const location = [profile?.cityState, profile?.countryRegion].filter(Boolean).join(", ") || "—";
 
     return (
-        <div>
+        <div className="min-h-[calc(100vh-200px)]">
             <div className="mb-4.5">
                 <h1 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">My Profile</h1>
                 <p className="text-sm text-(--db-text-primary) font-normal">Manage your personal account information and profile details.</p>
@@ -203,7 +204,7 @@ function MyProfileTab() {
 
             <div className="bg-(--db-main-bg) p-6.25">
                 {/* Avatar + summary row */}
-                <div className="mb-5 pb-6 border-b border-[#D28A4433]">
+                <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-7">
                             <div className="relative shrink-0">
@@ -245,15 +246,19 @@ function MyProfileTab() {
                             </div>
                         </div>
 
-                        <button className="bg-(--db-icon-btn-bg) text-(--db-modal-btn) hover:text-(--db-modal-btn-hover-text) hover:bg-(--db-modal-btn) w-7.5 h-7.5 rounded-sm flex justify-center items-center">
-                            <SettingsPencilIcon />
-                        </button>
+                        {!formOpen && (
+                            <button onClick={() => setFormOpen(true)} className="bg-(--db-icon-btn-bg) text-(--db-modal-btn) hover:text-(--db-modal-btn-hover-text) hover:bg-(--db-modal-btn) w-7.5 h-7.5 rounded-sm flex justify-center items-center shrink-0">
+                                <SettingsPencilIcon />
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Personal information form */}
+                {/* Personal information form — accordion */}
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${formOpen ? "max-h-500 opacity-100" : "max-h-0 opacity-0"}`}>
+                    <hr className="pb-4 mt-6 border-[#D28A4433]" />
                 <div className="w-full mb-6.5">
-                    <SectionTitle showEdit>Personal Information</SectionTitle>
+                    <SectionTitle showEdit onEdit={() => setFormOpen(false)}>Personal Information</SectionTitle>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                         <FormField label="First Name">
@@ -332,7 +337,8 @@ function MyProfileTab() {
                     </div>
                 </div>
 
-                <SaveBar />
+                <SaveBar onCancel={() => setFormOpen(false)} />
+                </div>
             </div>
         </div>
     );
