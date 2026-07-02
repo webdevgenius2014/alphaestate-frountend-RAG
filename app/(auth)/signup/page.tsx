@@ -30,6 +30,12 @@ export default function SignUpPage() {
             const res = await appService.signUp({ email, password, fullName });
 
             if (res?.status === 200 || res?.status === 201) {
+                const { accessToken, refreshToken, sessionId } = res.data?.data ?? {};
+                const maxAge = keepLoggedIn ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7;
+                if (accessToken) document.cookie = `access_token=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
+                if (refreshToken) document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+                if (sessionId) document.cookie = `session_id=${sessionId}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+                document.cookie = `user_role=user; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
                 router.push("/dashboard");
             } else {
                 const data = res?.data;

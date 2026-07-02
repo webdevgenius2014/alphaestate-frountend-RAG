@@ -4,6 +4,8 @@ import React, { useState, useEffect, type ReactNode } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DeleteAccountModal } from "@/app/components/dashboard/alert-modals";
 import appService from "@/app/services/appService";
+import { getCookie, clearAuthCookies } from "@/app/services/interceptor";
+import { formatDevice, getLocation, formatRelativeTime } from "@/app/utils/session";
 import {PHONE_CODES} from "@/app/constant";
 import {
     SETTINGS_TABS,
@@ -392,6 +394,67 @@ function SecurityTab() {
         });
     }, []);
 
+    type SessionRow = { id: string; device: string; location: string; lastActive: string; isCurrent: boolean };
+    const [sessions, setSessions] = useState<SessionRow[]>([]);
+    const [sessionsLoading, setSessionsLoading] = useState(true);
+    const [logoutLoadingId, setLogoutLoadingId] = useState<string | null>(null);
+
+    useEffect(() => {
+        appService.getSessions().then(async (res) => {
+            const list = res?.data?.data ?? res?.data;
+            if (!Array.isArray(list)) {
+                setSessionsLoading(false);
+                return;
+            }
+            const currentSessionId = getCookie("session_id");
+            const rows = await Promise.all(
+                list.map(async (s: any): Promise<SessionRow> => ({
+                    id: s.id,
+                    device: formatDevice(s.userAgent ?? null),
+                    location: await getLocation(s.ipAddress ?? s.ip ?? null),
+                    lastActive: formatRelativeTime(s.lastUsedAt ?? s.lastUsed ?? null),
+                    isCurrent: !!currentSessionId && s.id === currentSessionId,
+                }))
+            );
+            setSessions(rows);
+            setSessionsLoading(false);
+        }).catch(() => setSessionsLoading(false));
+    }, []);
+
+    const handleLogoutSession = async (id: string) => {
+        setLogoutLoadingId(id);
+        const res = await appService.logoutSession(id);
+        setLogoutLoadingId(null);
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 204) {
+            setSessions((prev) => prev.filter((s) => s.id !== id));
+            toast.success("Device logged out successfully.");
+        } else {
+            toast.error(res?.data?.message || "Failed to logout device.");
+        }
+    };
+
+    const [currentSessionLoading, setCurrentSessionLoading] = useState(false);
+
+    const handleLogoutCurrentSession = async () => {
+        const sessionId = getCookie("session_id");
+        if (!sessionId) {
+            toast.error("No active session found.");
+            return;
+        }
+
+        setCurrentSessionLoading(true);
+        const res = await appService.logoutSessionBySessionId(sessionId);
+        setCurrentSessionLoading(false);
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 204) {
+            clearAuthCookies();
+            window.location.href = "/login";
+        } else {
+            toast.error(res?.data?.message || "Failed to logout device.");
+        }
+    };
+
     const handleToggle2Fa = async () => {
         setTwoFaLoading(true);
         const res = await appService.toggleUserProfile2Fa({ enabled: !twoFaEnabled });
@@ -442,7 +505,9 @@ function SecurityTab() {
                                     <span>Current Session</span>
                                 </div>
                             </div>
-                            <ModalButton className="py-3! max-w-fit px-6">LOGOUT DEVICE</ModalButton>
+                            <ModalButton className="py-3! max-w-fit px-6" onClick={handleLogoutCurrentSession} disabled={currentSessionLoading}>
+                                {currentSessionLoading ? "LOGGING OUT..." : "LOGOUT DEVICE"}
+                            </ModalButton>
                         </div>
                     </div>
 

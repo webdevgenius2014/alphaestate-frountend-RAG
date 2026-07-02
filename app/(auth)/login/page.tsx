@@ -29,11 +29,14 @@ export default function LoginPage() {
             const res = await appService.login({ email, password });
 
             if (res?.status === 200 || res?.status === 201) {
-                const { accessToken, refreshToken, user } = res.data.data;
+                const { accessToken, refreshToken, sessionId, user } = res.data.data;
                 const maxAge = keepLoggedIn ? 60 * 60 * 24 * 30 : 60 * 60 * 24 * 7;
                 document.cookie = `access_token=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
                 document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
                 document.cookie = `user_role=${user.role}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+                if (sessionId) {
+                    document.cookie = `session_id=${sessionId}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+                }
                 window.location.href = user.role === "admin" ? "/admin-dashboard" : "/dashboard";
             } else {
                 toast.error(res?.data?.message || "Invalid email or password.");

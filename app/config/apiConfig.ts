@@ -11,6 +11,9 @@ const ApiConfig = {
   resetPassword:   `${apiURL}/auth/reset-password`,
   changePassword:  `${apiURL}/auth/change-password`,
   deleteAccount:   `${apiURL}/auth/delete`,
+  authSessions:    `${apiURL}/auth/sessions`,
+  authSessionById: `${apiURL}/auth/sessions/{id}`,
+  authSessionBySessionId: `${apiURL}/auth/sessions/{sessionId}`,
 
   // User
   userProfileInfo: `${apiURL}/users/me`,

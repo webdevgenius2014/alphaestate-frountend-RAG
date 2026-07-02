@@ -1,5 +1,5 @@
 import axios from "axios";
-import instance from "./interceptor";
+import instance, { getCookie } from "./interceptor";
 import ApiConfig from "../config/apiConfig";
 
 class AppService {
@@ -30,7 +30,10 @@ class AppService {
 
   async logout() {
     try {
-      return await instance.post(ApiConfig.logout);
+      const refreshToken = getCookie("refresh_token");
+      return await instance.post(ApiConfig.logout, {}, {
+        headers: refreshToken ? { Authorization: `Bearer ${refreshToken}` } : undefined,
+      });
     } catch (error: any) {
       return error.response;
     }
@@ -71,6 +74,32 @@ class AppService {
   async deleteAccount() {
     try {
       return await instance.delete(ApiConfig.deleteAccount);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getSessions() {
+    try {
+      return await instance.get(ApiConfig.authSessions);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async logoutSession(id: string) {
+    try {
+      const url = ApiConfig.authSessionById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async logoutSessionBySessionId(sessionId: string) {
+    try {
+      const url = ApiConfig.authSessionBySessionId.replace("{sessionId}", sessionId);
+      return await instance.delete(url);
     } catch (error: any) {
       return error.response;
     }
