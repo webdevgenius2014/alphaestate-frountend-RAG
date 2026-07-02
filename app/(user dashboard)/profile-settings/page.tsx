@@ -4,6 +4,8 @@ import React, { useState, useEffect, type ReactNode } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DeleteAccountModal } from "@/app/components/dashboard/alert-modals";
 import appService from "@/app/services/appService";
+import { getCookie, clearAuthCookies } from "@/app/services/interceptor";
+import { formatDevice, getLocation, formatRelativeTime } from "@/app/utils/session";
 import {PHONE_CODES} from "@/app/constant";
 import {
     SETTINGS_TABS,
@@ -387,6 +389,91 @@ function SecurityTab() {
         { key: "suspicious", label: "Suspicious Activity Detection" },
     ];
 
+    const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+    const [twoFaLoading, setTwoFaLoading] = useState(false);
+
+    useEffect(() => {
+        appService.getUserProfile().then((res) => {
+            if (res?.data?.success && res.data.data) {
+                setTwoFaEnabled(!!res.data.data.isTwoFactorEnabled);
+            }
+        });
+    }, []);
+
+    type SessionRow = { id: string; device: string; location: string; lastActive: string; isCurrent: boolean };
+    const [sessions, setSessions] = useState<SessionRow[]>([]);
+    const [sessionsLoading, setSessionsLoading] = useState(true);
+    const [logoutLoadingId, setLogoutLoadingId] = useState<string | null>(null);
+
+    useEffect(() => {
+        appService.getSessions().then(async (res) => {
+            const list = res?.data?.data ?? res?.data;
+            if (!Array.isArray(list)) {
+                setSessionsLoading(false);
+                return;
+            }
+            const currentSessionId = getCookie("session_id");
+            const rows = await Promise.all(
+                list.map(async (s: any): Promise<SessionRow> => ({
+                    id: s.id,
+                    device: formatDevice(s.userAgent ?? null),
+                    location: await getLocation(s.ipAddress ?? s.ip ?? null),
+                    lastActive: formatRelativeTime(s.lastUsedAt ?? s.lastUsed ?? null),
+                    isCurrent: !!currentSessionId && s.id === currentSessionId,
+                }))
+            );
+            setSessions(rows);
+            setSessionsLoading(false);
+        }).catch(() => setSessionsLoading(false));
+    }, []);
+
+    const handleLogoutSession = async (id: string) => {
+        setLogoutLoadingId(id);
+        const res = await appService.logoutSession(id);
+        setLogoutLoadingId(null);
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 204) {
+            setSessions((prev) => prev.filter((s) => s.id !== id));
+            toast.success("Device logged out successfully.");
+        } else {
+            toast.error(res?.data?.message || "Failed to logout device.");
+        }
+    };
+
+    const [currentSessionLoading, setCurrentSessionLoading] = useState(false);
+
+    const handleLogoutCurrentSession = async () => {
+        const sessionId = getCookie("session_id");
+        if (!sessionId) {
+            toast.error("No active session found.");
+            return;
+        }
+
+        setCurrentSessionLoading(true);
+        const res = await appService.logoutSessionBySessionId(sessionId);
+        setCurrentSessionLoading(false);
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 204) {
+            clearAuthCookies();
+            window.location.href = "/login";
+        } else {
+            toast.error(res?.data?.message || "Failed to logout device.");
+        }
+    };
+
+    const handleToggle2Fa = async () => {
+        setTwoFaLoading(true);
+        const res = await appService.toggleUserProfile2Fa({ enabled: !twoFaEnabled });
+        setTwoFaLoading(false);
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 201) {
+            setTwoFaEnabled((prev) => !prev);
+            toast.success(!twoFaEnabled ? "Two-factor authentication enabled." : "Two-factor authentication disabled.");
+        } else {
+            toast.error(res?.data?.message || "Failed to update two-factor authentication.");
+        }
+    };
+
     return (
         <div>
             <div className="mb-4.5">
@@ -424,7 +511,9 @@ function SecurityTab() {
                                     <span>Current Session</span>
                                 </div>
                             </div>
-                            <ModalButton className="py-3! max-w-fit px-6">LOGOUT DEVICE</ModalButton>
+                            <ModalButton className="py-3! max-w-fit px-6" onClick={handleLogoutCurrentSession} disabled={currentSessionLoading}>
+                                {currentSessionLoading ? "LOGGING OUT..." : "LOGOUT DEVICE"}
+                            </ModalButton>
                         </div>
                     </div>
 
@@ -432,11 +521,15 @@ function SecurityTab() {
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-4">Two-Factor Authentication</h3>
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="w-2 h-2 rounded-full bg-[#5E9F62] shrink-0" />
-                                <span className="text-sm font-semibold text-(--db-text-primary)">2FA Disabled</span>
+                                <div className={`w-2 h-2 rounded-full shrink-0 ${twoFaEnabled ? "bg-[#5E9F62]" : "bg-[#CF2D48]"}`} />
+                                <span className="text-sm font-semibold text-(--db-text-primary)">{twoFaEnabled ? "2FA Enabled" : "2FA Disabled"}</span>
                             </div>
-                            <p className="text-[13px] text-(--db-text-primary) mb-4">Your account currently uses password-only authentication.</p>
-                            <ModalButton className="py-2.25! max-w-fit px-6">ENABLE 2FA</ModalButton>
+                            <p className="text-[13px] text-(--db-text-primary) mb-4">
+                                {twoFaEnabled ? "Your account is protected with two-factor authentication." : "Your account currently uses password-only authentication."}
+                            </p>
+                            <ModalButton className="py-2.25! max-w-fit px-6" onClick={handleToggle2Fa} disabled={twoFaLoading}>
+                                {twoFaLoading ? "UPDATING..." : twoFaEnabled ? "DISABLE 2FA" : "ENABLE 2FA"}
+                            </ModalButton>
                         </div>
 
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">

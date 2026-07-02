@@ -11,25 +11,27 @@ const instance = axios.create({
   },
 });
 
-function getCookie(name: string): string | null {
+export function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function setCookie(name: string, value: string, maxAge: number) {
+export function setCookie(name: string, value: string, maxAge: number) {
   document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; SameSite=Lax`;
 }
 
-function clearAuthCookies() {
-  ["access_token", "refresh_token", "user_role"].forEach((name) => {
+export function clearAuthCookies() {
+  ["access_token", "refresh_token", "user_role", "session_id"].forEach((name) => {
     document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
   });
 }
 
 instance.interceptors.request.use((config) => {
-  const token = getCookie("access_token");
-  if (token) config.headers["Authorization"] = `Bearer ${token}`;
+  if (!config.headers["Authorization"]) {
+    const token = getCookie("access_token");
+    if (token) config.headers["Authorization"] = `Bearer ${token}`;
+  }
   return config;
 });
 
@@ -45,7 +47,7 @@ instance.interceptors.response.use(
         const res = await appService.refreshToken();
 
         if (res?.status === 200 || res?.status === 201) {
-          const { accessToken, refreshToken } = res.data?.data ?? {};
+          const { accessToken, refreshToken, sessionId } = res.data?.data ?? {};
 
           if (accessToken) {
             setCookie("access_token", accessToken, 60 * 60 * 24 * 7);
@@ -53,6 +55,9 @@ instance.interceptors.response.use(
           }
           if (refreshToken) {
             setCookie("refresh_token", refreshToken, 60 * 60 * 24 * 30);
+          }
+          if (sessionId) {
+            setCookie("session_id", sessionId, 60 * 60 * 24 * 30);
           }
 
           return instance(originalRequest);

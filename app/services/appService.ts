@@ -1,5 +1,5 @@
 import axios from "axios";
-import instance from "./interceptor";
+import instance, { getCookie } from "./interceptor";
 import ApiConfig from "../config/apiConfig";
 
 class AppService {
@@ -30,7 +30,10 @@ class AppService {
 
   async logout() {
     try {
-      return await instance.post(ApiConfig.logout);
+      const refreshToken = getCookie("refresh_token");
+      return await instance.post(ApiConfig.logout, {}, {
+        headers: refreshToken ? { Authorization: `Bearer ${refreshToken}` } : undefined,
+      });
     } catch (error: any) {
       return error.response;
     }
@@ -76,6 +79,32 @@ class AppService {
     }
   }
 
+  async getSessions() {
+    try {
+      return await instance.get(ApiConfig.authSessions);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async logoutSession(id: string) {
+    try {
+      const url = ApiConfig.authSessionById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async logoutSessionBySessionId(sessionId: string) {
+    try {
+      const url = ApiConfig.authSessionBySessionId.replace("{sessionId}", sessionId);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // User Profile
   async getUserProfile() {
     try {
@@ -106,6 +135,14 @@ class AppService {
       return await instance.post(ApiConfig.userProfileAvtar, payload, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async toggleUserProfile2Fa(payload: any) {
+    try {
+      return await instance.post(ApiConfig.userProfile2Fa, payload);
     } catch (error: any) {
       return error.response;
     }
@@ -160,6 +197,15 @@ class AppService {
     try {
       const url = ApiConfig.similarProperties.replace("{id}", id);
       return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Districts
+  async getAllDistricts() {
+    try {
+      return await instance.get(ApiConfig.allDistricts);
     } catch (error: any) {
       return error.response;
     }
@@ -224,6 +270,50 @@ class AppService {
   async getAdminDashboard(period?: string) {
     try {
       return await instance.get(ApiConfig.admindashboard, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Admin Profile
+  
+  async getAdminProfile() {
+    try {
+      return await instance.get(ApiConfig.adminProfile);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAdminProfile(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.adminProfile, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadAdminProfileAvatar(payload: FormData) {
+    try {
+      return await instance.post(ApiConfig.adminProfileAvtar, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async toggleAdminProfile2Fa(payload: any) {
+    try {
+      return await instance.post(ApiConfig.adminProfile2Fa, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async changeAdminPassword(payload: any) {
+    try {
+      return await instance.post(ApiConfig.adminChangePassword, payload);
     } catch (error: any) {
       return error.response;
     }

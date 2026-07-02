@@ -11,10 +11,14 @@ const ApiConfig = {
   resetPassword:   `${apiURL}/auth/reset-password`,
   changePassword:  `${apiURL}/auth/change-password`,
   deleteAccount:   `${apiURL}/auth/delete`,
+  authSessions:    `${apiURL}/auth/sessions`,
+  authSessionById: `${apiURL}/auth/sessions/{id}`,
+  authSessionBySessionId: `${apiURL}/auth/sessions/{sessionId}`,
 
   // User
   userProfileInfo: `${apiURL}/users/me`,
-  userProfileAvtar:  `${apiURL}/users/me/avatar`,
+  userProfileAvtar: `${apiURL}/users/me/avatar`,
+  userProfile2Fa: `${apiURL}/users/me/2Fa/toggle`,
 
   // Subscription
   subsriptionPlans: `${apiURL}/subscriptions/plans`,
@@ -28,6 +32,10 @@ const ApiConfig = {
   // Saver Property
   listingSavedProperties: `${apiURL}/users/me/saved`,
   savedPropertyById: `${apiURL}/properties/{id}/save`,
+
+  //districts
+  allDistricts: `${apiURL}/districts`,
+
 
   // Admin
   // Dashbord 
@@ -59,6 +67,14 @@ const ApiConfig = {
   revenueInsights: `${apiURL}/admin/subscriptions/revenue-insights`,
   plansById: `${apiURL}/admin/subscriptions/plans/{id}`,
   upgradeSubscription: `${apiURL}/admin/subscriptions/checkout-session`,
+
+  // admin profile
+  adminProfile: `${apiURL}/admin/profile`,
+  adminProfileAvtar: `${apiURL}/admin/profile/avatar`,
+  adminProfile2Fa: `${apiURL}/admin/profile/2fa/toggle`,
+  adminChangePassword: `${apiURL}/admin/profile/change-password`, 
+  
+
 
 
 
