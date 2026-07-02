@@ -44,6 +44,9 @@
   --db-drawer-header-bg: #FFE6CE;
   --db-drawer-section-bg: #FFF0E2;
   --db-section-bg: #F9F6EF;
+  --db-warm-card-bg: #FFECDA;
+  --db-dropdown-bg: #F6ECDF;
+  
 }
 
 .dark {
@@ -75,6 +78,8 @@
   --db-drawer-header-bg: rgba(210, 138, 68, 0.15);
   --db-drawer-section-bg: rgba(210, 138, 68, 0.08);
   --db-section-bg: #0b1f3a;
+  --db-warm-card-bg: rgba(210, 138, 68, 0.1);
+  --db-dropdown-bg: #0B1F3A;
 }
 /* ────────────────────────────────────────────────────── */
 
