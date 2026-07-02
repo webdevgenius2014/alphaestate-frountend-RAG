@@ -14,6 +14,7 @@ import {
     SavedLocIcon,
 } from "@/app/(user dashboard)/constants";
 import appService from "@/app/services/appService";
+import { FILTER_LABELS, FILTER_OPTIONS, LABEL_TO_KEY, type FilterState } from "@/app/constant";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -104,23 +105,6 @@ function PropertyCard({ prop }: { prop: SavedProperty }) {
     );
 }
 
-const FILTER_LABELS = ["District", "Property Type", "Investment Signal", "Market Type"] as const;
-type FilterLabel = typeof FILTER_LABELS[number];
-
-const LABEL_TO_KEY: Record<FilterLabel, keyof FilterState> = {
-    "District": "district",
-    "Property Type": "propertyType",
-    "Investment Signal": "investmentSignal",
-    "Market Type": "marketType",
-};
-
-type FilterState = {
-    district: string;
-    propertyType: string;
-    investmentSignal: string;
-    marketType: string;
-};
-
 export default function SavedPage() {
     const [properties, setProperties] = useState<SavedProperty[]>([]);
     const [loading, setLoading] = useState(true);
@@ -209,6 +193,9 @@ export default function SavedPage() {
                                     >
                                         <option value="">{lbl}</option>
                                         <option value="">All</option>
+                                        {FILTER_OPTIONS[lbl].map((opt) => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
                                     </select>
                                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                                         <SelectChevron />

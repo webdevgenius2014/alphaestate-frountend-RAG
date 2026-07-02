@@ -33,6 +33,10 @@ const ApiConfig = {
   listingSavedProperties: `${apiURL}/users/me/saved`,
   savedPropertyById: `${apiURL}/properties/{id}/save`,
 
+  //districts
+
+
+
   // Admin
   // Dashbord 
   admindashboard: `${apiURL}/admin/dashboard`,

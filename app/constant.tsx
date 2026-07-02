@@ -266,6 +266,47 @@ export const testimonials = [
     },
 ];
 
+export const FILTER_LABELS = ["District", "Property Type", "Investment Signal", "Market Type"] as const;
+export type FilterLabel = typeof FILTER_LABELS[number];
+
+export type FilterState = {
+    district: string;
+    propertyType: string;
+    investmentSignal: string;
+    marketType: string;
+};
+
+export const LABEL_TO_KEY: Record<FilterLabel, keyof FilterState> = {
+    "District": "district",
+    "Property Type": "propertyType",
+    "Investment Signal": "investmentSignal",
+    "Market Type": "marketType",
+};
+
+export const FILTER_OPTIONS: Record<FilterLabel, string[]> = {
+    "District": [],
+    "Property Type": [
+        "Apartment",
+        "Villa",
+        "Townhouse / Attached Villa",
+        "Plot for Villa",
+        "Duplex",
+        "Farm",
+        "Residential Complex",
+        "Office",
+        "Other",
+    ],
+    "Investment Signal": [
+        "Strong Investment Opportunity",
+        "High Growth Potential",
+        "Stable Returns",
+        "Luxury Appreciation Zone",
+        "Emerging District",
+        "Monitor Closely",
+    ],
+    "Market Type": ["Off-Plan", "Ready", "Court-Mandated"],
+};
+
 export const PHONE_CODES = [
     { code: "+1",   label: "+1  (US/CA)" },
     { code: "+7",   label: "+7  (RU)"    },
