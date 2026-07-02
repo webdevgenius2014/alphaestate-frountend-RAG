@@ -34,7 +34,7 @@ const ApiConfig = {
   savedPropertyById: `${apiURL}/properties/{id}/save`,
 
   //districts
-
+  allDistricts: `${apiURL}/districts`,
 
 
   // Admin

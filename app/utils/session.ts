@@ -13,7 +13,7 @@ export function formatDevice(userAgent: string | null): string {
 export async function getLocation(ip: string | null): Promise<string> {
     if (!ip || ip === "::1" || ip.startsWith("127.")) return "Local";
     try {
-        const res = await fetch(`https://ip-api.com/json/${ip}?fields=city,countryCode`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SESSION_URL}/json/${ip}?fields=city,countryCode`);
         const data = await res.json();
         if (!data?.city) return ip;
         return `${data.city}, ${data.countryCode}`;

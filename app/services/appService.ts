@@ -202,6 +202,15 @@ class AppService {
     }
   }
 
+  // Districts
+  async getAllDistricts() {
+    try {
+      return await instance.get(ApiConfig.allDistricts);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Saved Property
   async getListingSavedProperties(
   page: number = 1,

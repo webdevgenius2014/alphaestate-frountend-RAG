@@ -108,12 +108,24 @@ function PropertyCard({ prop }: { prop: SavedProperty }) {
 export default function SavedPage() {
     const [properties, setProperties] = useState<SavedProperty[]>([]);
     const [loading, setLoading] = useState(true);
+    const [districts, setDistricts] = useState<string[]>([]);
     const [filters, setFilters] = useState<FilterState>({
         district: "",
         propertyType: "",
         investmentSignal: "",
         marketType: "",
     });
+
+    useEffect(() => {
+        appService.getAllDistricts().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const items = res.data?.data ?? [];
+                setDistricts(
+                    items.map((item: any) => typeof item === "string" ? item : item.name ?? item.district ?? "").filter(Boolean)
+                );
+            }
+        });
+    }, []);
 
     useEffect(() => {
         setLoading(true);
@@ -193,7 +205,7 @@ export default function SavedPage() {
                                     >
                                         <option value="">{lbl}</option>
                                         <option value="">All</option>
-                                        {FILTER_OPTIONS[lbl].map((opt) => (
+                                        {(lbl === "District" ? districts : FILTER_OPTIONS[lbl]).map((opt) => (
                                             <option key={opt} value={opt}>{opt}</option>
                                         ))}
                                     </select>
