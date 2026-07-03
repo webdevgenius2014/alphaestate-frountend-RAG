@@ -359,6 +359,178 @@ class AppService {
     }
   }
 
+  // Admin Properties
+  async getAdminProperties(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+      search?: string;
+      district?: string;
+      districtId?: string;
+      propertyType?: string;
+      assetClass?: string;
+      layout?: string;
+      saleType?: string;
+      status?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      minArea?: number;
+      maxArea?: number;
+      isFeatured?: boolean;
+      sortBy?: string;
+      sortOrder?: string;
+      period?: string;
+    }
+  ) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([_, v]) => v !== undefined && v !== null && v !== ""
+            )
+          )
+        : {};
+
+      return await instance.get(ApiConfig.adminProperties, {
+        params: { page, limit, ...cleanFilters },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async createAdminProperty(payload: any) {
+    try {
+      return await instance.post(ApiConfig.adminProperties, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminPropertiesStats() {
+    try {
+      return await instance.get(ApiConfig.adminPropertiesStats);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminPropertyById(id: string) {
+    try {
+      const url = ApiConfig.adminPropertiesById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAdminPropertyById(id: string, payload: any) {
+    try {
+      const url = ApiConfig.adminPropertiesById.replace("{id}", id);
+      return await instance.patch(url, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteAdminPropertyById(id: string) {
+    try {
+      const url = ApiConfig.adminPropertiesById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAdminPropertyStatus(id: string, payload: any) {
+    try {
+      const url = ApiConfig.adminPropertiesStatus.replace("{id}", id);
+      return await instance.patch(url, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadAdminPropertyCoverImage(id: string, payload: FormData) {
+    try {
+      const url = ApiConfig.adminPropertiesCoverImage.replace("{id}", id);
+      return await instance.post(url, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadAdminPropertyGallery(id: string, payload: FormData) {
+    try {
+      const url = ApiConfig.adminPropertiesGallery.replace("{id}", id);
+      return await instance.post(url, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadAdminPropertyBrochure(id: string, payload: FormData) {
+    try {
+      const url = ApiConfig.adminPropertiesBrochure.replace("{id}", id);
+      return await instance.post(url, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+
+  // Admin Activity Logs
+  async getAdminActivityLogs(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+      period?: string;
+      adminUser?: string;
+      activityType?: string;
+    }
+  ) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([_, v]) => v !== undefined && v !== null && v !== ""
+            )
+          )
+        : {};
+
+      return await instance.get(ApiConfig.adminActivityLogs, {
+        params: { page, limit, ...cleanFilters },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async exportAdminActivityLogs(filters?: { period?: string; adminUser?: string; activityType?: string }) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([_, v]) => v !== undefined && v !== null && v !== ""
+            )
+          )
+        : {};
+
+      return await instance.get(ApiConfig.adminActivityLogsExport, {
+        params: cleanFilters,
+        responseType: "blob",
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Admin Analytics
   async getAnalyticsOverview(period?: string, district?: string, propertyType?: string) {
     try {

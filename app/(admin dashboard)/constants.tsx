@@ -1351,7 +1351,8 @@ export const selectCls = "w-full bg-(--db-modal-field-bg) border border-(--db-mo
 
 export const PLATFORM_TABS = [
     { id: "system-settings", label: "System Settings" },
-    { id: "roles-permissions", label: "Roles & Permissions" },
+    // Could be used further
+    // { id: "roles-permissions", label: "Roles & Permissions" },
     { id: "activity-logs", label: "Activity Logs" },
     { id: "api-connections", label: "API & Data Connections" },
 ] as const;

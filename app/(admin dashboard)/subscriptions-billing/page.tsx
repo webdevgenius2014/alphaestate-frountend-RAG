@@ -242,7 +242,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
 <div class="footer">System-generated invoice &bull; Alpha Estate &bull; ${new Date().getFullYear()}</div>
 </body></html>`;
 
-//Could be used further to download the invoice while clicking on the download button
+    //  further to download the invoice while clicking on the download button
         // const blob = new Blob([html], { type: "text/html;charset=utf-8" });
         // const url  = URL.createObjectURL(blob);
         // const link = document.createElement("a");

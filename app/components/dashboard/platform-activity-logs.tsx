@@ -1,15 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
-import { ACTIVITY_LOGS, thCls, tdCls, selectCls, compactSelect } from "@/app/(admin dashboard)/constants";
+import appService from "@/app/services/appService";
+import { ACTIVITY_LOGS, thCls, tdCls, compactSelect } from "@/app/(admin dashboard)/constants";
 import { SelectChevron, SortIcon } from "@/app/(user dashboard)/constants";
 
+const EXT_BY_MIME: Record<string, string> = {
+    "text/csv": "csv",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/pdf": "pdf",
+    "application/json": "json",
+};
+
+const PAGE_LIMIT = 10;
+
+function str(val: any): string {
+    if (val == null) return "";
+    if (typeof val === "object") return val.name ?? val.fullName ?? val.title ?? JSON.stringify(val);
+    return String(val);
+}
+
+function resolveAdmin(row: any): string {
+    const a = row.admin ?? row.adminName ?? row.user ?? row.actor ?? "";
+    if (typeof a === "object" && a !== null) return a.fullName ?? a.name ?? a.email ?? "";
+    return String(a);
+}
+
+function resolveTime(row: any): string {
+    const t = row.time ?? row.createdAt ?? row.timestamp ?? row.date ?? "";
+    if (!t) return "";
+    const parsed = new Date(t);
+    if (isNaN(parsed.getTime())) return String(t);
+    return parsed.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 export function PlatformActivityLogs() {
-    const [dateRange, setDateRange]   = useState("Date Range");
-    const [adminUser, setAdminUser]   = useState("Admin User");
-    const [activityType, setActivityType] = useState("Activity Type");
+    const [dateRange, setDateRange]       = useState("");
+    const [adminUser, setAdminUser]       = useState("");
+    const [activityType, setActivityType] = useState("");
+    const [logs, setLogs]                 = useState<any[]>([]);
+    const [page, setPage]                 = useState(1);
+    const [totalPages, setTotalPages]     = useState(1);
+    const [exporting, setExporting]       = useState(false);
+
+    useEffect(() => {
+        appService
+            .getAdminActivityLogs(page, PAGE_LIMIT, {
+                period: dateRange || undefined,
+                adminUser: adminUser || undefined,
+                activityType: activityType || undefined,
+            })
+            .then((res) => {
+                if (res?.data?.data) {
+                    const d = res.data.data;
+                    const items = Array.isArray(d) ? d : Array.isArray(d.items) ? d.items : [];
+                    setLogs(items);
+                    setTotalPages(Math.max(1, Math.ceil((d.total ?? items.length) / (d.limit ?? PAGE_LIMIT))));
+                }
+            });
+    }, [page, dateRange, adminUser, activityType]);
+
+    const rows = logs.length > 0 ? logs : ACTIVITY_LOGS;
+
+    const handleExport = async () => {
+        setExporting(true);
+        const res = await appService.exportAdminActivityLogs({
+            period: dateRange || undefined,
+            adminUser: adminUser || undefined,
+            activityType: activityType || undefined,
+        });
+        setExporting(false);
+
+        if (!res?.data || res.status >= 400) {
+            toast.error("Failed to export activity logs.");
+            return;
+        }
+
+        const contentType = res.headers?.["content-type"] || "text/csv";
+        const disposition: string = res.headers?.["content-disposition"] || "";
+        const nameMatch = disposition.match(/filename="?([^"; ]+)"?/i);
+        const ext = EXT_BY_MIME[contentType.split(";")[0].trim()] || "csv";
+        const filename = nameMatch?.[1] || `activity-logs.${ext}`;
+
+        const blob = new Blob([res.data], { type: contentType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="flex flex-col gap-5 bg-(--db-sidebar-bg) rounded-md p-5">
@@ -30,34 +115,46 @@ export function PlatformActivityLogs() {
                 <div className="flex flex-wrap items-center gap-2">
                     {/* Date Range */}
                     <div className="relative">
-                        <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className={compactSelect}>
-                            <option>Date Range</option>
-                            <option>Today</option>
-                            <option>Last 7 Days</option>
-                            <option>Last 30 Days</option>
-                            <option>This Month</option>
+                        <select
+                            value={dateRange}
+                            onChange={(e) => { setDateRange(e.target.value); setPage(1); }}
+                            className={compactSelect}
+                        >
+                            <option value="">Date Range</option>
+                            <option value="today">Today</option>
+                            <option value="last_7_days">Last 7 Days</option>
+                            <option value="last_30_days">Last 30 Days</option>
+                            <option value="this_month">This Month</option>
                         </select>
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                     </div>
                     {/* Admin User */}
                     <div className="relative">
-                        <select value={adminUser} onChange={(e) => setAdminUser(e.target.value)} className={compactSelect}>
-                            <option>Admin User</option>
-                            <option>Sarah Admin</option>
-                            <option>John Admin</option>
-                            <option>Michael Admin</option>
-                            <option>Emma Admin</option>
+                        <select
+                            value={adminUser}
+                            onChange={(e) => { setAdminUser(e.target.value); setPage(1); }}
+                            className={compactSelect}
+                        >
+                            <option value="">Admin User</option>
+                            <option value="Sarah Admin">Sarah Admin</option>
+                            <option value="John Admin">John Admin</option>
+                            <option value="Michael Admin">Michael Admin</option>
+                            <option value="Emma Admin">Emma Admin</option>
                         </select>
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                     </div>
                     {/* Activity Type */}
                     <div className="relative">
-                        <select value={activityType} onChange={(e) => setActivityType(e.target.value)} className={compactSelect}>
-                            <option>Activity Type</option>
-                            <option>Property Update</option>
-                            <option>User Management</option>
-                            <option>Report Action</option>
-                            <option>API Settings</option>
+                        <select
+                            value={activityType}
+                            onChange={(e) => { setActivityType(e.target.value); setPage(1); }}
+                            className={compactSelect}
+                        >
+                            <option value="">Activity Type</option>
+                            <option value="property_update">Property Update</option>
+                            <option value="user_management">User Management</option>
+                            <option value="report_action">Report Action</option>
+                            <option value="api_settings">API Settings</option>
                         </select>
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                     </div>
@@ -77,12 +174,12 @@ export function PlatformActivityLogs() {
                             </tr>
                         </thead>
                         <tbody>
-                            {ACTIVITY_LOGS.map((row, i) => (
-                                <tr key={i} className="border-b divide-x divide-(--db-border) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
-                                    <td className={`${tdCls} font-medium`}>{row.admin}</td>
-                                    <td className={tdCls}>{row.action}</td>
-                                    <td className={tdCls}>{row.module}</td>
-                                    <td className={tdCls}>{row.time}</td>
+                            {rows.map((row: any, i: number) => (
+                                <tr key={row.id ?? i} className="border-b divide-x divide-(--db-border) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
+                                    <td className={`${tdCls} font-medium`}>{resolveAdmin(row)}</td>
+                                    <td className={tdCls}>{str(row.action ?? row.activity ?? row.description)}</td>
+                                    <td className={tdCls}>{str(row.module ?? row.resource ?? row.entityType)}</td>
+                                    <td className={tdCls}>{resolveTime(row)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -90,9 +187,29 @@ export function PlatformActivityLogs() {
                 </div>
             </div>
 
+            {/* Pagination */}
+            {logs.length > 0 && (
+                <div className="flex items-center justify-center gap-1.5">
+                    {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((p) => (
+                        <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            className={`w-6 h-6 rounded-sm text-[15px] font-medium transition-colors ${page === p
+                                ? "bg-[#D28A44] text-white"
+                                : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
+                                }`}
+                        >
+                            {p}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             {/* Export */}
             <div>
-                <Button variant="primary" className="py-2.5! max-w-fit px-8">EXPORT LOGS</Button>
+                <Button variant="primary" className="py-2.5! max-w-fit px-8" onClick={handleExport} disabled={exporting}>
+                    {exporting ? "EXPORTING..." : "EXPORT LOGS"}
+                </Button>
             </div>
 
         </div>

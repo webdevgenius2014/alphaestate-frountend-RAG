@@ -314,9 +314,10 @@ export default function AdminProfilePage() {
                             <h3 className="text-[18px] font-medium text-(--db-text-primary) mb-4">Preferences</h3>
                             <div className="space-y-3">
                                 {([
-                                    { key: "emailNotifications", label: "Email Notifications" },
+                                    // Could be used further
+                                    // { key: "emailNotifications", label: "Email Notifications" },
                                     { key: "systemHealthAlerts", label: "System Health Alerts" },
-                                    { key: "activitySummary", label: "Activity Summary" },
+                                    // { key: "activitySummary", label: "Activity Summary" },
                                 ] as { key: keyof typeof prefs; label: string }[]).map(({ key, label }) => (
                                     <div key={key} className="flex items-center justify-between gap-4 border border-[#D28A441F] bg-(--db-section-bg) rounded-md p-4">
                                         <span className="text-sm text-(--db-text-primary) font-normal">{label}</span>

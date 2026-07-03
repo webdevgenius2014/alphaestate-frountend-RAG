@@ -74,8 +74,18 @@ const ApiConfig = {
   adminProfile2Fa: `${apiURL}/admin/profile/2fa/toggle`,
   adminChangePassword: `${apiURL}/admin/profile/change-password`, 
   
+  // admin property managmant
+  adminProperties: `${apiURL}/admin/properties`,
+  adminPropertiesStats: `${apiURL}/admin/properties/stats`,
+  adminPropertiesById: `${apiURL}/admin/properties/{id}`,
+  adminPropertiesStatus: `${apiURL}/admin/properties/{id}/status`,
+  adminPropertiesCoverImage: `${apiURL}/admin/properties/{id}/cover-image`,
+  adminPropertiesGallery: `${apiURL}/admin/properties/{id}/gallery`,
+  adminPropertiesBrochure: `${apiURL}/admin/properties/{id}/brochure`,
 
-
+ // admin platform managment
+  adminActivityLogs: `${apiURL}/admin/activity-logs`,
+  adminActivityLogsExport: `${apiURL}/admin/activity-logs/export`,
 
 
 
