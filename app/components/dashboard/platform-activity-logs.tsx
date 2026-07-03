@@ -39,8 +39,8 @@ function resolveTime(row: any): string {
 
 export function PlatformActivityLogs() {
     const [dateRange, setDateRange]       = useState("");
-    const [adminUser, setAdminUser]       = useState("");
-    const [activityType, setActivityType] = useState("");
+    const [role, setRole]                 = useState("");
+    const [module, setModule]             = useState("");
     const [logs, setLogs]                 = useState<any[]>([]);
     const [page, setPage]                 = useState(1);
     const [totalPages, setTotalPages]     = useState(1);
@@ -50,8 +50,8 @@ export function PlatformActivityLogs() {
         appService
             .getAdminActivityLogs(page, PAGE_LIMIT, {
                 period: dateRange || undefined,
-                adminUser: adminUser || undefined,
-                activityType: activityType || undefined,
+                role: role || undefined,
+                module: module || undefined,
             })
             .then((res) => {
                 if (res?.data?.data) {
@@ -61,7 +61,7 @@ export function PlatformActivityLogs() {
                     setTotalPages(Math.max(1, Math.ceil((d.total ?? items.length) / (d.limit ?? PAGE_LIMIT))));
                 }
             });
-    }, [page, dateRange, adminUser, activityType]);
+    }, [page, dateRange, role, module]);
 
     const rows = logs.length > 0 ? logs : ACTIVITY_LOGS;
 
@@ -69,8 +69,8 @@ export function PlatformActivityLogs() {
         setExporting(true);
         const res = await appService.exportAdminActivityLogs({
             period: dateRange || undefined,
-            adminUser: adminUser || undefined,
-            activityType: activityType || undefined,
+            role: role || undefined,
+            module: module || undefined,
         });
         setExporting(false);
 
@@ -121,40 +121,38 @@ export function PlatformActivityLogs() {
                             className={compactSelect}
                         >
                             <option value="">Date Range</option>
-                            <option value="today">Today</option>
-                            <option value="last_7_days">Last 7 Days</option>
-                            <option value="last_30_days">Last 30 Days</option>
-                            <option value="this_month">This Month</option>
+                            <option value="last_year">Last Year</option>
+                            <option value="last_6months">Last 6 Month</option>
+                            <option value="last_month">Last Month</option>
                         </select>
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                     </div>
-                    {/* Admin User */}
+                    {/* Role */}
                     <div className="relative">
                         <select
-                            value={adminUser}
-                            onChange={(e) => { setAdminUser(e.target.value); setPage(1); }}
+                            value={role}
+                            onChange={(e) => { setRole(e.target.value); setPage(1); }}
                             className={compactSelect}
                         >
-                            <option value="">Admin User</option>
-                            <option value="Sarah Admin">Sarah Admin</option>
-                            <option value="John Admin">John Admin</option>
-                            <option value="Michael Admin">Michael Admin</option>
-                            <option value="Emma Admin">Emma Admin</option>
+                            <option value="">Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
                         </select>
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                     </div>
-                    {/* Activity Type */}
+                    {/* Module */}
                     <div className="relative">
                         <select
-                            value={activityType}
-                            onChange={(e) => { setActivityType(e.target.value); setPage(1); }}
+                            value={module}
+                            onChange={(e) => { setModule(e.target.value); setPage(1); }}
                             className={compactSelect}
                         >
-                            <option value="">Activity Type</option>
-                            <option value="property_update">Property Update</option>
-                            <option value="user_management">User Management</option>
-                            <option value="report_action">Report Action</option>
-                            <option value="api_settings">API Settings</option>
+                            <option value="">Module</option>
+                            <option value="Properties">Properties</option>
+                            <option value="Subscriptions">Subscriptions</option>
+                            <option value="Platform">Platform</option>
+                            <option value="Reports">Reports</option>
+                            <option value="Auth">Auth</option>
                         </select>
                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                     </div>

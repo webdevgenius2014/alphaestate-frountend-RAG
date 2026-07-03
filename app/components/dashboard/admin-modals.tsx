@@ -166,7 +166,7 @@ export function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onCl
             setVals({ current: "", next: "", confirm: "" });
             onClose();
         } else {
-            toast.error(res?.data?.message || "Failed to update password.");
+            toast.error(res?.data?.error || res?.data?.message || "Failed to update password.");
         }
     };
 
