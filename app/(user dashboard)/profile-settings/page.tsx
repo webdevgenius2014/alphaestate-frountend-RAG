@@ -381,7 +381,42 @@ function SecurityTab() {
     };
 
     const [prefs, setPrefs] = useState({ email: true, newDevice: true, suspicious: true });
-    const togglePref = (k: keyof typeof prefs) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
+    const [prefsLoading, setPrefsLoading] = useState({ email: false, newDevice: false, suspicious: false });
+
+    useEffect(() => {
+        appService.getNotificationPreferences().then((res) => {
+            const d = res?.data?.data ?? res?.data;
+            if (d) {
+                setPrefs({
+                    email: d.emailLoginAlertsEnabled ?? true,
+                    newDevice: d.newDeviceNotificationsEnabled ?? true,
+                    suspicious: d.suspiciousActivityDetectionEnabled ?? true,
+                });
+            }
+        });
+    }, []);
+
+    const handleTogglePref = async (key: keyof typeof prefs) => {
+        const prevPrefs = prefs;
+        const nextPrefs = { ...prefs, [key]: !prefs[key] };
+
+        setPrefs(nextPrefs);
+        setPrefsLoading((p) => ({ ...p, [key]: true }));
+
+        const res = await appService.updateNotificationPreferences({
+            emailLoginAlertsEnabled: nextPrefs.email,
+            newDeviceNotificationsEnabled: nextPrefs.newDevice,
+            suspiciousActivityDetectionEnabled: nextPrefs.suspicious,
+        });
+        setPrefsLoading((p) => ({ ...p, [key]: false }));
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 201) {
+            toast.success("Notification preference updated.");
+        } else {
+            setPrefs(prevPrefs);
+            toast.error(res?.data?.message || "Failed to update notification preference.");
+        }
+    };
 
     const secPrefs: { key: keyof typeof prefs; label: string }[] = [
         { key: "email",      label: "Email Login Alerts" },
@@ -554,7 +589,7 @@ function SecurityTab() {
                                 {secPrefs.map(({ key, label }) => (
                                     <div key={key} className="flex bg-(--db-main-bg) p-3.75 items-center justify-between gap-4">
                                         <span className="text-sm font-normal text-(--db-text-primary)">{label}</span>
-                                        <Toggle checked={prefs[key]} onChange={() => togglePref(key)} />
+                                        <Toggle checked={prefs[key]} onChange={() => !prefsLoading[key] && handleTogglePref(key)} />
                                     </div>
                                 ))}
                             </div>
@@ -567,25 +602,194 @@ function SecurityTab() {
     );
 }
 
+const AI_ALERT_FIELD_MAP: Record<string, string> = {
+    "Price Drop Alerts": "priceDropAlertsEnabled",
+    "New Listings in Saved Areas": "newListingsInSavedAreasEnabled",
+    "Market Trend Shifts": "marketTrendShiftsEnabled",
+    "Investment Score Changes": "investmentScoreChangesEnabled",
+    "ROI Opportunity Flags": "roiOpportunityFlagsEnabled",
+    "Rental Yield Updates": "rentalYieldUpdatesEnabled",
+    "Comparable Sales Alerts": "comparableSalesAlertsEnabled",
+    "District Development News": "districtDevelopmentNewsEnabled",
+};
+
+const ACCOUNT_TOGGLE_FIELD_MAP: Record<string, string> = {
+    property_saved: "propertySavedEnabled",
+    deal_analyzed: "dealAnalyzedEnabled",
+    report_ready: "reportReadyEnabled",
+    profile_updated: "profileUpdatedEnabled",
+};
+
+const FREQUENCY_TO_API: Record<string, string> = { "Daily": "daily", "Weekly": "weekly", "Monthly": "monthly", "Never": "never" };
+const API_TO_FREQUENCY: Record<string, string> = Object.fromEntries(Object.entries(FREQUENCY_TO_API).map(([k, v]) => [v, k]));
+
+const SENSITIVITY_TO_API: Record<string, string> = { "Low": "low", "Medium": "medium", "High": "high" };
+const API_TO_SENSITIVITY: Record<string, string> = Object.fromEntries(Object.entries(SENSITIVITY_TO_API).map(([k, v]) => [v, k]));
+
+const SUMMARY_TO_API: Record<string, string> = {
+    "Weekly Summary": "weekly_summary",
+    "Bi-Weekly": "bi_weekly",
+    "Monthly": "monthly",
+    "Never": "never",
+};
+const API_TO_SUMMARY: Record<string, string> = Object.fromEntries(Object.entries(SUMMARY_TO_API).map(([k, v]) => [v, k]));
+
 function NotificationsTab() {
     const [mainToggles, setMainToggles] = useState<Record<string, boolean>>({
         email: true, push: true, sms: false,
     });
+    const [mainToggleLoading, setMainToggleLoading] = useState<Record<string, boolean>>({});
+
     const [aiAlerts, setAiAlerts] = useState<Set<string>>(
         () => new Set(["Price Drop Alerts", "New Listings in Saved Areas", "Market Trend Shifts", "ROI Opportunity Flags"])
     );
+    const [aiAlertLoading, setAiAlertLoading] = useState<Record<string, boolean>>({});
+
     const [marketUpdate, setMarketUpdate] = useState("Daily");
     const [sensitivity, setSensitivity]   = useState("Medium");
     const [summary, setSummary]           = useState("Weekly Summary");
+    const [selectLoading, setSelectLoading] = useState({ marketUpdate: false, sensitivity: false, summary: false });
+
     const [districts, setDistricts] = useState<Set<string>>(
         () => new Set(["Downtown Dubai", "Dubai Marina"])
     );
+    const [districtLoading, setDistrictLoading] = useState<Record<string, boolean>>({});
+
     const [accountToggles, setAccountToggles] = useState<Record<string, boolean>>({
         property_saved: true, deal_analyzed: true, report_ready: true, profile_updated: false,
     });
+    const [accountToggleLoading, setAccountToggleLoading] = useState<Record<string, boolean>>({});
 
-    const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) =>
-        setter((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
+    useEffect(() => {
+        appService.getNotificationPreferences().then((res) => {
+            const d = res?.data?.data ?? res?.data;
+            if (!d) return;
+
+            setMainToggles((p) => ({
+                ...p,
+                push: d.pushNotificationsEnabled ?? p.push,
+                sms: d.smsNotificationsEnabled ?? p.sms,
+            }));
+
+            setAiAlerts((prev) => {
+                const next = new Set(prev);
+                Object.entries(AI_ALERT_FIELD_MAP).forEach(([label, field]) => {
+                    if (d[field] == null) return;
+                    d[field] ? next.add(label) : next.delete(label);
+                });
+                return next;
+            });
+
+            if (d.marketUpdatesFrequency) setMarketUpdate(API_TO_FREQUENCY[d.marketUpdatesFrequency] ?? d.marketUpdatesFrequency);
+            if (d.alertSensitivity) setSensitivity(API_TO_SENSITIVITY[d.alertSensitivity] ?? d.alertSensitivity);
+            if (d.weeklySummary) setSummary(API_TO_SUMMARY[d.weeklySummary] ?? d.weeklySummary);
+            if (Array.isArray(d.preferredDistricts)) setDistricts(new Set(d.preferredDistricts));
+
+            setAccountToggles((p) => ({
+                ...p,
+                property_saved: d.propertySavedEnabled ?? p.property_saved,
+                deal_analyzed: d.dealAnalyzedEnabled ?? p.deal_analyzed,
+                report_ready: d.reportReadyEnabled ?? p.report_ready,
+                profile_updated: d.profileUpdatedEnabled ?? p.profile_updated,
+            }));
+        });
+    }, []);
+
+    const patchPref = async (payload: Record<string, any>, revert: () => void) => {
+        const res = await appService.updateNotificationPreferences(payload);
+        if (res?.data?.success || res?.status === 200 || res?.status === 201) {
+            toast.success("Notification preference updated.");
+        } else {
+            revert();
+            toast.error(res?.data?.message || "Failed to update notification preference.");
+        }
+    };
+
+    const handleToggleMain = async (id: string) => {
+        if (id !== "push" && id !== "sms") {
+            setMainToggles((p) => ({ ...p, [id]: !p[id] }));
+            return;
+        }
+
+        const prevValue = mainToggles[id];
+        const nextValue = !prevValue;
+
+        setMainToggles((p) => ({ ...p, [id]: nextValue }));
+        setMainToggleLoading((p) => ({ ...p, [id]: true }));
+
+        const payload = id === "push" ? { pushNotificationsEnabled: nextValue } : { smsNotificationsEnabled: nextValue };
+        await patchPref(payload, () => setMainToggles((p) => ({ ...p, [id]: prevValue })));
+        setMainToggleLoading((p) => ({ ...p, [id]: false }));
+    };
+
+    const handleToggleAiAlert = async (label: string) => {
+        const field = AI_ALERT_FIELD_MAP[label];
+        const wasChecked = aiAlerts.has(label);
+        const nextChecked = !wasChecked;
+
+        setAiAlerts((prev) => {
+            const next = new Set(prev);
+            nextChecked ? next.add(label) : next.delete(label);
+            return next;
+        });
+        setAiAlertLoading((p) => ({ ...p, [label]: true }));
+
+        await patchPref({ [field]: nextChecked }, () => setAiAlerts((prev) => {
+            const next = new Set(prev);
+            wasChecked ? next.add(label) : next.delete(label);
+            return next;
+        }));
+        setAiAlertLoading((p) => ({ ...p, [label]: false }));
+    };
+
+    const handleMarketUpdateChange = async (value: string) => {
+        const prevValue = marketUpdate;
+        setMarketUpdate(value);
+        setSelectLoading((p) => ({ ...p, marketUpdate: true }));
+        await patchPref({ marketUpdatesFrequency: FREQUENCY_TO_API[value] ?? value }, () => setMarketUpdate(prevValue));
+        setSelectLoading((p) => ({ ...p, marketUpdate: false }));
+    };
+
+    const handleSensitivityChange = async (value: string) => {
+        const prevValue = sensitivity;
+        setSensitivity(value);
+        setSelectLoading((p) => ({ ...p, sensitivity: true }));
+        await patchPref({ alertSensitivity: SENSITIVITY_TO_API[value] ?? value }, () => setSensitivity(prevValue));
+        setSelectLoading((p) => ({ ...p, sensitivity: false }));
+    };
+
+    const handleSummaryChange = async (value: string) => {
+        const prevValue = summary;
+        setSummary(value);
+        setSelectLoading((p) => ({ ...p, summary: true }));
+        await patchPref({ weeklySummary: SUMMARY_TO_API[value] ?? value }, () => setSummary(prevValue));
+        setSelectLoading((p) => ({ ...p, summary: false }));
+    };
+
+    const handleToggleDistrict = async (district: string) => {
+        const wasChecked = districts.has(district);
+        const nextChecked = !wasChecked;
+        const nextDistricts = new Set(districts);
+        nextChecked ? nextDistricts.add(district) : nextDistricts.delete(district);
+
+        setDistricts(nextDistricts);
+        setDistrictLoading((p) => ({ ...p, [district]: true }));
+
+        await patchPref({ preferredDistricts: Array.from(nextDistricts) }, () => setDistricts(districts));
+        setDistrictLoading((p) => ({ ...p, [district]: false }));
+    };
+
+    const handleToggleAccount = async (id: string) => {
+        const field = ACCOUNT_TOGGLE_FIELD_MAP[id];
+        const prevValue = accountToggles[id];
+        const nextValue = !prevValue;
+
+        setAccountToggles((p) => ({ ...p, [id]: nextValue }));
+        setAccountToggleLoading((p) => ({ ...p, [id]: true }));
+
+        await patchPref({ [field]: nextValue }, () => setAccountToggles((p) => ({ ...p, [id]: prevValue })));
+        setAccountToggleLoading((p) => ({ ...p, [id]: false }));
+    };
 
     return (
         <div>
@@ -604,7 +808,7 @@ function NotificationsTab() {
                             </div>
                             <Toggle
                                 checked={mainToggles[item.id] ?? false}
-                                onChange={() => setMainToggles((p) => ({ ...p, [item.id]: !p[item.id] }))}
+                                onChange={() => !mainToggleLoading[item.id] && handleToggleMain(item.id)}
                             />
                         </div>
                     ))}
@@ -619,7 +823,7 @@ function NotificationsTab() {
                                     key={label}
                                     label={label}
                                     checked={aiAlerts.has(label)}
-                                    onChange={() => toggleSet(setAiAlerts, label)}
+                                    onChange={() => !aiAlertLoading[label] && handleToggleAiAlert(label)}
                                     textCls="text-sm font-normal text-(--db-text-primary)"
                                 />
                             ))}
@@ -634,7 +838,7 @@ function NotificationsTab() {
                                     <div>
                                         <p className="block text-[15px] font-medium text-(--db-text-primary) mb-2">Market Updates</p>
                                         <div className="relative">
-                                            <select value={marketUpdate} onChange={(e) => setMarketUpdate(e.target.value)} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
+                                            <select value={marketUpdate} onChange={(e) => handleMarketUpdateChange(e.target.value)} disabled={selectLoading.marketUpdate} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
                                                 {NOTIF_MARKET_UPDATE_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                             </select>
                                             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-(--db-text-muted)"><SelectChevron /></span>
@@ -643,7 +847,7 @@ function NotificationsTab() {
                                     <div>
                                         <p className="block text-[15px] font-medium text-(--db-text-primary) mb-2">Alert Sensitivity</p>
                                         <div className="relative">
-                                            <select value={sensitivity} onChange={(e) => setSensitivity(e.target.value)} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
+                                            <select value={sensitivity} onChange={(e) => handleSensitivityChange(e.target.value)} disabled={selectLoading.sensitivity} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
                                                 {NOTIF_SENSITIVITY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                             </select>
                                             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-(--db-text-muted)"><SelectChevron /></span>
@@ -653,7 +857,7 @@ function NotificationsTab() {
                                 <div>
                                     <p className="block text-[15px] font-medium text-(--db-text-primary) mb-2">Weekly Summary</p>
                                     <div className="relative">
-                                        <select value={summary} onChange={(e) => setSummary(e.target.value)} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
+                                        <select value={summary} onChange={(e) => handleSummaryChange(e.target.value)} disabled={selectLoading.summary} className={`${inputCls} bg-(--db-main-bg)! appearance-none pr-8`}>
                                             {NOTIF_SUMMARY_OPTIONS.map((o) => <option key={o}>{o}</option>)}
                                         </select>
                                         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-(--db-text-muted)"><SelectChevron /></span>
@@ -666,7 +870,7 @@ function NotificationsTab() {
                             <p className="text-[15px] font-semibold text-(--db-text-primary) mb-3">Preferred District Alerts</p>
                             <div className="flex flex-wrap gap-x-5 gap-y-2">
                                 {NOTIF_DISTRICTS.map((d) => (
-                                    <Checkbox key={d} label={d} checked={districts.has(d)} onChange={() => toggleSet(setDistricts, d)} />
+                                    <Checkbox key={d} label={d} checked={districts.has(d)} onChange={() => !districtLoading[d] && handleToggleDistrict(d)} />
                                 ))}
                             </div>
                         </div>
@@ -684,7 +888,7 @@ function NotificationsTab() {
                                 </div>
                                 <Toggle
                                     checked={accountToggles[item.id] ?? false}
-                                    onChange={() => setAccountToggles((p) => ({ ...p, [item.id]: !p[item.id] }))}
+                                    onChange={() => !accountToggleLoading[item.id] && handleToggleAccount(item.id)}
                                 />
                             </div>
                         ))}

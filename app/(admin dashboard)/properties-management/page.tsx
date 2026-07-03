@@ -23,6 +23,7 @@ import {
 import { SelectChevron, SortIcon, SearchIcon } from "@/app/(user dashboard)/constants";
 import { DeletePropertyModal } from "@/app/components/dashboard/admin-modals";
 import { PropertyDetailViewDrawer } from "@/app/components/dashboard/property-detail-view-drawer";
+import { CsvImportLogsModal } from "@/app/components/dashboard/csv-import-logs-modal";
 
 type DisplayRow = {
    id?: string;
@@ -118,6 +119,7 @@ export default function PropertiesManagementPage() {
 
    const [deleteTarget, setDeleteTarget] = useState<DisplayRow | null>(null);
    const [drawerRecord, setDrawerRecord] = useState<PropertyViewRecord | null>(null);
+   const [csvModalOpen, setCsvModalOpen] = useState(false);
 
    useEffect(() => {
       const t = setTimeout(() => {
@@ -195,7 +197,10 @@ export default function PropertiesManagementPage() {
                   Manage property listings, market opportunities, and investment inventory across the platform.
                </p>
             </div>
+            <div className="flex flex-wrap items-end gap-4 ml-auto">
             <Button variant="primary" className="py-2.5! px-6 shrink-0" onClick={() => router.push("/properties-management/add-property")}>ADD PROPERTY</Button>
+            <Button variant="secondary" onClick={() => setCsvModalOpen(true)}>IMPORT CSV</Button>
+            </div>
          </div>
 
          {/* Stat cards */}
@@ -353,6 +358,7 @@ export default function PropertiesManagementPage() {
 
          <DeletePropertyModal isOpen={deleteTarget !== null} onClose={() => setDeleteTarget(null)} onConfirm={handleConfirmDelete} />
          {drawerRecord && <PropertyDetailViewDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
+         {csvModalOpen && <CsvImportLogsModal onClose={() => { setCsvModalOpen(false); refresh(); }} />}
       </div>
    );
 }

@@ -148,6 +148,22 @@ class AppService {
     }
   }
 
+  async getNotificationPreferences() {
+    try {
+      return await instance.get(ApiConfig.notificationPrefrences);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateNotificationPreferences(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.notificationPrefrences, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Subscriptions
   async getSubscriptionPlans() {
     try {
@@ -484,6 +500,97 @@ class AppService {
     }
   }
 
+
+  // Admin Platform Settings
+  async getPlatformGeneralInfo() {
+    try {
+      return await instance.get(ApiConfig.platformGenralInfo);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updatePlatformGeneralInfo(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.platformGenralInfo, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getPlatformSecurityInfo() {
+    try {
+      return await instance.get(ApiConfig.platformSecurityInfo);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updatePlatformSecurityInfo(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.platformSecurityInfo, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminNotificationSettings() {
+    try {
+      return await instance.get(ApiConfig.adminNotification);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAdminNotificationSettings(payload: any) {
+    try {
+      return await instance.patch(ApiConfig.adminNotification, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Admin CSV Ingestion
+  async getAdminCSV(
+    page: number = 1,
+    limit: number = 20,
+    filters?: Record<string, any>
+  ) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([_, v]) => v !== undefined && v !== null && v !== ""
+            )
+          )
+        : {};
+
+      return await instance.get(ApiConfig.adminGetCSV, {
+        params: { page, limit, ...cleanFilters },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminCSVById(id: string) {
+    try {
+      const url = ApiConfig.adminGetCSVById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async importAdminCSV(payload: FormData) {
+    try {
+      return await instance.post(ApiConfig.adminImportCSV, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
 
   // Admin Activity Logs
   async getAdminActivityLogs(
