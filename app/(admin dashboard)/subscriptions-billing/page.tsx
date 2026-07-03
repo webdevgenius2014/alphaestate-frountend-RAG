@@ -86,24 +86,24 @@ function str(val: any): string {
 }
 
 export default function SubscriptionsBillingPage() {
-    const [editingPlan, setEditingPlan]               = useState<any>(null);
-    const [loadingPlanId, setLoadingPlanId]           = useState<string | null>(null);
-    const [viewingInvoice, setViewingInvoice]         = useState<any>(null);
+    const [editingPlan, setEditingPlan] = useState<any>(null);
+    const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+    const [viewingInvoice, setViewingInvoice] = useState<any>(null);
 
-    const [dashboardStats, setDashboardStats]         = useState<any>(null);
-    const [activeSubs, setActiveSubs]                 = useState<any[]>([]);
-    const [activeSubsPage, setActiveSubsPage]         = useState(1);
+    const [dashboardStats, setDashboardStats] = useState<any>(null);
+    const [activeSubs, setActiveSubs] = useState<any[]>([]);
+    const [activeSubsPage, setActiveSubsPage] = useState(1);
     const [activeSubsTotalPages, setActiveSubsTotalPages] = useState(1);
-    const [billingHistory, setBillingHistory]         = useState<any[]>([]);
-    const [billingPeriod, setBillingPeriod]           = useState<string>("");
-    const [billingPage, setBillingPage]               = useState(1);
-    const [billingTotalPages, setBillingTotalPages]   = useState(1);
-    const [upcomingRenewals, setUpcomingRenewals]     = useState<any[]>([]);
-    const [upcomingPage, setUpcomingPage]             = useState(1);
-    const [plans, setPlans]                           = useState<any[]>([]);
-    const [planActiveUsers, setPlanActiveUsers]       = useState<Record<string, number>>({});
-    const [subPerformance, setSubPerformance]         = useState<any>(null);
-    const [revenueInsights, setRevenueInsights]       = useState<any>(null);
+    const [billingHistory, setBillingHistory] = useState<any[]>([]);
+    const [billingPeriod, setBillingPeriod] = useState<string>("");
+    const [billingPage, setBillingPage] = useState(1);
+    const [billingTotalPages, setBillingTotalPages] = useState(1);
+    const [upcomingRenewals, setUpcomingRenewals] = useState<any[]>([]);
+    const [upcomingPage, setUpcomingPage] = useState(1);
+    const [plans, setPlans] = useState<any[]>([]);
+    const [planActiveUsers, setPlanActiveUsers] = useState<Record<string, number>>({});
+    const [subPerformance, setSubPerformance] = useState<any>(null);
+    const [revenueInsights, setRevenueInsights] = useState<any>(null);
 
     useEffect(() => {
         appService.getSubscriptionDashboard().then((res) => {
@@ -190,10 +190,10 @@ export default function SubscriptionsBillingPage() {
         const detail = res?.data?.data ?? row;
         if (detail.stripePdfUrl) { window.open(detail.stripePdfUrl, "_blank"); return; }
 
-        const userName  = typeof detail.user === "object" ? (detail.user?.fullName ?? detail.user?.email ?? "") : (detail.fullName ?? detail.user ?? "");
+        const userName = typeof detail.user === "object" ? (detail.user?.fullName ?? detail.user?.email ?? "") : (detail.fullName ?? detail.user ?? "");
         const userEmail = typeof detail.user === "object" ? (detail.user?.email ?? "") : "";
-        const fmtDate   = (d: string) => { try { return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }); } catch { return d || "-"; } };
-        const status    = detail.status ?? "paid";
+        const fmtDate = (d: string) => { try { return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }); } catch { return d || "-"; } };
+        const status = detail.status ?? "paid";
 
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <title>Invoice ${detail.invoiceNumber ?? detail.id}</title>
@@ -242,7 +242,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
 <div class="footer">System-generated invoice &bull; Alpha Estate &bull; ${new Date().getFullYear()}</div>
 </body></html>`;
 
-    //  further to download the invoice while clicking on the download button
+        //  further to download the invoice while clicking on the download button
         // const blob = new Blob([html], { type: "text/html;charset=utf-8" });
         // const url  = URL.createObjectURL(blob);
         // const link = document.createElement("a");
@@ -255,7 +255,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
     };
 
     const upcomingTotalPages = Math.ceil(upcomingRenewals.length / UPCOMING_PAGE_SIZE);
-    const pagedUpcoming        = upcomingRenewals.slice((upcomingPage - 1) * UPCOMING_PAGE_SIZE, upcomingPage * UPCOMING_PAGE_SIZE);
+    const pagedUpcoming = upcomingRenewals.slice((upcomingPage - 1) * UPCOMING_PAGE_SIZE, upcomingPage * UPCOMING_PAGE_SIZE);
 
     return (
         <div className="flex flex-col gap-5">
@@ -392,7 +392,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                     </table>
                 </div>
                 <div className="flex items-center justify-center gap-1.5 mt-4">
-                    {Array.from({ length: activeSubsTotalPages }, (_, idx) => idx + 1).map((p) => (
+                    {Array.from(
+                        {
+                            length: Math.min(
+                                5,
+                                activeSubsTotalPages -
+                                Math.max(
+                                    1,
+                                    Math.min(activeSubsPage - 2, activeSubsTotalPages - 4)
+                                ) +
+                                1
+                            ),
+                        },
+                        (_, i) =>
+                            Math.max(
+                                1,
+                                Math.min(activeSubsPage - 2, activeSubsTotalPages - 4)
+                            ) + i
+                    ).map((p) => (
                         <button
                             key={p}
                             onClick={() => setActiveSubsPage(p)}
@@ -470,7 +487,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                     </table>
                 </div>
                 <div className="flex items-center justify-center gap-1.5 mt-4">
-                    {Array.from({ length: billingTotalPages }, (_, idx) => idx + 1).map((p) => (
+                    {Array.from(
+                        {
+                            length: Math.min(
+                                5,
+                                billingTotalPages -
+                                Math.max(
+                                    1,
+                                    Math.min(billingPage - 2, billingTotalPages - 4)
+                                ) +
+                                1
+                            ),
+                        },
+                        (_, i) =>
+                            Math.max(
+                                1,
+                                Math.min(billingPage - 2, billingTotalPages - 4)
+                            ) + i
+                    ).map((p) => (
                         <button
                             key={p}
                             onClick={() => setBillingPage(p)}
@@ -515,13 +549,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                         </table>
                     </div>
                     <div className="flex items-center justify-center gap-1.5 mt-4">
-                        {Array.from({ length: upcomingTotalPages }, (_, idx) => idx + 1).map((p) => (
+                        {Array.from(
+                            {
+                                length: Math.min(
+                                    5,
+                                    upcomingTotalPages -
+                                    Math.max(
+                                        1,
+                                        Math.min(upcomingPage - 2, upcomingTotalPages - 4)
+                                    ) +
+                                    1
+                                ),
+                            },
+                            (_, i) =>
+                                Math.max(
+                                    1,
+                                    Math.min(upcomingPage - 2, upcomingTotalPages - 4)
+                                ) + i
+                        ).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setUpcomingPage(p)}
                                 className={`w-6 h-6 rounded-sm text-[15px] font-medium transition-colors ${upcomingPage === p
-                                    ? "bg-[#D28A44] text-white"
-                                    : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
+                                        ? "bg-[#D28A44] text-white"
+                                        : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
                                     }`}
                             >
                                 {p}

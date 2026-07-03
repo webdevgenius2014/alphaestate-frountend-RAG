@@ -241,13 +241,30 @@ export default function UsersManagementPage() {
                     </div>
 
                     <div className="flex items-center justify-center gap-1.5 mt-4">
-                        {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((p) => (
+                        {Array.from(
+                            {
+                                length: Math.min(
+                                    5,
+                                    totalPages -
+                                    Math.max(
+                                        1,
+                                        Math.min(activePage - 2, totalPages - 4)
+                                    ) +
+                                    1
+                                ),
+                            },
+                            (_, i) =>
+                                Math.max(
+                                    1,
+                                    Math.min(activePage - 2, totalPages - 4)
+                                ) + i
+                        ).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setActivePage(p)}
                                 className={`w-6 h-6 rounded-sm text-[15px] font-medium transition-colors ${activePage === p
-                                    ? "bg-[#D28A44] text-white"
-                                    : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
+                                        ? "bg-[#D28A44] text-white"
+                                        : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
                                     }`}
                             >
                                 {p}
