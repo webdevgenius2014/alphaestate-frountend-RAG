@@ -251,7 +251,12 @@ export function CsvImportLogsModal({ onClose }: { onClose: () => void }) {
 
                             {logs.length > 0 && (
                                 <div className="flex items-center justify-center gap-1.5">
-                                    {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((p) => (
+                                    {Array.from(
+                                        {
+                                            length: Math.min(5, totalPages - Math.max(1, Math.min(page - 2, totalPages - 4)) + 1),
+                                        },
+                                        (_, i) => Math.max(1, Math.min(page - 2, totalPages - 4)) + i
+                                    ).map((p) => (
                                         <button
                                             key={p}
                                             onClick={() => setPage(p)}

@@ -330,14 +330,22 @@ export default function PropertiesManagementPage() {
             </div>
 
             {properties.length > 0 && (
-               <div className="flex items-center justify-center gap-1.5">
-                  {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((p) => (
+               <div className="flex items-center justify-center gap-2">
+                  {Array.from(
+                     {
+                        length: Math.min(
+                           5,
+                           totalPages - Math.max(1, Math.min(page - 2, totalPages - 4)) + 1
+                        ),
+                     },
+                     (_, i) => Math.max(1, Math.min(page - 2, totalPages - 4)) + i
+                  ).map((p) => (
                      <button
                         key={p}
                         onClick={() => setPage(p)}
-                        className={`w-6 h-6 rounded-sm text-[15px] font-medium transition-colors ${page === p
-                           ? "bg-[#D28A44] text-white"
-                           : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
+                        className={`w-8 h-8 rounded-sm text-[15px] font-medium transition-colors ${page === p
+                              ? "bg-[#D28A44] text-white"
+                              : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
                            }`}
                      >
                         {p}
