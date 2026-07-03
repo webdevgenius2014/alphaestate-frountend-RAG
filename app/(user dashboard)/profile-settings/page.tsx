@@ -129,11 +129,11 @@ function PasswordInput({ label, show, onToggle, ...rest }: { label: string; show
     );
 }
 
-function SaveBar({ label = "SAVE CHANGES", onCancel }: { label?: string; onCancel?: () => void }) {
+function SaveBar({ label = "SAVE CHANGES", onCancel, onSave, saving }: { label?: string; onCancel?: () => void; onSave?: () => void; saving?: boolean }) {
     return (
         <div className="flex items-center gap-4 mt-2">
-            <Button variant="primary" className="py-2.5!">
-                {label}
+            <Button variant="primary" className="py-2.5!" onClick={onSave} disabled={saving}>
+                {saving ? "SAVING..." : label}
             </Button>
             <ModalButton className="max-w-fit px-5 py-2.5!" onClick={onCancel}>CANCEL</ModalButton>
         </div>
@@ -194,6 +194,31 @@ function MyProfileTab() {
             setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
     const location = [profile?.cityState, profile?.countryRegion].filter(Boolean).join(", ") || "—";
+
+    const [saving, setSaving] = useState(false);
+
+    const handleSaveProfile = async () => {
+        setSaving(true);
+        const res = await appService.updateUserProfile({
+            fullName: `${form.firstName} ${form.lastName}`.trim(),
+            email: form.email,
+            phoneCode: form.phoneCode,
+            phoneNumber: form.phone,
+            countryRegion: form.country,
+            cityState: form.city,
+            bio: form.bio,
+        });
+        setSaving(false);
+
+        if (res?.status === 200 || res?.status === 201) {
+            const data = res.data?.data ?? res.data;
+            setProfile(data);
+            toast.success("Profile updated successfully.");
+            setFormOpen(false);
+        } else {
+            toast.error(res?.data?.error || res?.data?.message || "Failed to update profile.");
+        }
+    };
 
     return (
         <div className="min-h-[calc(100vh-200px)]">
@@ -337,7 +362,7 @@ function MyProfileTab() {
                     </div>
                 </div>
 
-                <SaveBar onCancel={() => setFormOpen(false)} />
+                <SaveBar onCancel={() => setFormOpen(false)} onSave={handleSaveProfile} saving={saving} />
                 </div>
             </div>
         </div>
@@ -373,7 +398,7 @@ function SecurityTab() {
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
-                toast.error(res?.data?.message || "Failed to update password.");
+                toast.error(res?.data?.error || res?.data?.message || "Failed to update password.");
             }
         } finally {
             setPwLoading(false);

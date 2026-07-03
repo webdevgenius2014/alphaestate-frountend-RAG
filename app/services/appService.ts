@@ -598,8 +598,8 @@ class AppService {
     limit: number = 20,
     filters?: {
       period?: string;
-      adminUser?: string;
-      activityType?: string;
+      role?: string;
+      module?: string;
     }
   ) {
     try {
@@ -619,7 +619,7 @@ class AppService {
     }
   }
 
-  async exportAdminActivityLogs(filters?: { period?: string; adminUser?: string; activityType?: string }) {
+  async exportAdminActivityLogs(filters?: { period?: string; role?: string; module?: string }) {
     try {
       const cleanFilters = filters
         ? Object.fromEntries(
