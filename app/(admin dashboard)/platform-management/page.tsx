@@ -45,7 +45,8 @@ export default function PlatformManagementPage() {
             </div>
 
             {activeTab === "system-settings"   && <PlatformSystemSettings />}
-            {activeTab === "roles-permissions" && <PlatformRolesPermissions />}
+            {/* Could be used further */}
+            {/* {activeTab === "roles-permissions" && <PlatformRolesPermissions />} */}
             {activeTab === "activity-logs"     && <PlatformActivityLogs />}
             {activeTab === "api-connections"   && <PlatformAPIConnections />}
 

@@ -70,13 +70,14 @@ export function PlatformSystemSettings() {
                             <span className="text-sm text-(--db-text-primary)">Two-Factor Authentication</span>
                             <Toggle checked={security.twoFA} onChange={() => setSecurity((p) => ({ ...p, twoFA: !p.twoFA }))} />
                         </div>
+                        {/* Could be used further */}
 
-                        <Select label="Session Timeout" options={["15 Minutes", "30 Minutes", "1 Hour", "4 Hours", "Never"]} value={security.sessionTimeout} onChange={(v) => setSecurity((p) => ({ ...p, sessionTimeout: v }))} />
+                        {/* <Select label="Session Timeout" options={["15 Minutes", "30 Minutes", "1 Hour", "4 Hours", "Never"]} value={security.sessionTimeout} onChange={(v) => setSecurity((p) => ({ ...p, sessionTimeout: v }))} />
 
                         <div>
                             <label className={labelCls}>Password Policy</label>
                             <input type="text" value={security.passwordPolicy} onChange={(e) => setSecurity((p) => ({ ...p, passwordPolicy: e.target.value }))} placeholder="Strong Password Required" className={fieldCls} />
-                        </div>
+                        </div> */}
                     </div>
 
                     <div className="bg-(--db-main-bg) rounded-md p-5 flex flex-col gap-3">

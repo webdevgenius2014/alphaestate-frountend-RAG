@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
+import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import {
    PROPERTY_STATS,
@@ -16,26 +17,170 @@ import {
    EyeIcon,
    EditIcon,
    TrashIcon,
+   type PropertyStatus,
    type PropertyViewRecord,
 } from "../constants";
 import { SelectChevron, SortIcon, SearchIcon } from "@/app/(user dashboard)/constants";
 import { DeletePropertyModal } from "@/app/components/dashboard/admin-modals";
 import { PropertyDetailViewDrawer } from "@/app/components/dashboard/property-detail-view-drawer";
 
+type DisplayRow = {
+   id?: string;
+   name: string;
+   district: string;
+   type: string;
+   price: string;
+   status: PropertyStatus;
+   raw?: any;
+};
+
+const PAGE_LIMIT = 10;
+
+function mapStatus(status: any): PropertyStatus {
+   const v = String(status ?? "").toLowerCase();
+   if (v === "featured") return "Featured";
+   if (v === "draft") return "Draft";
+   return "Active";
+}
+
+function formatPrice(n: any): string {
+   if (n == null || n === "") return "-";
+   const num = typeof n === "number" ? n : Number(n);
+   if (Number.isNaN(num)) return String(n);
+   return `AED ${num.toLocaleString()}`;
+}
+
+function formatPercent(overrideVal: any, fractionVal: any): string {
+   if (overrideVal != null && overrideVal !== "") {
+      const n = Number(overrideVal);
+      return Number.isNaN(n) ? String(overrideVal) : `${n}%`;
+   }
+   if (fractionVal != null && fractionVal !== "") {
+      const n = Number(fractionVal);
+      return Number.isNaN(n) ? String(fractionVal) : `${(n * 100).toFixed(2)}%`;
+   }
+   return "-";
+}
+
+function titleCase(s: string): string {
+   return s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function toDisplayRow(item: any): DisplayRow {
+   return {
+      id: item.id,
+      name: item.projectName ?? item.name ?? "",
+      district: item.district ?? item.districtName ?? "",
+      type: item.propertyType ?? item.type ?? "",
+      price: formatPrice(item.displayPrice ?? item.askingPriceAed ?? item.price),
+      status: mapStatus(item.status),
+      raw: item,
+   };
+}
+
+function toViewRecord(item: any): PropertyViewRecord {
+   const saleType = item.saleType ?? item.recentTransactions?.[0]?.saleType ?? "";
+   return {
+      name: item.projectName ?? item.name ?? "",
+      district: item.district ?? item.districtName ?? "",
+      type: item.propertyType ?? item.type ?? "",
+      price: formatPrice(item.displayPrice ?? item.askingPriceAed ?? item.price),
+      status: mapStatus(item.status),
+      developer: item.developerName ?? item.developer ?? "-",
+      beds: item.bedrooms ?? 0,
+      sqft: item.landAreaSqm != null ? String(item.landAreaSqm) : (item.sqft ?? ""),
+      saleType: saleType ? titleCase(saleType) : "-",
+      roi: formatPercent(item.roiOverride, item.roi),
+      rentalYield: formatPercent(item.rentalYieldOverride, item.rentalYield),
+      description: item.description ?? "No description provided.",
+      amenities: item.features ?? item.amenities ?? [],
+      images: [item.coverImageUrl, ...(item.galleryImageUrls ?? item.images ?? [])].filter(Boolean),
+   };
+}
+
 export default function PropertiesManagementPage() {
    const router = useRouter();
-   const [deleteOpen, setDeleteOpen] = useState(false);
-   const [search, setSearch] = useState("");
+
+   const [properties, setProperties] = useState<any[]>([]);
+   const [page, setPage] = useState(1);
+   const [totalPages, setTotalPages] = useState(1);
+   const [stats, setStats] = useState<any>(null);
+   const [refreshKey, setRefreshKey] = useState(0);
+   const refresh = () => setRefreshKey((k) => k + 1);
+
+   const [searchInput, setSearchInput] = useState("");
+   const [activeSearch, setActiveSearch] = useState("");
    const [district, setDistrict] = useState("District");
    const [status, setStatus] = useState("Status");
    const [saleType, setSaleType] = useState("Sale Type");
    const [propType, setPropType] = useState("Property Type");
-   const [period, setPeriod] = useState("Last Year");
+   const [period, setPeriod] = useState("last_year");
+
+   const [deleteTarget, setDeleteTarget] = useState<DisplayRow | null>(null);
    const [drawerRecord, setDrawerRecord] = useState<PropertyViewRecord | null>(null);
 
-   const openDrawer = (name: string) => {
-      const record = ALL_PROPERTY_VIEWS.find((v) => v.name === name);
+   useEffect(() => {
+      const t = setTimeout(() => {
+         setPage(1);
+         setActiveSearch(searchInput);
+      }, 500);
+      return () => clearTimeout(t);
+   }, [searchInput]);
+
+   useEffect(() => {
+      appService.getAdminPropertiesStats().then((res) => {
+         if (res?.data?.data) setStats(res.data.data);
+      });
+   }, [refreshKey]);
+
+   useEffect(() => {
+      appService
+         .getAdminProperties(page, PAGE_LIMIT, {
+            search: activeSearch || undefined,
+            district: district !== "District" ? district : undefined,
+            propertyType: propType !== "Property Type" ? propType : undefined,
+            saleType: saleType !== "Sale Type" ? saleType.toLowerCase().replace(/\s+/g, "-") : undefined,
+            status: status !== "Status" ? status.toLowerCase() : undefined,
+            period: period || undefined,
+         })
+         .then((res) => {
+            if (res?.data?.data) {
+               const d = res.data.data;
+               const items = Array.isArray(d) ? d : Array.isArray(d.items) ? d.items : [];
+               setProperties(items);
+               setTotalPages(Math.max(1, Math.ceil((d.total ?? items.length) / (d.limit ?? PAGE_LIMIT))));
+            }
+         });
+   }, [page, refreshKey, activeSearch, district, status, saleType, propType, period]);
+
+   const rows: DisplayRow[] = properties.length > 0
+      ? properties.map(toDisplayRow)
+      : ALL_PROPERTIES.map((p) => ({ ...p }));
+
+   const openDrawer = (row: DisplayRow) => {
+      if (row.raw) {
+         if (row.id) {
+            appService.getAdminPropertyById(row.id).then((res) => {
+               setDrawerRecord(toViewRecord(res?.data?.data ?? row.raw));
+            });
+         } else {
+            setDrawerRecord(toViewRecord(row.raw));
+         }
+         return;
+      }
+      const record = ALL_PROPERTY_VIEWS.find((v) => v.name === row.name);
       if (record) setDrawerRecord(record);
+   };
+
+   const handleConfirmDelete = () => {
+      if (deleteTarget?.id) {
+         appService.deleteAdminPropertyById(deleteTarget.id).then(() => {
+            setDeleteTarget(null);
+            refresh();
+         });
+      } else {
+         setDeleteTarget(null);
+      }
    };
 
    return (
@@ -55,17 +200,26 @@ export default function PropertiesManagementPage() {
 
          {/* Stat cards */}
          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-            {PROPERTY_STATS.map((s) => (
-               <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-[13px_14px_21px] flex flex-col">
-                  <div className="flex items-center justify-start gap-2 mb-4">
-                     <div className="shrink-0 bg-[#D28A441F] p-1.75 rounded-sm">
-                        {s.icon}
+            {PROPERTY_STATS.map((s, i) => {
+               const apiValues = [
+                  stats?.total != null ? String(stats.total) : null,
+                  stats?.active != null ? String(stats.active) : null,
+                  stats?.featured != null ? String(stats.featured) : null,
+                  stats?.draft != null ? String(stats.draft) : null,
+               ];
+               const val = apiValues[i] ?? s.value;
+               return (
+                  <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-[13px_14px_21px] flex flex-col">
+                     <div className="flex items-center justify-start gap-2 mb-4">
+                        <div className="shrink-0 bg-[#D28A441F] p-1.75 rounded-sm">
+                           {s.icon}
+                        </div>
+                        <p className="text-sm font-medium text-(--db-text-primary)">{s.label}</p>
                      </div>
-                     <p className="text-sm font-medium text-(--db-text-primary)">{s.label}</p>
+                     <AnimatedNumber value={val} className="text-2xl mb-2 mt-1 md:text-[42px] font-semibold text-(--db-text-primary) leading-none" />
                   </div>
-                  <AnimatedNumber value={s.value} className="text-2xl mb-2 mt-1 md:text-[42px] font-semibold text-(--db-text-primary) leading-none" />
-               </div>
-            ))}
+               );
+            })}
          </div>
 
          {/* Search + filters */}
@@ -73,8 +227,8 @@ export default function PropertiesManagementPage() {
             <div className="flex flex-1 pr-1.5 max-w-99.75 items-center border border-(--db-border) rounded-sm overflow-hidden bg-(--db-main-bg)">
                <input
                   type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search by Property Name, District,  Developer"
                   className="flex-1 text-[11px] text-(--db-text-primary) placeholder-(--db-text-muted) bg-transparent outline-none px-3 py-2.5"
                />
@@ -90,7 +244,11 @@ export default function PropertiesManagementPage() {
                   { value: propType, set: setPropType, opts: ["Property Type", "Apartment", "Villa", "Townhouse", "Penthouse"] },
                ] as const).map(({ value, set, opts }) => (
                   <div key={opts[0]} className="relative shrink-0">
-                     <select value={value} onChange={(e) => (set as (v: string) => void)(e.target.value)} className={compactSelect}>
+                     <select
+                        value={value}
+                        onChange={(e) => { (set as (v: string) => void)(e.target.value); setPage(1); }}
+                        className={compactSelect}
+                     >
                         {opts.map((o) => <option key={o}>{o}</option>)}
                      </select>
                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
@@ -109,11 +267,11 @@ export default function PropertiesManagementPage() {
                </div>
                <div className="flex items-center gap-2 shrink-0">
                   <div className="relative">
-                     <select value={period} onChange={(e) => setPeriod(e.target.value)} className={compactSelect}>
-                        <option>Last Year</option>
-                        <option>Last Month</option>
-                        <option>Last Week</option>
-                        <option>All Time</option>
+                     <select value={period} onChange={(e) => { setPeriod(e.target.value); setPage(1); }} className={compactSelect}>
+                        <option value="last_year">Last Year</option>
+                        <option value="last_month">Last Month</option>
+                        <option value="last_week">Last Week</option>
+                        <option value="">All Time</option>
                      </select>
                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"><SelectChevron /></span>
                   </div>
@@ -137,10 +295,10 @@ export default function PropertiesManagementPage() {
                         </tr>
                      </thead>
                      <tbody>
-                        {ALL_PROPERTIES.map((row, i) => {
+                        {rows.map((row, i) => {
                            const st = PROPERTY_STATUS_CONFIG[row.status];
                            return (
-                              <tr key={i} className="border-b divide-x divide-(--db-border) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
+                              <tr key={row.id ?? i} className="border-b divide-x divide-(--db-border) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
                                  <td className={`${tdCls} font-medium`}>{row.name}</td>
                                  <td className={tdCls}>{row.district}</td>
                                  <td className={tdCls}>{row.type}</td>
@@ -153,9 +311,9 @@ export default function PropertiesManagementPage() {
                                  </td>
                                  <td className={tdCls}>
                                     <div className="flex items-center gap-1.5">
-                                       <button className={actionBtnCls} title="View" onClick={() => openDrawer(row.name)}><EyeIcon /></button>
-                                       <button className={actionBtnCls} onClick={() => router.push("/properties-management/edit-property")} title="Edit"><EditIcon /></button>
-                                       <button className={actionBtnCls} title="Delete" onClick={() => setDeleteOpen(true)}><TrashIcon /></button>
+                                       <button className={actionBtnCls} title="View" onClick={() => openDrawer(row)}><EyeIcon /></button>
+                                       <button className={actionBtnCls} onClick={() => router.push(row.id ? `/properties-management/edit-property?id=${row.id}` : "/properties-management/edit-property")} title="Edit"><EditIcon /></button>
+                                       <button className={actionBtnCls} title="Delete" onClick={() => setDeleteTarget(row)}><TrashIcon /></button>
                                     </div>
                                  </td>
                               </tr>
@@ -166,9 +324,26 @@ export default function PropertiesManagementPage() {
                </div>
             </div>
 
+            {properties.length > 0 && (
+               <div className="flex items-center justify-center gap-1.5">
+                  {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((p) => (
+                     <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-6 h-6 rounded-sm text-[15px] font-medium transition-colors ${page === p
+                           ? "bg-[#D28A44] text-white"
+                           : "text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white"
+                           }`}
+                     >
+                        {p}
+                     </button>
+                  ))}
+               </div>
+            )}
+
          </div>
 
-         <DeletePropertyModal isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+         <DeletePropertyModal isOpen={deleteTarget !== null} onClose={() => setDeleteTarget(null)} onConfirm={handleConfirmDelete} />
          {drawerRecord && <PropertyDetailViewDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
       </div>
    );
