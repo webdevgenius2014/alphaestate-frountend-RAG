@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
@@ -119,7 +119,15 @@ function UploadZone({
     );
 }
 
-export default function AddPropertyPage() {
+export default function EditPropertyPage() {
+    return (
+        <Suspense fallback={null}>
+            <EditPropertyForm />
+        </Suspense>
+    );
+}
+
+function EditPropertyForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
