@@ -83,10 +83,22 @@ const ApiConfig = {
   adminPropertiesGallery: `${apiURL}/admin/properties/{id}/gallery`,
   adminPropertiesBrochure: `${apiURL}/admin/properties/{id}/brochure`,
 
+  // CSV
+  adminGetCSV: `${apiURL}/admin/ingestion/logs`,
+  adminGetCSVById: `${apiURL}/admin/ingestion/logs/{id}`,
+  adminImportCSV: `${apiURL}/admin/ingestion/upload`,
+
+
+
  // admin platform managment
   adminActivityLogs: `${apiURL}/admin/activity-logs`,
   adminActivityLogsExport: `${apiURL}/admin/activity-logs/export`,
+  adminNotification: `${apiURL}/admin/platform/settings/notifications`,
+  platformGenralInfo: `${apiURL}/admin/platform/settings/general`,
+  platformSecurityInfo: `${apiURL}/admin/platform/settings/security`,
 
+  //user profile notification
+  notificationPrefrences: `${apiURL}/users/me/notification-preferences`,
 
 
 

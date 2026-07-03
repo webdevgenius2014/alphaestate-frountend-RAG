@@ -3716,11 +3716,12 @@ export function SettingsLocationPinIcon() {
 // ── Notification Settings data ────────────────────────────────────────────
 
 export const NOTIF_MAIN_TOGGLES = [
-  {
-    id: "email",
-    label: "Email Login Alerts",
-    desc: "Receive security and login notifications via email",
-  },
+  // Could be used further
+  // {
+  //   id: "email",
+  //   label: "Email Login Alerts",
+  //   desc: "Receive security and login notifications via email",
+  // },
   {
     id: "push",
     label: "Push Notifications",
@@ -3745,17 +3746,17 @@ export const NOTIF_AI_ALERTS = [
 ];
 
 export const NOTIF_MARKET_UPDATE_OPTIONS = [
-  "Real-Time",
   "Daily",
   "Weekly",
   "Monthly",
+  "Never",
 ];
 export const NOTIF_SENSITIVITY_OPTIONS = ["Low", "Medium", "High"];
 export const NOTIF_SUMMARY_OPTIONS = [
-  "Daily Digest",
   "Weekly Summary",
-  "Monthly Report",
-  "Disabled",
+  "Bi-Weekly",
+  "Monthly",
+  "Never",
 ];
 
 export const NOTIF_DISTRICTS = [
