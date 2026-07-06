@@ -7,6 +7,8 @@ const publicRoutes = [
   "/resend-email",
   "/forgot-password",
   "/reset-password",
+  "/privacy-policy",
+  "/terms-of-service",
 ];
 
 export function middleware(req: NextRequest) {

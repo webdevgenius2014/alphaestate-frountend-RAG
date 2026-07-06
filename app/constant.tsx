@@ -350,3 +350,153 @@ export function Stars({ rating }: { rating: number }) {
         </div>
     );
 }
+
+// ── Privacy Policy ─────────────────────────────────────────────────────────
+
+export const PP_TOC = [
+    { num: "1",  label: "Introduction" },
+    { num: "2",  label: "Who We Are" },
+    { num: "3",  label: "What Personal Data We Collect" },
+    { num: "4",  label: "How We Use Your Personal Data" },
+    { num: "5",  label: "How We Share Your Personal Data" },
+    { num: "6",  label: "Cross-Border Data Transfers" },
+    { num: "7",  label: "AI Processing of Your Data" },
+    { num: "8",  label: "Cookies and Tracking Technologies" },
+    { num: "9",  label: "Your Rights as a Data Subject" },
+    { num: "10", label: "Data Security" },
+    { num: "11", label: "Data Retention" },
+    { num: "12", label: "Contact Us" },
+    { num: "13", label: "Changes to This Policy" },
+];
+
+export const PP_DIRECT_INFO = [
+    "Account information: full name, email address, phone number, password (stored in encrypted/hashed form)",
+    "Profile information: country/region, city, professional role (e.g., investor, broker), short bio (optional)",
+    "Payment and billing information: processed via third-party payment processors; we do not store full card numbers",
+    "Deal Analyzer and ROI Calculator inputs: property prices, rental income figures, and other financial figures you choose to enter",
+    "Communications: any correspondence you send us, including support requests and feedback",
+];
+
+export const PP_AUTO_INFO = [
+    "Usage data: pages viewed, features used, queries made to the AI Assistant, search history within the Platform",
+    "Device and technical data: IP address, browser type, device type, operating system, approximate location (derived from IP)",
+    "Cookies and similar technologies, as described in Section 8",
+];
+
+export const PP_PURPOSES: [string, string][] = [
+    ["Creating and managing your account", "Performance of contract"],
+    ["Providing AI Assistant responses, Deal Analyzer results, and reports", "Performance of contract"],
+    ["Processing subscription payments", "Performance of contract"],
+    ["Sending service notifications (e.g., security alerts, billing)", "Performance of contract / Legitimate purpose"],
+    ["Sending marketing communications (where you have opted in)", "Consent"],
+    ["Improving the Platform and AI Assistant performance", "Legitimate purpose"],
+    ["Detecting fraud, abuse, or security incidents", "Legitimate purpose / Legal obligation"],
+    ["Complying with legal or regulatory obligations", "Legal obligation"],
+];
+
+export const PP_SHARING = [
+    "Service providers who process data on our behalf (e.g., cloud hosting providers, payment processors, email delivery services), under contractual data protection obligations consistent with the PDPL",
+    "The AI/LLM provider used to power the AI Assistant, to the extent necessary to generate responses to your queries (see Section 7)",
+    "Legal or regulatory authorities, where required by UAE law or a valid legal process",
+    "A successor entity in the event of a merger, acquisition, or sale of assets, subject to equivalent privacy protections",
+];
+
+export const PP_CROSS_BORDER = [
+    "A determination by the UAE Data Office that the destination country provides an adequate level of data protection; or",
+    "Appropriate contractual safeguards with the receiving party; or",
+    "Your explicit consent to the specific transfer, after being informed of the relevant risks, where neither of the above applies",
+];
+
+export const PP_RIGHTS = [
+    "Right to access the personal data we hold about you",
+    "Right to request correction of inaccurate or incomplete personal data",
+    "Right to request erasure of your personal data, subject to applicable legal retention requirements",
+    "Right to restrict or object to certain processing of your personal data",
+    "Right to data portability, where technically feasible",
+    "Right to withdraw consent at any time, where processing is based on consent (e.g., marketing communications)",
+    "Right to lodge a complaint with the UAE Data Office if you believe your rights have been violated",
+];
+
+// ── Terms of Service ────────────────────────────────────────────────────────
+
+export const TOS_TOC = [
+    { num: "1",  label: "Introduction and Acceptance" },
+    { num: "2",  label: "Description of Service" },
+    { num: "3",  label: "Eligibility and Account Registration" },
+    { num: "4",  label: "Subscription Plans and Payment" },
+    { num: "5",  label: "Acceptable Use" },
+    { num: "6",  label: "Disclaimers Regarding Data and AI Output" },
+    { num: "7",  label: "Limitation of Liability" },
+    { num: "8",  label: "Intellectual Property" },
+    { num: "9",  label: "Reports and Exported Content" },
+    { num: "10", label: "Termination" },
+    { num: "11", label: "Governing Law and Dispute Resolution" },
+    { num: "12", label: "Changes to These Terms" },
+    { num: "13", label: "Contact" },
+];
+
+export const TOS_PLATFORM_FEATURES = [
+    "Analysis of historical and, where available, live property transaction data sourced from the Abu Dhabi Real Estate Centre (ADREC)",
+    "An AI-powered conversational interface (\"AI Assistant\") for querying market data in Arabic and English",
+    "Financial calculation tools, including return-on-investment (ROI), rental yield, and price comparison estimates",
+    "A Deal Analyzer tool comparing user-submitted property details against historical transaction data",
+    "Market intelligence reports, alerts, and related analytical features",
+];
+
+export const TOS_SUBSCRIPTION_ITEMS = [
+    "Access to certain features of the Platform requires a paid subscription. Subscription tiers, pricing, and included features are described on the Platform and may be updated from time to time.",
+    "Subscriptions renew automatically at the end of each billing cycle (monthly or annually, as selected) unless cancelled prior to renewal.",
+    "All fees are stated in AED and are exclusive of applicable VAT unless stated otherwise.",
+    "Except as required by law or expressly stated in our refund policy, subscription fees are non-refundable.",
+    "We reserve the right to change subscription pricing with reasonable prior notice to existing subscribers.",
+    "Payments are processed through third-party payment processors. We do not store full payment card details on our servers.",
+];
+
+export const TOS_ACCEPTABLE_USE = [
+    "Use the Platform for any unlawful purpose or in violation of any applicable UAE federal or local law",
+    "Attempt to scrape, copy, reverse-engineer, or systematically extract data from the Platform for resale or competing commercial use",
+    "Use automated means (bots, scrapers) to access the Platform without our prior written consent",
+    "Misrepresent your identity or impersonate any person or entity",
+    "Share your account credentials with third parties or allow access to the Platform by individuals not party to your subscription",
+    "Use the AI Assistant or any Platform output as the sole basis for a real estate transaction without independent verification",
+    "Interfere with or disrupt the integrity or performance of the Platform",
+];
+
+export const TOS_DISCLAIMERS: { bold: string; text: string }[] = [
+    {
+        bold: "Data Source.",
+        text: "Historical transaction data displayed on the Platform is derived from records made available by or sourced in connection with the Abu Dhabi Real Estate Centre (ADREC). We process this data (including cleansing, filtering, and normalization) before presenting it. While we take reasonable steps to maintain accuracy, we do not guarantee that all figures precisely match official ADREC records at all times, and figures may be subject to revision.",
+    },
+    {
+        bold: "No Investment, Financial, or Legal Advice.",
+        text: "All content on the Platform — including AI Assistant responses, ROI and yield calculations, Deal Analyzer scores, market signals, and reports — is provided for general informational purposes only. Nothing on the Platform constitutes investment advice, financial advice, legal advice, or a recommendation to buy, sell, or hold any property or enter into any transaction.",
+    },
+    {
+        bold: "AI-Generated Content.",
+        text: "The AI Assistant uses automated systems, including large language models, to generate responses based on the Platform's underlying dataset. While we implement safeguards to reduce inaccurate or fabricated outputs, AI-generated content may contain errors, omissions, or outdated information. You should independently verify any information before relying on it for financial or legal decisions.",
+    },
+    {
+        bold: "User-Provided Inputs.",
+        text: "Where calculations (such as ROI or rental yield) rely on figures you provide (e.g., purchase price, expected rent, service charges), the accuracy of the output depends entirely on the accuracy of your inputs. Where you do not provide inputs, the Platform may use general market estimates, which are approximate and may not reflect your specific property or transaction.",
+    },
+    {
+        bold: "No Brokerage Relationship.",
+        text: "Use of the Platform does not create a brokerage, agency, fiduciary, or advisory relationship between you and Estate Alpha.",
+    },
+];
+
+export const TOC = [
+    { num: "1",  label: "Introduction and Acceptance" },
+    { num: "2",  label: "Description of Service" },
+    { num: "3",  label: "Eligibility and Account Registration" },
+    { num: "4",  label: "Subscription Plans and Payment" },
+    { num: "5",  label: "Acceptable Use" },
+    { num: "6",  label: "Disclaimers Regarding Data and AI Output" },
+    { num: "7",  label: "Limitation of Liability" },
+    { num: "8",  label: "Intellectual Property" },
+    { num: "9",  label: "Reports and Exported Content" },
+    { num: "10", label: "Termination" },
+    { num: "11", label: "Governing Law and Dispute Resolution" },
+    { num: "12", label: "Changes to These Terms" },
+    { num: "13", label: "Contact" },
+];
