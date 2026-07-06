@@ -77,8 +77,8 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
                         <footer className="bg-(--db-sidebar-bg) mt-5 px-5 py-3 flex flex-wrap rounded-[3px] items-center justify-between gap-2">
                             <p className="text-xs inline-flex text-(--db-text-primary)">© Copyright 2025, Alpha Estate | All Rights Reserved</p>
                             <div className="inline-flex items-center gap-4 text-xs text-(--db-text-primary)">
-                                <Link href="#" className="hover:text-(--db-text-primary) transition-colors">Privacy Policy</Link>
-                                <Link href="#" className="hover:text-(--db-text-primary) transition-colors">Terms of Service</Link>
+                                <Link href="/privacy-policy" className="hover:text-(--db-text-primary) transition-colors">Privacy Policy</Link>
+                                <Link href="/terms-of-service" className="hover:text-(--db-text-primary) transition-colors">Terms of Service</Link>
                             </div>
                         </footer>
                     </main>

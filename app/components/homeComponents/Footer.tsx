@@ -47,7 +47,7 @@ export const Footer = () => {
     }, []);
 
     return (
-        <footer className="bg-linear-to-b from-[#031532] to-[#000C1CD9] -mx-7.5 overflow-hidden">
+        <footer className="bg-linear-to-b from-[#031532] to-[#000C1CD9] xl:-mx-7.5 overflow-hidden">
             <div className="w-full max-w-345 mx-auto px-4 pt-20 pb-0">
                 {/* Main row */}
                 <div className="flex flex-col lg:flex-row gap-16 lg:gap-0 justify-between">
@@ -65,7 +65,7 @@ export const Footer = () => {
                         </p>
 
                         {/* Subscribe input */}
-                        <div className="flex gap-3 items-center">
+                        <div className="flex gap-3 flex-wrap items-center">
                             <input
                                 type="email"
                                 placeholder="Enter Your Email Address.."
@@ -80,7 +80,7 @@ export const Footer = () => {
                     </div>
 
                     {/* Right: nav links */}
-                    <div className="flex flex-col gap-0 min-w-115">
+                    <div className="flex flex-col gap-0 md:min-w-115">
                         {navLinks.map((link, i) => (
                             <button
                                 key={link.num}
@@ -135,10 +135,10 @@ export const Footer = () => {
                     <p className="text-[#4F5B66] text-[16px] font-light">
                         © Copyright 2026, Alpha Estate   |   All Rights Reserved
                     </p>
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center gap-6">
                         <div className="flex items-center gap-4 text-[#4F5B66] text-[16px] font-light">
-                            <Link href="#" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
-                            <Link href="#" className="hover:text-white transition-colors duration-200">Terms and Conditions</Link>
+                            <Link href="/privacy-policy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
+                            <Link href="/terms-of-service" className="hover:text-white transition-colors duration-200">Terms and Conditions</Link>
                         </div>
                         {/* Social icons */}
                         <div className="flex items-center gap-2">
