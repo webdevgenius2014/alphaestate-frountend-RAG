@@ -34,7 +34,7 @@ export const AboutSection = () => {
     }, []);
 
     return (
-        <div className="relative -mx-7.5">
+        <div className="relative xl:-mx-7.5">
 
             <style>{`
                 .text-fill {
@@ -82,15 +82,15 @@ export const AboutSection = () => {
                     </span>
                 </p>
 
-                <div className="flex items-center justify-center w-full max-w-248.75">
+                <div className="flex items-center flex-wrap gap-4 justify-center w-full max-w-248.75">
                     {stats.map((stat, i) => (
-                        <div key={stat.label} className="flex items-center flex-1">
-                            <div className="flex flex-col items-center flex-1 gap-1.5">
-                                <AnimatedNumber value={stat.value} className="text-white text-[36px] md:text-[43px] font-semibold leading-12.5" />
+                        <div key={stat.label} className="flex items-center">
+                            <div className="flex flex-col items-center gap-1.5">
+                                <AnimatedNumber value={stat.value} className="text-white text-[25px] lg:text-[36px] md:text-[43px] font-semibold leading-12.5" />
                                 <span className="text-[#FFFFFF99] text-[15px] font-light leading-7">{stat.label}</span>
                             </div>
                             {i < stats.length - 1 && (
-                                <div className="h-20.75 border-r-2 [border-image-source:linear-gradient(180deg,#03142E_0%,#224A87_50%,#03142E_100%)] [border-image-slice:1] shrink-0" />
+                                <div className="h-20.75 border-r-2 pl-4 [border-image-source:linear-gradient(180deg,#03142E_0%,#224A87_50%,#03142E_100%)] [border-image-slice:1] shrink-0" />
                             )}
                         </div>
                     ))}

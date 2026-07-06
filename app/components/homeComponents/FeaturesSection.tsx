@@ -25,17 +25,17 @@ function AccordionItem({
             <button
                 type="button"
                 onClick={onToggle}
-                className="w-full grid grid-cols-[270px_auto_auto] items-center gap-8 py-7 group text-left"
+                className="w-full flex lg:grid grid-cols-[270px_auto_auto] items-center gap-8 py-7 group text-left"
             >
-                <span className={`shrink-0 pl-10.75 text-[33px] font-semibold transition-colors duration-300 ${isOpen ? "text-[#D28A44]" : "text-white"}`}>
+                <span className={`shrink-0 lg:pl-10.75 pl-4 lg:text-[33px] text-[20px] font-semibold transition-colors duration-300 ${isOpen ? "text-[#D28A44]" : "text-white"}`}>
                     {num}
                 </span>
 
-                <span className={`text-[21px] font-semibold leading-[100%] transition-colors duration-300 ${isOpen ? "text-white" : "text-[#FFFFFFCC]"}`}>
+                <span className={`lg:text-[21px] text-lg font-semibold leading-[100%] transition-colors duration-300 ${isOpen ? "text-white" : "text-[#FFFFFFCC]"}`}>
                     {title}
                 </span>
 
-                <div className={`shrink-0 ml-auto w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-300 ${isOpen ? "bg-[#D28A44] border-[#D28A44] rotate-45" : "border-[#FFFFFF33] group-hover:bg-[#D28A44] group-hover:border-[#D28A44]"}`}>
+                <div className={`shrink-0 ml-auto w-6 h-6 lg:w-9 lg:h-9 rounded-full border flex items-center justify-center transition-all duration-300 ${isOpen ? "bg-[#D28A44] border-[#D28A44] rotate-45" : "border-[#FFFFFF33] group-hover:bg-[#D28A44] group-hover:border-[#D28A44]"}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
                         <circle cx="18" cy="18" r="17.5" transform="rotate(-90 18 18)" stroke="white" />
                         <path d="M27.7071 18.7071C28.0976 18.3166 28.0976 17.6834 27.7071 17.2929L21.3431 10.9289C20.9526 10.5384 20.3195 10.5384 19.9289 10.9289C19.5384 11.3195 19.5384 11.9526 19.9289 12.3431L25.5858 18L19.9289 23.6569C19.5384 24.0474 19.5384 24.6805 19.9289 25.0711C20.3195 25.4616 20.9526 25.4616 21.3431 25.0711L27.7071 18.7071ZM10 18L10 19L27 19L27 18L27 17L10 17L10 18Z" fill="white" />
@@ -50,11 +50,11 @@ function AccordionItem({
             }}>
                 <div style={{ overflow: "hidden" }}>
                     <div className="pb-10 pt-7 border-t border-[#FFFFFF33]">
-                        <div className="flex items-start justify-between gap-5 w-full">
-                            <h3 className="text-white  pl-10.75 text-[28px] font-bold leading-tight shrink-0">{title}</h3>
+                        <div className="flex items-start flex-wrap justify-between gap-5 w-full">
+                            <h3 className="text-white lg:inline-flex hidden pl-4 lg:pl-10.75 lg:text-[28px] text-base font-bold leading-tight shrink-0">{title}</h3>
 
-                            <div className="relative rounded-3xl bg-[#0B1F3A] border-5 border-[#FFFFFF33] overflow-hidden p-2 shrink-0">
-                                <div className="rounded-2xl overflow-hidden bg-[#060F1E] w-87.5 h-100">
+                            <div className="relative rounded-3xl bg-[#0B1F3A] max-w-full border-5 border-[#FFFFFF33] overflow-hidden p-2 shrink-0">
+                                <div className="rounded-2xl overflow-hidden bg-[#060F1E] max-w-87.5 w-full h-full max-h-100">
                                     <img
                                         src={image}
                                         alt={title}
@@ -101,7 +101,7 @@ export const FeaturesSection = () => {
                     </div>
                 </div>
 
-                <h2 className="text-center text-white text-[32px] md:text-[36px] font-semibold leading-[110%] mb-14.75">
+                <h2 className="text-center text-white text-[28px] md:text-[36px] font-semibold md:leading-[110%] mb-14.75">
                     Everything You Need to Invest Smarter
                 </h2>
 

@@ -24,7 +24,7 @@ export const Header = (): React.JSX.Element => {
 
    return (
       <div className="relative flex justify-center items-center">
-         <header className={`${scrolled ? "fixed top-0" : "absolute xl:top-7.75 top-2"} z-50 left-1/2 -translate-x-1/2 ${scrolled ? "w-[calc(100%-60px)]" : "w-full"} max-w-329.75 md:h-20.75 h-15 flex bg-[#0b1f3a66] rounded-[70px] backdrop-blur-[7px] backdrop-brightness-100 [-webkit-backdrop-filter:blur(7px)_brightness(100%)] transition-all ease-linear`}>
+         <header className={`${scrolled ? "fixed top-0" : "absolute xl:top-7.75 top-3"} z-50 left-1/2 -translate-x-1/2 ${scrolled ? "xl:w-[calc(100%-60px)] w-[calc(100%-50px)]" : "w-[calc(100%-50px)] xl:w-full"} max-w-329.75 md:h-20.75 h-15 flex bg-[#0b1f3a66] rounded-[70px] backdrop-blur-[7px] backdrop-brightness-100 [-webkit-backdrop-filter:blur(7px)_brightness(100%)] transition-all ease-linear`}>
 
             <div className="hidden xl:inline-flex mt-5.5 ml-5 relative w-319.75 h-10 items-center gap-47.75">
                <Link href="/" aria-label="Alpha home" className="relative block">
@@ -48,7 +48,7 @@ export const Header = (): React.JSX.Element => {
                      );
                   })}
                </nav>
-               <div className="relative flex justify-end gap-2">
+               <div className="relative flex justify-end w-full max-w-fit gap-2">
                   <Link href="/login">
                      <button
                         type="button"

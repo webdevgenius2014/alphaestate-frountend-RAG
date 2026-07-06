@@ -4,7 +4,7 @@ import { infos, SendIcon } from "@/app/constant";
 
 export const NewsletterSection = () => {
     return (
-        <div className="relative -mx-7.5 overflow-hidden">
+        <div className="relative xl:-mx-7.5 overflow-hidden">
 
             <video
                 src="/particales-bg.mp4"
@@ -16,11 +16,11 @@ export const NewsletterSection = () => {
 
             <div className="bg-linear-to-b from-[#010C1B] to-[#011735E5] absolute inset-0 w-full h-full scale-110" />
             <div className="w-full max-w-345 relative z-1 mx-auto px-4 pb-16 pt-26">
-                <div className="flex items-center justify-center">
+                <div className="flex items-center flex-wrap gap-5 justify-center">
                     {infos.map((info, i) => (
-                        <div key={info.label} className="flex items-center flex-1">
+                        <div key={info.label} className="flex items-center">
                             {/* Item */}
-                            <div className="flex flex-col items-center flex-1">
+                            <div className="flex flex-col items-center">
                                 {/* Icon circle */}
                                 <div className="w-12 h-12 rounded-full bg-[#D28A44] flex items-center justify-center mb-3">
                                     <SendIcon/>
@@ -31,7 +31,7 @@ export const NewsletterSection = () => {
 
                             {/* Divider */}
                             {i < infos.length - 1 && (
-                                <div className="h-33.5 border-r-2 [border-image-source:linear-gradient(180deg,#03142E_0%,#224A87_50%,#03142E_100%)] [border-image-slice:1] shrink-0" />
+                                <div className="h-33.5 pl-5 border-r-2 [border-image-source:linear-gradient(180deg,#03142E_0%,#224A87_50%,#03142E_100%)] [border-image-slice:1] shrink-0" />
                             )}
                         </div>
                     ))}
