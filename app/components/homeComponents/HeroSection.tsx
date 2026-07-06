@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Button from "../ui/button";
-import { ParticleBackground } from "./ParticleBackground";
 import { AnimatedNumber } from "../dashboard/animated-number";
 
 export const HeroSection = () => {
@@ -33,7 +32,7 @@ export const HeroSection = () => {
     });
 
     return (
-        <section className="relative w-full min-h-215.5 text-white max-w-345 mx-auto rounded-[30px] px-7.75 border border-[#272727] flex items-end overflow-hidden">
+        <section className="relative w-full min-h-215.5 text-white max-w-345 mx-auto rounded-[30px] md:px-7.75 px-4 border border-[#272727] flex items-end overflow-hidden">
 
             {/* <ParticleBackground /> */}
             <video
@@ -99,9 +98,9 @@ export const HeroSection = () => {
 
             <div className="relative z-1 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-                <div className="flex flex-col mb-45.75 max-w-149.5">
+                <div className="flex flex-col lg:mb-45.75 mt-40 lg:mt-0 max-w-149.5">
                     {/* Trust badge */}
-                    <div className="inline-flex items-center gap-3.25 mb-4.75">
+                    <div className="inline-flex flex-wrap items-center gap-3.25 mb-4.75">
                         <div className="flex -space-x-3">
                             <img className="w-8.75 h-8.75 rounded-full object-cover" src="/user.png" />
                             <img className="w-8.75 h-8.75 rounded-full object-cover" src="/user-1.png" />
@@ -111,13 +110,9 @@ export const HeroSection = () => {
                             Trusted by 5,000+ Investors &amp; Property Analysts
                         </span>
                     </div>
-
-                    {/* Heading */}
-                    <h1 className="text-[28px] md:text-[30px] lg:text-[39px] font-semibold leading-15.25 tracking-[-0.5px] mb-2.5">
+                    <h1 className="text-[28px] lg:text-[39px] font-semibold lg:leading-15.25 tracking-[-0.5px] mb-2.5">
                         Your AI Copilot For Real Estate Investment Decisions
                     </h1>
-
-                    {/* Description */}
                     <p className=" text-[15px] leading-7 mb-7 font-light max-w-126.25">
                         Analyze properties, predict market trends, and uncover profitable investment opportunities with AI-driven insights, district intelligence, and real-time market data.
                     </p>
@@ -126,22 +121,41 @@ export const HeroSection = () => {
                 </div>
 
                 <div
-                    className={`flex mb-7.5 bg-[#05132780] shadow-[0px_17px_37px_0px_#0000001A,0px_67px_67px_0px_#00000017,0px_150px_90px_0px_#0000000D,0px_268px_107px_0px_#00000003,0px_418px_117px_0px_#00000000] relative border border-[#272727] flex-col gap-3 rounded-[30px] p-14.5 mt-10 lg:mt-0 transition-transform duration-1200 ease-linear ${panelReady ? "translate-y-0 translate-x-0" : "-translate-y-20 -translate-x-10"}`}
+                    className={`flex mb-7.5 bg-[#05132780] shadow-[0px_17px_37px_0px_#0000001A,0px_67px_67px_0px_#00000017,0px_150px_90px_0px_#0000000D,0px_268px_107px_0px_#00000003,0px_418px_117px_0px_#00000000] relative border border-[#272727] flex-col gap-3 rounded-[30px] p-5 lg:p-14.5 mt-6 lg:mt-0 transition-transform duration-1200 ease-linear ${panelReady ? "translate-y-0 translate-x-0" : "-translate-y-8 lg:-translate-y-20 lg:-translate-x-10"}`}
                 >
 
-                    <div className={`f-up-a self-center absolute text-white bg-[#0E2445] rounded-[14px] p-[14px_15px] min-w-35.75 duration-1200 ease-linear ${panelReady ? "-top-12" : "-top-4"}`}>
+                    {/* Desktop: ROI badge floats above card */}
+                    <div className={`f-up-a hidden lg:block absolute self-center text-white bg-[#0E2445] rounded-[14px] p-[14px_15px] min-w-35.75 duration-1200 ease-linear ${panelReady ? "-top-12" : "-top-4"}`}>
                         <p className="text-[13px] font-semibold mb-1">ROI Forecast</p>
                         <p className="text-[27px] font-semibold leading-6"><AnimatedNumber value="18%" className="text-[27px] font-semibold leading-6" /></p>
                     </div>
 
-                    <div className="rounded-[10px] bg-[#051327] p-5 backdrop-blur-sm">
-                        <div className="f-down-a flex items-center justify-between gap-2.5 bg-[#051327] border rounded-[11px] border-[#FFFFFF21] px-3.5 py-2.75 mb-2.5" >
-                            <div className="flex gap-2 items-center">
+                    {/* Mobile: compact badge pair side-by-side */}
+                    <div className="lg:hidden grid grid-cols-2 gap-2.5">
+                        <div className={`text-white bg-[#0E2445] rounded-[14px] p-3 transition-all duration-1200 ease-linear ${panelReady ? "translate-y-0 opacity-100" : "translate-y-3 opacity-60"}`}>
+                            <p className="text-[10px] font-medium mb-1 text-white/50 uppercase tracking-[0.08em]">ROI Forecast</p>
+                            <p className="text-[22px] font-semibold leading-6"><AnimatedNumber value="18%" className="text-[22px] font-semibold leading-6" /></p>
+                        </div>
+                        <div className={`text-white bg-[#0E2445] rounded-[14px] p-3 transition-all duration-1200 ease-linear ${panelReady ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-60"}`}>
+                            <p className="text-[10px] font-medium mb-1 text-white/50 uppercase tracking-[0.08em]">Investment Score</p>
+                            <p className="text-[22px] font-semibold leading-6 flex items-baseline gap-1">
+                                <AnimatedNumber value="9.2" className="text-[22px] font-semibold leading-6" />
+                                <span className="text-[13px] font-normal opacity-60">/ 10</span>
+                            </p>
+                            <div className="h-1 mt-2 flex bg-[#030B17] rounded-full overflow-hidden">
+                                <div className={`bg-[#294874] rounded-full duration-1200 ease-linear ${panelReady ? "w-3" : "w-[95%]"}`} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-[10px] bg-[#051327] p-3.5 lg:p-5 backdrop-blur-sm">
+                        <div className="f-down-a flex items-center justify-between gap-x-2.5 gap-y-2 flex-wrap bg-[#051327] border rounded-[11px] border-[#FFFFFF21] px-2.5 lg:px-3.5 py-2.75 mb-2.5" >
+                            <div className="flex gap-2 items-center text-[13px] lg:text-[14px]">
                                 AlphaAI Analyst
-                                <p className="bg-[#0E2445] rounded-full px-2 text-[14px]">4.0</p>
+                                <p className="bg-[#0E2445] rounded-full px-2 text-[13px] lg:text-[14px]">4.0</p>
                             </div>
 
-                            <span className="inline-flex items-center gap-1.5 bg-[#0E2445] rounded-full px-2.5 min-h-6.25 font-medium text-[13px]">
+                            <span className="inline-flex items-center gap-1.5 bg-[#0E2445] rounded-full px-2 lg:px-2.5 min-h-6.25 font-medium text-[12px] lg:text-[13px]">
                                 Market History
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
                                     <g clipPath="url(#clip0_1_1266)">
@@ -155,9 +169,9 @@ export const HeroSection = () => {
                                 </svg>
                             </span>
                         </div>
-                        <div className={`f-up-b bg-[linear-gradient(180deg,#D28A44_0%,#9C5F23_100%)] relative my-6.75 text-[15px] leading-6 rounded-[20px] p-5 duration-1200 ease-linear ${panelReady ? "-left-32 top-0 " : "-top-4 -left-32"}`}>
-                            <div className="flex gap-2 mb-3.25 items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38" fill="none">
+                        <div className={`f-up-b bg-[linear-gradient(180deg,#D28A44_0%,#9C5F23_100%)] relative my-4 lg:my-6.75 text-[13px] lg:text-[15px] leading-6 rounded-[20px] p-3.5 lg:p-5 duration-1200 ease-linear ${panelReady ? "opacity-100 top-0 -left-10 lg:-left-32" : "opacity-75 -top-4 left-0 lg:-left-32"}`}>
+                            <div className="flex gap-2 mb-2.5 lg:mb-3.25 items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 lg:w-9.5 lg:h-9.5 shrink-0" width="38" height="38" viewBox="0 0 38 38" fill="none">
                                     <g clipPath="url(#clip0_1_1288)">
                                         <path d="M27.9062 35.7734H26.793V33.3984H11.207V35.7734H10.0938C9.4784 35.7734 8.98047 36.2714 8.98047 36.8867C8.98047 37.5021 9.4784 38 10.0938 38H27.9062C28.5216 38 29.0195 37.5021 29.0195 36.8867C29.0195 36.2714 28.5216 35.7734 27.9062 35.7734Z" fill="white" />
                                         <path d="M19.1576 8.92911L19 8.61383L18.8489 8.91605C18.5746 9.48085 18.0192 9.52509 18.0118 9.53251L17.6617 9.58469L17.9019 9.82167C18.1656 10.0727 18.2954 10.4514 18.2281 10.8219L18.1727 11.1578L18.4868 10.9948C18.8022 10.8307 19.1877 10.8255 19.5131 10.9948L19.8273 11.1578L19.7697 10.8088C19.7099 10.4512 19.8284 10.0869 20.0861 9.83362L20.3383 9.58469L19.9882 9.53251C19.6294 9.47811 19.3197 9.25308 19.1576 8.92911Z" fill="white" />
@@ -170,7 +184,7 @@ export const HeroSection = () => {
                                     </defs>
                                 </svg>
 
-                                <h3 className="text-[23px] font-semibold leading-6">AI Investment Insight</h3>
+                                <h3 className="text-[17px] lg:text-[23px] font-semibold leading-6">AI Investment Insight</h3>
                             </div>
                             <p> Based on recent transaction activity and rental demand patterns,
                                 Yas Island currently ranks as the strongest district for long-term
@@ -178,9 +192,9 @@ export const HeroSection = () => {
                         </div>
                         <div className="f-down-b relative flex flex-col bg-[#051327] border border-[#FFFFFF21] rounded-[20px] p-[13px_20px]">
                             <textarea
-                                rows={5}
+                                rows={4}
                                 placeholder="Ask AlphaAI about properties, districts, ROI, rental yields, or market trends..."
-                                className="w-full resize-none border-none pr-22 text-[13px] leading-6 whitespace-normal placeholder:text-white outline-none cursor-pointer"
+                                className="w-full resize-none border-none pr-4 lg:pr-22 text-[13px] leading-6 whitespace-normal placeholder:text-white outline-none cursor-pointer"
                             />
                             <div className="flex justify-between items-center gap-3">
                                 <button
@@ -224,7 +238,7 @@ export const HeroSection = () => {
                     </div>
 
 
-                    <div className={`f-up-c self-center absolute bottom-14.5 text-white bg-[#0E2445] rounded-[14px] p-[14px_15px] min-w-48.25 duration-1200 ease-linear ${panelReady ? "-left-31.25 " : "-left-20"}`}>
+                    <div className={`f-up-c hidden lg:block absolute bottom-14.5 text-white bg-[#0E2445] rounded-[14px] p-[14px_15px] min-w-48.25 duration-1200 ease-linear ${panelReady ? "-left-31.25" : "-left-20"}`}>
                         <p className="text-[13px] font-semibold mb-1">Investment Score</p>
                         <p className="text-[27px] font-semibold leading-6 flex items-baseline gap-1">
                             <AnimatedNumber value="9.2" className="text-[27px] font-semibold leading-6" />

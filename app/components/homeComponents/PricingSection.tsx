@@ -8,7 +8,7 @@ export const PricingSection = () => {
     const [yearly, setYearly] = useState(false);
 
     return (
-        <div className="bg-[linear-gradient(180deg,#010C1B_0%,#021126F5_100%)] -mx-7.5">
+        <div className="bg-[linear-gradient(180deg,#010C1B_0%,#021126F5_100%)] xl:-mx-7.5">
             <section className="w-full max-w-345 mx-auto px-4 py-24 relative z-1">
                 {/* Badge */}
                 <div className="flex justify-center mb-6.75">
@@ -18,7 +18,7 @@ export const PricingSection = () => {
                 </div>
 
                 {/* Heading */}
-                <h2 className="text-center text-white text-[32px] md:text-[36px] font-semibold leading-[100%] mb-3">
+                <h2 className="text-center text-white text-[28px] md:text-[36px] font-semibold md:leading-[100%] mb-3">
                     Choose the Plan That Fits Your Investment Journey
                 </h2>
 
@@ -55,7 +55,7 @@ export const PricingSection = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-7.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7.5">
                     {plans.map((plan) => (
                         <div
                             key={plan.name}

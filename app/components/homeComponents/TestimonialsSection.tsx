@@ -57,7 +57,7 @@ export const TestimonialsSection = () => {
     }, []);
 
     return (
-        <div className="bg-[radial-gradient(50%_50%_at_50%_50%,rgba(2,17,37,0.9)_0%,#010C1B_100%)] -mx-7.5 relative overflow-hidden">
+        <div className="bg-[radial-gradient(50%_50%_at_50%_50%,rgba(2,17,37,0.9)_0%,#010C1B_100%)] xl:-mx-7.5 relative overflow-hidden">
 
             <img src="/large-globe.svg" alt="" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
             <div className={`absolute top-100 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-180 w-full pointer-events-none transition-opacity duration-1200 ease-linear ${panelReady ? "opacity-100" : "opacity-100"}`}>
@@ -104,14 +104,14 @@ export const TestimonialsSection = () => {
                 </svg>
             </div>
 
-            <section className="w-full max-w-345 mx-auto px-4 pt-24 pb-60 relative z-10">
+            <section className="w-full max-w-345 mx-auto px-4 pt-24 lg:pb-60 pb-20 relative z-10">
                 <div className="flex justify-center mb-6">
                     <div className="inline-flex items-center gap-2 border border-[#0E2445] rounded-full px-9.25 py-4 bg-[linear-gradient(90deg,rgba(5,19,39,0.2)_0%,rgba(18,69,141,0.2)_100%)]">
                         <span className="text-white text-base uppercase font-normal leading-6">Client Testimonials</span>
                     </div>
                 </div>
 
-                <h2 className="text-center text-white text-[32px] md:text-[36px] font-semibold leading-[100%] mb-8.5">
+                <h2 className="text-center text-white text-[28px] md:text-[36px] font-semibold md:leading-[100%] mb-8.5">
                     Trusted by Investors Seeking Smarter Decisions
                 </h2>
 
@@ -134,7 +134,7 @@ export const TestimonialsSection = () => {
                             <SwiperSlide key={i}>
                                 <div className="flex flex-col h-full bg-[#05132733] border border-[#272727] rounded-[30px] p-6.25">
                                     <Stars rating={t.rating} />
-                                    <p className="text-white text-[15px] leading-6 font-light flex-1 mb-22">
+                                    <p className="text-white text-[15px] leading-6 font-light flex-1 mb-8 lg:mb-22">
                                         "{t.quote}"
                                     </p>
                                     <div className="flex items-center gap-3.5">

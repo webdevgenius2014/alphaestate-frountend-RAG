@@ -31,13 +31,13 @@ export const HowItWorksSection = () => {
 
     return (
         <>
-            <div className="bg-[linear-gradient(180deg,#011735E5_0%,#010C1B_100%)] -mx-7.5 relative">
+            <div className="bg-[linear-gradient(180deg,#011735E5_0%,#010C1B_100%)] xl:-mx-7.5 relative lg:overflow-visible overflow-hidden">
                 <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full bg-[#12458D99] blur-[144px] z-0 hiw-blob" />
                 <section className="w-full max-w-345 mx-auto px-4 py-20 relative z-1">
                     <div className="grid grid-cols-1 lg:grid-cols-[auto_42%] gap-16 items-start">
 
                         {/* ── Left: sticky panel ── */}
-                        <div className="sticky top-30 self-start flex flex-col">
+                        <div className="lg:sticky top-30 self-start flex flex-col">
 
                             {/* Badge */}
                             <div className="inline-flex items-center gap-2 border border-[#0E2445] rounded-full px-9.25 py-4 mb-5.5 self-start bg-[linear-gradient(90deg,rgba(5,19,39,0.2)_0%,rgba(18,69,141,0.2)_100%)]">
@@ -45,7 +45,7 @@ export const HowItWorksSection = () => {
                             </div>
 
                             {/* Heading */}
-                            <h2 className="text-white text-[32px] md:text-[36px] font-semibold leading-[100%] mb-4">
+                            <h2 className="text-white text-[28px] md:text-[36px] font-semibold md:leading-[100%] mb-4">
                                 From Data to Smarter <br /> Investments
                             </h2>
 

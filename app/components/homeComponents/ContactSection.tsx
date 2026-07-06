@@ -19,7 +19,7 @@ export const ContactSection = () => {
         "w-full bg-[#D9D9D900] border border-[#FFFFFF4D] min-h-[54px] rounded-[40px] px-[26px] py-2.75 text-white text-[14px] placeholder:text-[#FFFFFF4D] focus:outline-none focus:border-[#D28A4466] font-light transition-colors duration-200";
 
     return (
-        <div className="bg-[linear-gradient(180deg,#021126F5_0%,#010C1B_100%)] -mx-7.5 relative overflow-hidden">
+        <div className="bg-[linear-gradient(180deg,#021126F5_0%,#010C1B_100%)] xl:-mx-7.5 relative overflow-hidden">
             <div className="pointer-events-none absolute left-1/2 bottom-0 -translate-x-1/2 w-150 h-100 rounded-full bg-[#12458D18] blur-[100px]" />
 
             <section className="w-full max-w-345 mx-auto px-4 py-24 relative z-10">
@@ -31,7 +31,7 @@ export const ContactSection = () => {
                 </div>
 
                 {/* Heading */}
-                <h2 className="text-center text-white text-[32px] md:text-[36px] font-semibold leading-[110%] mb-3">
+                <h2 className="text-center text-white text-[28px] md:text-[36px] font-semibold md:leading-[110%] mb-3">
                     Let's Talk About Your Next Investment
                 </h2>
 
@@ -42,7 +42,7 @@ export const ContactSection = () => {
 
                 {/* Form */}
                 <form
-                    className="max-w-273.5 mx-auto flex flex-col bg-[#05132733] border p-8.75 rounded-[30px] border-[#272727] space-y-7.5"
+                    className="max-w-273.5 mx-auto flex flex-col bg-[#05132733] border lg:p-8.75 p-5 rounded-[30px] border-[#272727] space-y-7.5"
                     onSubmit={(e) => e.preventDefault()}
                 >
                     {/* Row 1 */}

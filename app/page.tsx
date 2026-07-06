@@ -15,9 +15,9 @@ import { SmoothScroll } from './components/homeComponents/SmoothScroll'
 const page = () => {
     return (
         <SmoothScroll>
-            <div className='bg-[#010C1B] p-7.5 pb-0 relative'>
+            <div className='bg-[#010C1B] xl:p-7.5 pt-4 pb-0 relative'>
                 <Header />
-                <div id="home"><HeroSection /></div>
+                <div id="home" className='px-4 xl:px-0'><HeroSection /></div>
                 <LogoTicker />
                 <div id="about-alpha"><AboutSection /></div>
                 <div id="how-it-works"><HowItWorksSection /></div>

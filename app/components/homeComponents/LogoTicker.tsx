@@ -50,7 +50,7 @@ export const LogoTicker = () => {
     return (
         <div className="w-full max-w-345 overflow-hidden mx-auto pt-27.5">
 
-            <p className="text-center text-white text-[23px] leading-6 font-normal mb-10.5">
+            <p className="text-center text-white text-[23px] lg:leading-6 font-normal px-4 mb-10.5">
                 Trusted By Investors. Powered By Market Intelligence.
             </p>
 
