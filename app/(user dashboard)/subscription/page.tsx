@@ -171,8 +171,23 @@ function SubscriptionPageContent() {
                         Choose the right intelligence plan for your investment strategy and unlock AI-powered market analysis backed by verified ADREC transaction data.
                     </p>
                 </div>
-               
-               
+                <div className="text-right shrink-0">
+                    <p className="text-sm text-(--db-text-primary)">
+                        Your Current Plan{" "}
+                        <span className="text-[#D28A44] font-semibold">
+                            {mySub?.plan?.name ?? "—"}
+                        </span>
+                    </p>
+                    {mySub?.endsAt && (
+                        <p className="text-sm text-(--db-text-primary) mt-1 font-normal">
+                            Expires on{" "}
+                            <span>
+                                {formatDate(mySub.endsAt)}{" "}
+                                ({mySub.daysRemaining} days remaining)
+                            </span>
+                        </p>
+                    )}
+                </div>
             </div>
 
             <div className="bg-(--db-sidebar-bg) p-5">
