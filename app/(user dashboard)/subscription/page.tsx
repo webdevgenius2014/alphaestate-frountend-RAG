@@ -7,6 +7,7 @@ import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import appService from "@/app/services/appService";
+import { UpgradePlanModal, type PlanSwitchTarget } from "@/app/components/dashboard/subscription-modals";
 
 function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -81,6 +82,32 @@ function SubscriptionPageContent() {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [mySub, setMySub] = useState<any>(null);
     const [checkoutLoadingId, setCheckoutLoadingId] = useState<string | null>(null);
+    const [switchTarget, setSwitchTarget] = useState<PlanSwitchTarget | null>(null);
+
+    function refreshMySubscription() {
+        appService.getMySubscription().then((res) => {
+            if (res?.data?.success && res.data.data) {
+                setMySub(res.data.data);
+            }
+        });
+    }
+
+    function subscriptionPlanId(sub: any): string | null {
+        return sub?.planId ?? sub?.plan?.id ?? sub?.subscriptionPlanId ?? null;
+    }
+
+    async function handlePlanSwitched(planId: string) {
+        setMySub((prev: any) => (prev ? { ...prev, planId, subscriptionPlanId: planId, plan: prev.plan ? { ...prev.plan, id: planId } : prev.plan } : prev));
+
+        for (let attempt = 0; attempt < 6; attempt++) {
+            const res = await appService.getMySubscription();
+            if (res?.data?.success && res.data.data && subscriptionPlanId(res.data.data) === planId) {
+                setMySub(res.data.data);
+                return;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+    }
 
     useEffect(() => {
         appService.getSubscriptionPlans().then((res) => {
@@ -88,11 +115,7 @@ function SubscriptionPageContent() {
                 setPlans(transformPlans(res.data.data));
             }
         });
-        appService.getMySubscription().then((res) => {
-            if (res?.data?.success && res.data.data) {
-                setMySub(res.data.data);
-            }
-        });
+        refreshMySubscription();
     }, []);
 
     useEffect(() => {
@@ -103,9 +126,12 @@ function SubscriptionPageContent() {
     }, [searchParams, router]);
 
     const currentPlanId = mySub?.planId ?? mySub?.plan?.id ?? mySub?.subscriptionPlanId ?? null;
+    const currentPlanEntry = plans.find((p) => p.monthlyId === currentPlanId || p.yearlyId === currentPlanId) ?? null;
+    const currentPlanPrice = currentPlanEntry
+        ? (currentPlanEntry.monthlyId === currentPlanId ? currentPlanEntry.monthlyPrice : currentPlanEntry.yearlyPrice)
+        : null;
 
-    async function handleUpgrade(planId: string) {
-        if (!planId || checkoutLoadingId) return;
+    async function handleCheckout(planId: string) {
         setCheckoutLoadingId(planId);
         const res = await appService.createCheckoutSession(planId);
         setCheckoutLoadingId(null);
@@ -113,7 +139,27 @@ function SubscriptionPageContent() {
         const url = typeof res?.data?.data === "string" ? res.data.data : res?.data?.data?.url;
         if (res?.data?.success && url) {
             window.location.href = url;
+        } else {
+            toast.error(res?.data?.message ?? "Unable to start checkout. Please try again.");
         }
+    }
+
+    function handlePlanSelect(plan: Plan, planId: string) {
+        if (!planId || checkoutLoadingId) return;
+
+        if (!currentPlanId) {
+            handleCheckout(planId);
+            return;
+        }
+        if (planId === currentPlanId) return;
+
+        const targetPrice = billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+        setSwitchTarget({
+            planId,
+            planName: plan.name,
+            price: targetPrice,
+            isUpgrade: currentPlanPrice == null || targetPrice >= currentPlanPrice,
+        });
     }
 
     return (
@@ -192,7 +238,7 @@ function SubscriptionPageContent() {
                                         variant="navy"
                                         className="max-w-full! py-3.5! mb-6"
                                         disabled={isCurrentPlan || isLoading}
-                                        onClick={() => handleUpgrade(selectedPriceId)}
+                                        onClick={() => handlePlanSelect(plan, selectedPriceId)}
                                     >
                                         {isCurrentPlan ? "CURRENT PLAN" : isLoading ? "PROCESSING..." : plan.cta}
                                     </Button>
@@ -201,7 +247,7 @@ function SubscriptionPageContent() {
                                     <ModalButton
                                         className="mb-6 py-3.5!"
                                         disabled={isCurrentPlan || isLoading}
-                                        onClick={() => handleUpgrade(selectedPriceId)}
+                                        onClick={() => handlePlanSelect(plan, selectedPriceId)}
                                     >
                                         {isCurrentPlan ? "CURRENT PLAN" : isLoading ? "PROCESSING..." : plan.cta}
                                     </ModalButton>
@@ -224,6 +270,14 @@ function SubscriptionPageContent() {
                     })}
                 </div>
             </div>
+
+            {switchTarget && (
+                <UpgradePlanModal
+                    target={switchTarget}
+                    onClose={() => setSwitchTarget(null)}
+                    onSuccess={handlePlanSwitched}
+                />
+            )}
         </div>
     );
 }

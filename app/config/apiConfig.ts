@@ -24,6 +24,8 @@ const ApiConfig = {
   subsriptionPlans: `${apiURL}/subscriptions/plans`,
   mySubsriptionPlans: `${apiURL}/subscriptions/me`,
   checkoutSession: `${apiURL}/subscriptions/checkout-session`,
+  upgradePreview: `${apiURL}/subscriptions/upgrade-preview`,
+  upgrade: `${apiURL}/subscriptions/upgrade`,
 
   // Property Listing
   listingProperties: `${apiURL}/properties`,

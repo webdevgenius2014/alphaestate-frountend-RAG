@@ -189,6 +189,22 @@ class AppService {
     }
   }
 
+  async getUpgradePreview(planId: string) {
+    try {
+      return await instance.post(ApiConfig.upgradePreview, { planId });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async upgradeSubscriptionPlan(planId: string) {
+    try {
+      return await instance.post(ApiConfig.upgrade, { planId });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Property Listing
   async getListingProperties(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
     try {
