@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, type ReactNode } from "react";
+import React, { useState, useEffect, useRef, type ReactNode } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DeleteAccountModal } from "@/app/components/dashboard/alert-modals";
 import appService from "@/app/services/appService";
 import { getCookie, clearAuthCookies } from "@/app/services/interceptor";
+import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import { formatDevice, getLocation, formatRelativeTime } from "@/app/utils/session";
 import {PHONE_CODES} from "@/app/constant";
 import {
@@ -152,9 +153,12 @@ type ProfileForm = {
 };
 
 function MyProfileTab() {
+    const { updateUser } = useTheme();
     const [formOpen, setFormOpen] = useState(true);
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement>(null);
     const [form, setForm] = useState<ProfileForm>({
     firstName: '',
     lastName: '',
@@ -166,7 +170,7 @@ function MyProfileTab() {
     bio: '',
     });
 
-    useEffect(() => {
+    const loadProfile = () => {
         appService.getUserProfile()
             .then((res) => {
                 if (res?.status === 200 || res?.status === 201) {
@@ -177,16 +181,43 @@ function MyProfileTab() {
                         firstName: nameParts[0] ?? "",
                         lastName:  nameParts.slice(1).join(" "),
                         email:     data.email         ?? "",
-                        phoneCode: data.phoneCode     ?? "", 
+                        phoneCode: data.phoneCode     ?? "",
                         phone:     data.phoneNumber   ?? "",
                         country:   data.countryRegion ?? "",
                         city:      data.cityState     ?? "",
                         bio:       data.bio           ?? "",
                     });
+                    if (data.avatarUrl) updateUser({ avatarUrl: data.avatarUrl });
                 }
             })
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadProfile();
     }, []);
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+
+        setAvatarUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await appService.uploadProfileAvatar(formData);
+        setAvatarUploading(false);
+
+        if (res?.status === 200 || res?.status === 201) {
+            const data = res.data?.data ?? res.data;
+            const newAvatarUrl = data?.avatarUrl ?? data?.avatar;
+            setProfile((prev: any) => (prev ? { ...prev, avatarUrl: newAvatarUrl ?? prev.avatarUrl } : prev));
+            if (newAvatarUrl) updateUser({ avatarUrl: newAvatarUrl });
+            toast.success("Profile photo updated successfully.");
+        } else {
+            toast.error(res?.data?.error || res?.data?.message || "Failed to upload photo.");
+        }
+    };
 
     const handleChange =
         (key: keyof ProfileForm) =>
@@ -241,11 +272,14 @@ function MyProfileTab() {
                                     />
                                 </div>
                                 <button
-                                    className="absolute bottom-0.5 right-0.5 w-5.75 h-5.75 bg-[#D28A44] rounded-full flex items-center justify-center text-white shadow-sm"
+                                    onClick={() => avatarInputRef.current?.click()}
+                                    disabled={avatarUploading}
+                                    className="absolute bottom-0.5 right-0.5 w-5.75 h-5.75 bg-[#D28A44] rounded-full flex items-center justify-center text-white shadow-sm disabled:opacity-60"
                                     title="Change photo"
                                 >
                                     <SettingsCameraIcon />
                                 </button>
+                                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                             </div>
 
                             {/* Name / role / email / location */}
