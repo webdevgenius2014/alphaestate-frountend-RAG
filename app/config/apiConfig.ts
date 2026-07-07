@@ -24,6 +24,8 @@ const ApiConfig = {
   subsriptionPlans: `${apiURL}/subscriptions/plans`,
   mySubsriptionPlans: `${apiURL}/subscriptions/me`,
   checkoutSession: `${apiURL}/subscriptions/checkout-session`,
+  upgradePreview: `${apiURL}/subscriptions/upgrade-preview`,
+  upgrade: `${apiURL}/subscriptions/upgrade`,
 
   // Property Listing
   listingProperties: `${apiURL}/properties`,
@@ -36,6 +38,13 @@ const ApiConfig = {
   //districts
   allDistricts: `${apiURL}/districts`,
 
+  //user analytics page
+  userAnalytics: `${apiURL}/analytics/market/overview`,
+  priceTrend: `${apiURL}/analytics/market/price-trend`,
+  disrtictRoi: `${apiURL}/analytics/market/district-comparison`,
+  userInvestmentMovement: `${apiURL}/analytics/market/price-trend`,
+  rentalYield: `${apiURL}/analytics/market/district-comparison`,
+  capRateMap: `${apiURL}/analytics/market/cap-rate-map`,
 
   // Admin
   // Dashbord 
