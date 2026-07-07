@@ -23,7 +23,7 @@ const tooltipStyle = {
     labelStyle: { color: "var(--db-text-primary)" },
 };
 
-export function DistrictROIChart() {
+export function DistrictROIChart({ data: apiData }: { data?: Array<{ district: string; roi: number }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<number>>(new Set());
     const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -35,7 +35,14 @@ export function DistrictROIChart() {
             return next;
         });
 
-    const chartData = DISTRICT_ROI_DATA.map((d, i) => ({
+    const baseRows = apiData
+        ? apiData.map((d, i) => {
+            const match = DISTRICT_ROI_DATA.find(r => r.district.toLowerCase() === d.district.toLowerCase());
+            return { district: d.district, roi: d.roi, color: match?.color ?? DISTRICT_ROI_DATA[i % DISTRICT_ROI_DATA.length]?.color ?? "#D28A44" };
+          })
+        : DISTRICT_ROI_DATA;
+
+    const chartData = baseRows.map((d, i) => ({
         district: d.district,
         roi: hidden.has(i) ? 0 : d.roi,
     }));
@@ -98,7 +105,7 @@ export function DistrictROIChart() {
                             {chartData.map((_, i) => (
                                 <Cell
                                     key={i}
-                                    fill={hoverIdx === i ? DISTRICT_ROI_DATA[i].color : "url(#roiStripe)"}
+                                    fill={hoverIdx === i ? baseRows[i].color : "url(#roiStripe)"}
                                 />
                             ))}
                         </Bar>
@@ -106,7 +113,7 @@ export function DistrictROIChart() {
                 </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 justify-center">
-                {DISTRICT_ROI_DATA.map((item, idx) => {
+                {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
                         <button
@@ -138,9 +145,10 @@ function fmtM(v: number) {
     return `AED ${v}M`;
 }
 
-export function InvestmentMovementChart() {
+export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ month: string; yas: number; alReem: number; saadiyat: number }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<string>>(new Set());
+    const chartData = apiData ?? INVESTMENT_MOVEMENT_DATA;
 
     const toggle = (key: string) =>
         setHidden((prev) => {
@@ -154,7 +162,7 @@ export function InvestmentMovementChart() {
             <div className="bg-(--db-main-bg) rounded-lg p-4">
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart
-                        data={INVESTMENT_MOVEMENT_DATA}
+                        data={chartData}
                         margin={{ top: 10, right: 12, left: 0, bottom: 0 }}
                     >
                         <CartesianGrid vertical={false} stroke="var(--db-border)" strokeDasharray="4 4" />

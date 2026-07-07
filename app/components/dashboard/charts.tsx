@@ -44,15 +44,16 @@ function PriceTooltip({ active, payload, label }: { active?: boolean; payload?: 
     );
 }
 
-export function PriceTrendChart() {
+export function PriceTrendChart({ data: apiData }: { data?: Array<{ month: string; yas: number; alReem: number }> }) {
     const animActive = useAnimSync();
     const [showYas, setShowYas] = useState(true);
     const [showAlReem, setShowAlReem] = useState(true);
+    const chartData = apiData ?? PRICE_TREND_DATA;
 
     return (
         <div className="bg-(--db-main-bg) p-[24px_21px]">
             <ResponsiveContainer width="100%" height={450}>
-                <AreaChart data={PRICE_TREND_DATA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
                         <linearGradient id="yasGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#D28A44" stopOpacity={0.32} />
@@ -142,7 +143,7 @@ function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Ar
     );
 }
 
-export function RentalYieldChart() {
+export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: string; buy: number; rental: number }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<number>>(new Set());
     const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -154,7 +155,12 @@ export function RentalYieldChart() {
             return next;
         });
 
-    const chartData = RENTAL_YIELD_DATA.map((d, i) => {
+    const baseRows = (apiData ?? RENTAL_YIELD_DATA).map((d, i) => {
+        const match = CAP_RATE_DATA.find(r => r.name.toLowerCase() === d.district.toLowerCase());
+        return { district: d.district, buy: d.buy, rental: d.rental, color: match?.color ?? CAP_RATE_DATA[i % CAP_RATE_DATA.length]?.color ?? "#D28A44" };
+    });
+
+    const chartData = baseRows.map((d, i) => {
         const isHidden = hidden.has(i);
         return {
             district: d.district,
@@ -200,7 +206,7 @@ export function RentalYieldChart() {
                             onMouseLeave={() => setHoverIdx(null)}
                         >
                             {chartData.map((_, idx) => {
-                                const color = CAP_RATE_DATA[idx]?.color ?? "#D8D4CE";
+                                const color = baseRows[idx]?.color ?? "#D8D4CE";
                                 const isHovered = hoverIdx === idx;
                                 return (
                                     <Cell
@@ -216,7 +222,7 @@ export function RentalYieldChart() {
                             onMouseLeave={() => setHoverIdx(null)}
                         >
                             {chartData.map((_, idx) => {
-                                const color = CAP_RATE_DATA[idx]?.color ?? "#CECAC3";
+                                const color = baseRows[idx]?.color ?? "#CECAC3";
                                 const isHovered = hoverIdx === idx;
                                 return (
                                     <Cell
@@ -230,11 +236,11 @@ export function RentalYieldChart() {
                 </ResponsiveContainer>
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 justify-center">
-                {CAP_RATE_DATA.map((item, idx) => {
+                {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
                         <button
-                            key={item.name}
+                            key={item.district}
                             onClick={() => toggle(idx)}
                             className="flex items-center gap-1.5 text-xs outline-none transition-opacity"
                             style={{ opacity: isHidden ? 0.35 : 1 }}
@@ -246,7 +252,7 @@ export function RentalYieldChart() {
                                     textDecoration: isHidden ? "line-through" : "none",
                                 }}
                             >
-                                {item.name}
+                                {item.district}
                             </span>
                         </button>
                     );
@@ -256,7 +262,15 @@ export function RentalYieldChart() {
     );
 }
 
-export function CapRateChart() {
+export function CapRateChart({
+    data: apiData,
+    overallValue,
+    overallSqft,
+}: {
+    data?: Array<{ name: string; value: number }>;
+    overallValue?: number;
+    overallSqft?: number;
+}) {
     const [hidden, setHidden] = useState<Set<number>>(new Set());
 
     const toggle = (idx: number) =>
@@ -266,10 +280,23 @@ export function CapRateChart() {
             return next;
         });
 
-    const chartData = CAP_RATE_DATA.map((d, i) => ({
+    const baseRows = (apiData ?? CAP_RATE_DATA).map((d, i) => {
+        const match = CAP_RATE_DATA.find((r) => r.name.toLowerCase() === d.name.toLowerCase());
+        return {
+            name: d.name,
+            value: d.value,
+            color: match?.color ?? CAP_RATE_DATA[i % CAP_RATE_DATA.length]?.color ?? "#D28A44",
+        };
+    });
+
+    const chartData = baseRows.map((d, i) => ({
         ...d,
         value: hidden.has(i) ? 0.0001 : d.value,
     }));
+
+    const avgValue = overallValue ?? (
+        baseRows.length ? baseRows.reduce((sum, d) => sum + d.value, 0) / baseRows.length : 0
+    );
 
     return (
         <div className="flex flex-col items-center gap-5">
@@ -288,22 +315,24 @@ export function CapRateChart() {
                             cornerRadius={8}
                             animationEasing="ease-in-out"
                         >
-                            {CAP_RATE_DATA.map((entry, i) => (
+                            {chartData.map((entry, i) => (
                                 <Cell key={i} fill={entry.color} />
                             ))}
                         </Pie>
                     </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <AnimatedNumber value="8.1%" className="text-2xl font-bold text-(--db-text-primary) leading-none" />
-                    <div className="inline-flex gap-1 items-center mt-2">
-                        <AnimatedNumber value="1,342" className="text-[10px] text-(--db-text-primary)" />
-                        <span className="text-[10px] text-(--db-text-primary) leading-tight">sqft avg</span>
-                    </div>
+                    <AnimatedNumber value={`${avgValue.toFixed(1)}%`} className="text-2xl font-bold text-(--db-text-primary) leading-none" />
+                    {overallSqft != null && (
+                        <div className="inline-flex gap-1 items-center mt-2">
+                            <AnimatedNumber value={Math.round(overallSqft).toLocaleString()} className="text-[10px] text-(--db-text-primary)" />
+                            <span className="text-[10px] text-(--db-text-primary) leading-tight">sqft avg</span>
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="flex flex-col gap-3 w-full min-w-0">
-                {CAP_RATE_DATA.map((item, idx) => {
+                {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
                         <button

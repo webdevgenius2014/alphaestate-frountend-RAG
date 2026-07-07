@@ -227,6 +227,70 @@ class AppService {
     }
   }
 
+  // User Analytics
+  async getUserAnalytics(period?: string, district?: string, propertyType?: string) {
+    try {
+      const params: Record<string, any> = {};
+      if (period) params.period = period;
+      if (district) params.district = district;
+      if (propertyType) params.propertyType = propertyType;
+      return await instance.get(ApiConfig.userAnalytics, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getPriceTrend(period?: "last_year" | "last_2_years" | "all_time") {
+    try {
+      return await instance.get(ApiConfig.priceTrend, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getInvestmentMovement(period?: "last_year" | "last_2_years" | "all_time") {
+    try {
+      return await instance.get(ApiConfig.userInvestmentMovement, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getRentalYieldByDistrict(period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+    try {
+      return await instance.get(ApiConfig.rentalYield, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getCapRateMap(propertyType?: string) {
+    try {
+      return await instance.get(ApiConfig.capRateMap, { params: propertyType ? { propertyType } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getDistrictRoi(
+    district?: "all" | "top3" | string,
+    period?: "last_year" | "last_6months" | "last_2_years" | "all_time",
+    districtIds?: string[]
+  ) {
+    try {
+      const params: Record<string, any> = {};
+      if (districtIds && districtIds.length) {
+        params.districtIds = districtIds.slice(0, 5).join(",");
+      } else if (district) {
+        params.district = district;
+      }
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.disrtictRoi, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Saved Property
   async getListingSavedProperties(
   page: number = 1,
