@@ -35,12 +35,17 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
+// A 401 from these endpoints means "current password is incorrect", not "session expired" —
+// they must never trigger the token-refresh/auto-logout flow below.
+const AUTH_CHECK_PATHS = ["/auth/change-password", "/admin/profile/change-password"];
+
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const isAuthCheck = AUTH_CHECK_PATHS.some((path) => originalRequest?.url?.includes(path));
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthCheck) {
       originalRequest._retry = true;
 
       try {

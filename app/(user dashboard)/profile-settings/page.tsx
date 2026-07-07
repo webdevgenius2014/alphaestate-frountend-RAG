@@ -427,10 +427,22 @@ function SecurityTab() {
         try {
             const res = await appService.changePassword({ currentPassword, newPassword });
             if (res?.status === 200 || res?.status === 201) {
-                toast.success("Password updated successfully.");
+                toast.success("Password updated successfully. Logging out of all devices...");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
+
+                try {
+                    const sessionsRes = await appService.getSessions();
+                    const allSessions = sessionsRes?.data?.data ?? sessionsRes?.data;
+                    if (Array.isArray(allSessions)) {
+                        await Promise.all(allSessions.map((s: any) => appService.logoutSession(s.id)));
+                    }
+                } finally {
+                    clearAuthCookies();
+                    window.location.href = "/login";
+                }
+                return;
             } else {
                 toast.error(res?.data?.error || res?.data?.message || "Failed to update password.");
             }
