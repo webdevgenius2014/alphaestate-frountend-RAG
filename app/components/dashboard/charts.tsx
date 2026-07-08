@@ -331,7 +331,7 @@ export function CapRateChart({
                     )}
                 </div>
             </div>
-            <div className="flex flex-col gap-3 w-full min-w-0">
+            <div className="flex flex-col gap-3 w-full min-w-0 max-h-60 overflow-y-auto pr-1 thin-scroll">
                 {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (

@@ -45,6 +45,7 @@ const ApiConfig = {
   userInvestmentMovement: `${apiURL}/analytics/market/price-trend`,
   rentalYield: `${apiURL}/analytics/market/district-comparison`,
   capRateMap: `${apiURL}/analytics/market/cap-rate-map`,
+  exportReport: `${apiURL}/analytics/export/excel`,
 
   // Admin
   // Dashbord 
@@ -65,6 +66,7 @@ const ApiConfig = {
   appreciationPotential: `${apiURL}/admin/analytics/appreciation-potential`,
   marketIntelligence: `${apiURL}/admin/analytics/market-intelligence`,  
   usage: `${apiURL}/admin/analytics/usage`,
+  triggerAnalysis: `${apiURL}/admin/analytics/compute`,
 
   // admin subscriptions-billing
   dashboardSubscription: `${apiURL}/admin/subscriptions/dashboard`,

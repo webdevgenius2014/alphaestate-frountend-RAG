@@ -307,6 +307,24 @@ class AppService {
     }
   }
 
+  async exportAnalyticsReport(payload?: { district?: string; propertyType?: string; saleType?: string; dateFrom?: string; dateTo?: string; limit?: number }) {
+    try {
+      const body: Record<string, any> = {};
+      if (payload?.district) body.district = payload.district;
+      if (payload?.propertyType) body.propertyType = payload.propertyType;
+      if (payload?.saleType) body.saleType = payload.saleType;
+      if (payload?.dateFrom) body.dateFrom = payload.dateFrom;
+      if (payload?.dateTo) body.dateTo = payload.dateTo;
+      if (payload?.limit) body.limit = payload.limit;
+
+      return await instance.post(ApiConfig.exportReport, body, {
+        responseType: "blob",
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Saved Property
   async getListingSavedProperties(
   page: number = 1,
@@ -745,6 +763,14 @@ class AppService {
       if (period) params.period = period;
       if (district && district !== "all") params.district = district;
       return await instance.get(ApiConfig.districtPerformance, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async triggerAnalyticsComputation() {
+    try {
+      return await instance.post(ApiConfig.triggerAnalysis);
     } catch (error: any) {
       return error.response;
     }

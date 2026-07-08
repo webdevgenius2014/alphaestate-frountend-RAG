@@ -13,6 +13,8 @@ import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import { SortIcon } from "@/app/(user dashboard)/constants";
 import { AdminANALYTICS_STATS, AI_METRICSANALAYTCS } from "../constants";
 import appService from "@/app/services/appService";
+import Button from "@/app/components/ui/button";
+import { toast } from "react-hot-toast";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -24,6 +26,12 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
 
 function SectionLabel({ children }: { children: ReactNode }) {
     return <p className="text-sm font-medium text-(--db-text-primary)">{children}</p>;
+}
+
+function formatCompactNumber(n: number): string {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+    return String(n);
 }
 
 export default function AnalyticsPage() {
@@ -42,6 +50,7 @@ export default function AnalyticsPage() {
     const [marketIntelligence, setMarketIntelligence]           = useState<any>(null);
     const [usage, setUsage]                                     = useState<any>(null);
     const [usagePeriod, setUsagePeriod]                         = useState("last_year");
+    const [triggeringAnalysis, setTriggeringAnalysis]           = useState(false);
 
     useEffect(() => {
         appService.getAnalyticsOverview(
@@ -86,6 +95,25 @@ export default function AnalyticsPage() {
         });
     }, [platformGrowthPeriod]);
 
+    const handleTriggerAnalysis = async () => {
+        setTriggeringAnalysis(true);
+        const res = await appService.triggerAnalyticsComputation();
+        setTriggeringAnalysis(false);
+
+        if (res?.data?.success) {
+            toast.success("Analysis triggered successfully.");
+            appService.getAnalyticsOverview(
+                overviewPeriod || undefined,
+                overviewDistrict || undefined,
+                overviewPropertyType || undefined,
+            ).then((res) => {
+                if (res?.data?.data) setOverview(res.data.data);
+            });
+        } else {
+            toast.error(res?.data?.message || "Failed to trigger analysis.");
+        }
+    };
+
     return (
         <div className="flex flex-col min-h-full">
 
@@ -98,6 +126,14 @@ export default function AnalyticsPage() {
                             Analyze platform growth, user engagement, revenue trends, and market intelligence performance.
                         </p>
                     </div>
+                     <Button
+                            variant="navy"
+                            className="w-auto! py-2.5!"
+                            onClick={handleTriggerAnalysis}
+                            disabled={triggeringAnalysis}
+                        >
+                            {triggeringAnalysis ? "TRIGGERING..." : "TRIGGER ANALYSIS"}
+                      </Button>
                 </div>
 
                 <Card className="p-4!">
@@ -158,10 +194,10 @@ export default function AnalyticsPage() {
                         const apiVals = [
                             overview?.totalUsers,
                             overview?.activeSubscribers,
-                            overview?.monthlyRevenue,
+                            overview?.revenue,
                             overview?.totalAiQueries,
                         ];
-                        const val = apiVals[i] != null ? String(apiVals[i]) : s.value;
+                        const val = apiVals[i] != null ? formatCompactNumber(apiVals[i]) : s.value;
                         return (
                             <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-[13px_14px_21px] flex flex-col">
                                 <div className="flex items-center justify-start gap-2 mb-2.5">
