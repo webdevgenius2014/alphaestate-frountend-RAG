@@ -3,7 +3,7 @@ import instance, { getCookie } from "./interceptor";
 import ApiConfig from "../config/apiConfig";
 
 class AppService {
-
+  // auth 
   async refreshToken() {
     try {
       return await axios.post(ApiConfig.refreshToken, {}, { withCredentials: true });
@@ -389,8 +389,7 @@ class AppService {
     }
   }
 
-  // Admin Profile
-  
+  // Admin Profile  
   async getAdminProfile() {
     try {
       return await instance.get(ApiConfig.adminProfile);
@@ -597,7 +596,6 @@ class AppService {
       return error.response;
     }
   }
-
 
   // Admin Platform Settings
   async getPlatformGeneralInfo() {
