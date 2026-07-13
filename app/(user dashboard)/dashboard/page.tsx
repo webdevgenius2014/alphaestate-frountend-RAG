@@ -38,7 +38,7 @@ export default function DashboardPage() {
 
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-xl md:text-[25px] mb-2 leading-[100%] font-medium text-(--db-text-primary)">👋 Welcome back, {user?.fullName ?? "—"}</h1>
+                        <h1 className="text-xl md:text-[25px] mb-2 leading-[100%] font-medium text-(--db-text-primary)">👋 Welcome back, {user?.fullName ?? "User Name"}</h1>
                         <p className="text-sm text-(--db-text-primary) leading-5 font-normal max-w-130.75">
                             Track properties, market movements, investment insights, and AI-driven analytics all from one minimal command center.
                         </p>

@@ -19,6 +19,7 @@ import {
 } from "@/app/(admin dashboard)/constants";
 import { SortIcon } from "@/app/(user dashboard)/constants";
 import ModalButton from "@/app/components/ui/modal-button";
+import { formatDate } from "@/app/constant";
 
 // ── Local helpers ─────────────────────────────────────────────────────────────
 
@@ -83,6 +84,16 @@ function str(val: any): string {
     if (val == null) return "";
     if (typeof val === "object") return val.name ?? val.planName ?? val.title ?? val.value ?? JSON.stringify(val);
     return String(val);
+}
+
+function formatAedCompact(n: any): string {
+    const num = Number(n);
+    if (n == null || n === "" || Number.isNaN(num)) return "";
+    const abs = Math.abs(num);
+    if (abs >= 1e9) return `AED ${+(num / 1e9).toFixed(1)}B`;
+    if (abs >= 1e6) return `AED ${+(num / 1e6).toFixed(1)}M`;
+    if (abs >= 1e3) return `AED ${+(num / 1e3).toFixed(1)}K`;
+    return `AED ${num.toFixed(0)}`;
 }
 
 export default function SubscriptionsBillingPage() {
@@ -530,7 +541,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                                     <th className={thCls}>User</th>
                                     <th className={thCls}>Plan</th>
                                     <th className={thCls}>Renewal Date</th>
-                                    <th className={thCls}>Amount</th>
+                                     {/* Could be used further */}
+                                    {/* <th className={thCls}>Amount</th> */}
                                 </tr>
                             </thead>
                             <tbody>
@@ -541,8 +553,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                                     >
                                         <td className={tdCls}>{resolveUser(row)}</td>
                                         <td className={tdCls}>{str(row.plan ?? row.planName)}</td>
-                                        <td className={tdCls}>{str(row.renewalDate)}</td>
-                                        <td className={`${tdCls} font-medium`}>{str(row.amount)}</td>
+                                        <td className={tdCls}>{formatDate(row.renewalDate)}</td>
+                                        {/* Could be used further */}
+                                        {/* <td className={`${tdCls} font-medium`}>{str(row.amount)}</td> */}
                                     </tr>
                                 ))}
                             </tbody>
@@ -583,12 +596,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
 
                 <SectionCard title="Revenue Insights" sub="Key financial metrics and growth indicators">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {(revenueInsights ?? dashboardStats ? [
-                            { label: "Monthly Revenue", value: String((revenueInsights ?? dashboardStats)?.monthlyRevenue ?? "") },
-                            { label: "Yearly Revenue", value: String((revenueInsights ?? dashboardStats)?.annualRevenue ?? "") },
-                            { label: "Revenue Per User", value: String((revenueInsights ?? dashboardStats)?.revenuePerUser ?? "") },
-                            { label: "Subscription Growth", value: String((revenueInsights ?? dashboardStats)?.subscriptionGrowth ?? "") },
-                        ] : BILLING_INSIGHTS).map((item) => (
+                        {(() => {
+                            const revenueData = revenueInsights?.summary ?? revenueInsights ?? dashboardStats;
+                            return revenueData ? [
+                                { label: "Monthly Revenue", value: formatAedCompact(revenueData?.monthlyRevenue) },
+                                { label: "Yearly Revenue", value: formatAedCompact(revenueData?.yearlyRevenue ?? revenueData?.annualRevenue) },
+                                { label: "Revenue Per User", value: formatAedCompact(revenueData?.revenuePerUser) },
+                                { label: "Subscription Growth", value: revenueData?.subscriptionGrowth != null ? `${revenueData.subscriptionGrowth}%` : "" },
+                            ] : BILLING_INSIGHTS;
+                        })().map((item) => (
                             <div
                                 key={item.label}
                                 className="bg-(--db-main-bg) rounded-md p-5 flex flex-col gap-1"

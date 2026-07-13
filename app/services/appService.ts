@@ -472,6 +472,25 @@ class AppService {
     }
   }
 
+  async exportAdminUsers(filters?: { search?: string; plan?: string; status?: string; period?: string }) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([_, v]) => v !== undefined && v !== null && v !== ""
+            )
+          )
+        : {};
+
+      return await instance.get(ApiConfig.exportUsers, {
+        params: cleanFilters,
+        responseType: "blob",
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Admin Properties
   async getAdminProperties(
     page: number = 1,

@@ -86,6 +86,21 @@ export default function AdminProfilePage() {
     const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((p) => ({ ...p, [key]: e.target.value }));
 
+    const setPhone = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const cleaned = e.target.value.replace(/[^\d+\s]/g, "");
+        let digitCount = 0;
+        let value = "";
+        for (const ch of cleaned) {
+            if (ch === "+" || ch === " ") {
+                value += ch;
+            } else if (digitCount < 12) {
+                value += ch;
+                digitCount++;
+            }
+        }
+        setForm((p) => ({ ...p, phone: value }));
+    };
+
     const togglePref = (key: keyof typeof prefs) => setPrefs((p) => ({ ...p, [key]: !p[key] }));
 
     const handleSaveProfile = async () => {
@@ -227,7 +242,7 @@ export default function AdminProfilePage() {
                                 </div>
                                 <div>
                                     <label className={labelCls}>Phone Number</label>
-                                    <input type="text" value={form.phone} onChange={set("phone")} placeholder="+971 XX XXX XXXX" className={inputCls} />
+                                    <input type="text" inputMode="tel" value={form.phone} onChange={setPhone} placeholder="+971 XX XXX XXXX" className={inputCls} />
                                 </div>
                                 <div>
                                     <label className={labelCls}>Country / Region</label>

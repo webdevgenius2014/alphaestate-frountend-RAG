@@ -108,14 +108,16 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
             </defs>
           </svg>
         </button>
-        <img
-          src={prop.image}
-          alt={prop.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
+        {prop.image && (
+          <img
+            src={prop.image}
+            alt={prop.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
       </div>
       <div className="px-1.5 py-1.5 flex flex-col flex-1">
         <h3 className="text-base font-medium text-(--db-text-primary) mb-1">
@@ -198,7 +200,7 @@ export default function SavedPage() {
               slug: item.id,
               name: item.projectName,
               district: item.districtName,
-              image: item.coverImageUrl ?? "",
+              image: item.coverImageUrl || "/property-1.png",
               type: item.propertyType,
               beds: item.layout,
               sqft: String(Math.round((item.landAreaSqm ?? 0) * 10.764)),

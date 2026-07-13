@@ -56,6 +56,7 @@ const ApiConfig = {
   adminUsersById: `${apiURL}/admin/users/{id}`, 
   suspendAdminUsers: `${apiURL}/admin/users/{id}/suspend`,  
   deleteAdminUsers: `${apiURL}/admin/users/{id}`, 
+  exportUsers: `${apiURL}/admin/users/export`, 
 
   //admin-analytics
   overview: `${apiURL}/admin/analytics/overview`,
