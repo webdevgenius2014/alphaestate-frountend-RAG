@@ -38,6 +38,8 @@ export function useTheme() {
     return useContext(ThemeContext);
 }
 
+const THEME_STORAGE_KEY = "theme";
+
 export default function ThemeProvider({ children }: { children: ReactNode }) {
     const [isDark, setIsDark] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -49,13 +51,26 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
+    useEffect(() => {
+        const stored = localStorage.getItem(THEME_STORAGE_KEY);
+        if (stored) setIsDark(stored === "dark");
+    }, []);
+
     const updateUser = (partial: Partial<User>) =>
         setUser((prev) => prev ? { ...prev, ...partial } : prev);
+
+    const toggleTheme = () => {
+        setIsDark((prev) => {
+            const next = !prev;
+            localStorage.setItem(THEME_STORAGE_KEY, next ? "dark" : "light");
+            return next;
+        });
+    };
 
     return (
         <ThemeContext.Provider value={{
             isDark,
-            toggleTheme: () => setIsDark((p) => !p),
+            toggleTheme,
             isDrawerOpen,
             toggleDrawer: () => setIsDrawerOpen((p) => !p),
             closeDrawer: () => setIsDrawerOpen(false),
