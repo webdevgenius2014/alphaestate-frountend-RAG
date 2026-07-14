@@ -294,15 +294,23 @@ export default function SavedPage() {
           <p className="text-[13px] text-(--db-text-primary) mb-5">
             Properties ranked by AI investment performance in real time.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {loading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <PropertyCardSkeleton key={i} />
-                ))
-              : properties.map((prop) => (
-                  <PropertyCard key={prop.name} prop={prop} isSaved={(prop as any).isSaved} />
-                ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <PropertyCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : properties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {properties.map((prop) => (
+                <PropertyCard key={prop.name} prop={prop} isSaved={(prop as any).isSaved} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12 text-sm text-(--db-text-primary)">
+              No data found
+            </div>
+          )}
         </Card>
 
         {/* ── Compare Saved Properties ── */}
