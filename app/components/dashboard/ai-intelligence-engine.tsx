@@ -35,8 +35,8 @@ export function AIIntelligenceEngine() {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[auto_40%] gap-5">
 
                 {/* AI Insights Feed */}
-                <div className="bg-(--db-main-bg) rounded-md p-5 flex items-start justify-between gap-4 overflow-hidden">
-                    <div className="flex flex-col gap-3 flex-1 min-w-0">
+                <div className="bg-(--db-main-bg) rounded-md p-5 flex flex-wrap items-start justify-between gap-4 overflow-hidden">
+                    <div className="flex flex-col gap-3 md:flex-1 min-w-0">
                         <h3 className="text-base font-medium text-(--db-text-primary)">AI Insights Feed</h3>
                         <ul className="flex flex-col gap-2.5">
                             {AI_INSIGHTS_FEED.map((insight) => (

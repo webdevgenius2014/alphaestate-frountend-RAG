@@ -40,8 +40,9 @@ export default function Navbar() {
                 )}
                 <span>{pageLabel}</span>
             </div>
+            <img src="/favicon.ico" alt="" className="max-w-8 md:hidden" />
 
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center ml-auto">
 
                 <div
                     className={`fixed inset-0 bg-black z-70 transition-opacity duration-200 ${notifOpen ? "opacity-60 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
