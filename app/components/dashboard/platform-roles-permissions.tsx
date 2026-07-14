@@ -21,7 +21,7 @@ export function PlatformRolesPermissions() {
             </div>
 
             {/* Stat cards */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {ROLES_STATS.map((s) => (
                     <div key={s.label} className="bg-(--db-main-bg) rounded-md p-5 flex flex-col gap-3">
                         <div className="flex items-center gap-3">

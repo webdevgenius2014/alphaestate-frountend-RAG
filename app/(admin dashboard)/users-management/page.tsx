@@ -139,7 +139,7 @@ export default function UsersManagementPage() {
                 </div>
 
                 <Card className="p-4!">
-                    <div className="flex flex-wrap justify-between items-center gap-3">
+                    <div className="md:flex grid flex-wrap justify-between items-center gap-3">
                         <div className="flex flex-1 pr-1.5 max-w-99.75 items-center border border-(--db-border) rounded-sm overflow-hidden bg-(--db-main-bg)">
                             <input
                                 type="text"
@@ -153,7 +153,7 @@ export default function UsersManagementPage() {
                                 <SearchIcon />
                             </button>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 overflow-x-auto shrink-0">
                             <div className="relative">
                                 <select
                                     value={planFilter}
