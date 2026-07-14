@@ -192,7 +192,7 @@ export default function SavedPage() {
                             </button>
                             <span className="text-sm font-medium text-(--db-text-primary) shrink-0">Filter By</span>
                         </div>
-                        <div className="flex gap-1 items-center">
+                        <div className="flex gap-1 overflow-x-auto items-center">
                             {FILTER_LABELS.map((lbl) => (
                                 <div key={lbl} className="relative">
                                     <select

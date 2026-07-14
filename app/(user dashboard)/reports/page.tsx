@@ -75,7 +75,7 @@ export default function ReportsPage() {
             </div>
 
             <div className="mb-5 bg-(--db-sidebar-bg) p-5">
-                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-4/75">Generate Report</h2>
+                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-4.75">Generate Report</h2>
 
                 <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] xl:grid-cols-[365px_auto] gap-5">
                     <div className="bg-(--db-main-bg) p-5 rounded-sm">
@@ -115,7 +115,7 @@ export default function ReportsPage() {
                                 <Toggle checked={aiInsights} onChange={() => setAiInsights((p) => !p)} />
                             </div>
 
-                            <div className="flex items-center gap-4 pt-1">
+                            <div className="flex items-center flex-wrap gap-4 pt-1">
                                 <Button variant="primary" className="py-2.5!" onClick={() => setGenerateOpen(true)}>GENERATE REPORT</Button>
                                 <ModalButton className="max-w-fit px-5 py-2.5!">RESET FORM</ModalButton>
                             </div>

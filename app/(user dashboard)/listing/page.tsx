@@ -49,11 +49,11 @@ function PropertyCardSkeleton() {
         </div>
         <div className="h-4 bg-(--db-border) rounded mb-2.5 w-2/5" />
         <div className="h-3 bg-(--db-border) rounded mb-3.75 w-1/2" />
-        <div className="grid grid-cols-2 gap-1.75 mb-1.75">
+        <div className="grid grid-cold-1 sm:grid-cols-2 gap-1.75 mb-1.75">
           <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
           <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
         </div>
-        <div className="grid grid-cols-2 gap-1.75 mb-3.5">
+        <div className="grid grid-cold-1 sm:grid-cols-2 gap-1.75 mb-3.5">
           <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
           <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 py-1.5 h-7" />
         </div>
@@ -149,7 +149,7 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
           <span className={`w-2 h-2 rounded-full block bg-[#5E9F62]`}></span>
           Strong Investment Opportunity
         </span>
-        <div className="grid grid-cols-2 gap-1.75 mb-1.75">
+        <div className="grid grid-cold-1 sm:grid-cols-2 gap-1.75 mb-1.75">
           <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 leading-3.75 py-1.5 text-[11px] font-medium text-(--db-text-primary)">
             <span>
               ROI <b>{prop.roi}</b>
@@ -161,7 +161,7 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-1.75 mb-3.5">
+        <div className="grid grid-cold-1 sm:grid-cols-2 gap-1.75 mb-3.5">
           <div className="bg-(--db-icon-btn-bg) rounded-xs px-2 leading-3.75 py-1.5 text-[11px] font-medium text-(--db-text-primary)">
             <span>
               Appreciation <b>{prop.appreciation}</b>
@@ -263,7 +263,7 @@ export default function SavedPage() {
                 Filter By
               </span>
             </div>
-            <div className="flex gap-1 items-center">
+            <div className="flex gap-1 overflow-x-auto items-center">
               {(
                 [
                   "District",

@@ -262,7 +262,7 @@ function MyProfileTab() {
                 {/* Avatar + summary row */}
                 <div className="w-full">
                     <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-7">
+                        <div className="flex items-start md:items-center gap-4 md:gap-7 flex-wrap">
                             <div className="relative shrink-0">
                                 <div className="w-27.25 h-27.25 rounded-full flex items-center justify-center overflow-hidden">
                                     <img
@@ -373,7 +373,7 @@ function MyProfileTab() {
 
                     {/* Account information */}
                     <h3 className="text-[17px] font-semibold text-[#D28A44] mt-7 mb-3.5">Account Information</h3>
-                    <div className="bg-(--db-sidebar-bg) p-5 flex flex-wrap gap-20">
+                    <div className="bg-(--db-sidebar-bg) p-5 flex flex-wrap gap-8 md:gap-20">
                         {loading ? (
                             [1, 2, 3].map((n) => (
                                 <div key={n} className="space-y-1">
@@ -1040,15 +1040,15 @@ export default function ProfileSettingsPage() {
                 </div>
             </div>
 
-            <div className="bg-(--db-sidebar-bg) p-5 rounded-none! grid grid-cols-[177px_auto] self-start">
-                <nav className="w-full shrink-0 pr-5 h-fit space-y-4 md:sticky top-0">
+            <div className="bg-(--db-sidebar-bg) p-5 rounded-none! flex flex-col md:grid md:grid-cols-[177px_auto] self-start">
+                <nav className="w-full shrink-0 flex items-center gap-2 hide-scroll overflow-x-auto pb-3 border-b border-[#D28A4433] md:border-b-0 md:pb-0 md:flex-col md:gap-0 md:space-y-4 md:pr-5 md:overflow-visible md:sticky md:top-0">
                     {SETTINGS_TABS.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => handleTabClick(tab.id)}
-                            className={`w-full text-left px-3 py-1.5 text-[13px] rounded-sm transition-colors ease-linear ${
+                            className={`whitespace-nowrap md:w-full text-left px-3 py-1.5 text-[13px] rounded-sm transition-colors ease-linear ${
                                 tab.isDanger
-                                    ? "mt-7.5 bg-[#CF2D481A] text-[#CF2D48] hover:bg-[#CF2D4830] font-normal"
+                                    ? "md:mt-7.5 bg-[#CF2D481A] text-[#CF2D48] hover:bg-[#CF2D4830] font-normal"
                                     : activeTab === tab.id
                                         ? "bg-[#D28A4438] text-(--db-text-primary) font-medium"
                                         : "text-(--db-text-primary) font-normal hover:bg-[#D28A4438] hover:font-medium"
@@ -1059,7 +1059,7 @@ export default function ProfileSettingsPage() {
                     ))}
                 </nav>
 
-                <div className="flex-1 min-w-0 pl-5 border-l border-[#D28A4433]">
+                <div className="flex-1 min-w-0 pt-4 md:pt-0 md:pl-5 md:border-l border-[#D28A4433]">
                     {activeTab === "profile"         && <MyProfileTab key="profile" />}
                     {activeTab === "security"        && <SecurityTab key="security" />}
                     {activeTab === "notifications"   && <NotificationsTab key="notifications" />}
