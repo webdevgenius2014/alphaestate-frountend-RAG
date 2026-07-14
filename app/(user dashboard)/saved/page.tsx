@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import {
-    SAVED_COMPARE_ROWS, SAVED_RECOMMENDATIONS,
+    SAVED_RECOMMENDATIONS,
     SavedTypeIcon, SavedBedIcon, SavedSqftIcon,
     SelectChevron,
     type SavedProperty,
@@ -140,7 +140,7 @@ export default function SavedPage() {
                             slug: p.id,
                             name: p.projectName,
                             district: p.district,
-                            image: p.coverImageUrl ?? "",
+                            image: p.coverImageUrl ?? "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
                             sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
@@ -224,12 +224,19 @@ export default function SavedPage() {
                     <p className="text-[13px] text-(--db-text-primary) mb-5">
                         Your shortlisted properties ranked by AI investment performance in real time.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                        {loading
-                            ? Array.from({ length: 6 }).map((_, i) => <PropertyCardSkeleton key={i} />)
-                            : properties.map((prop) => <PropertyCard key={prop.name} prop={prop} />)
-                        }
-                    </div>
+                    {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                            {Array.from({ length: 6 }).map((_, i) => <PropertyCardSkeleton key={i} />)}
+                        </div>
+                    ) : properties.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                            {properties.map((prop) => <PropertyCard key={prop.name} prop={prop} />)}
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center py-12 text-sm text-(--db-text-primary)">
+                            No data found
+                        </div>
+                    )}
                 </Card>
 
                 {/* ── Compare Saved Properties ── */}
@@ -238,39 +245,47 @@ export default function SavedPage() {
                     <p className="text-[13px] text-(--db-text-primary) mb-5">
                         Side-by-side comparison of appreciation potential, AI investment scores across your shortlisted properties.
                     </p>
-                    <div className="overflow-x-auto border border-(--db-border) rounded-md">
-                        <table className="w-full min-w-150 text-sm">
-                            <thead>
-                                <tr className="bg-(--db-table-header-bg) divide-x divide-(--db-border) text-left text-sm font-semibold text-(--db-text-primary)">
-                                    <th className="px-5.5 py-3 whitespace-nowrap w-45">
-                                        Investment Metrics
-                                    </th>
-                                    {properties.map((p) => (
-                                        <th key={p.name} className="px-5.5 py-3">
-                                            {p.name}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {SAVED_COMPARE_ROWS.map((row) => (
-                                    <tr
-                                        key={row.metric}
-                                        className="border-b divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 hover:bg-(--db-sidebar-bg) odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) transition-colors"
-                                    >
-                                        <td className="px-5 py-3.5 font-medium text-(--db-text-primary) whitespace-nowrap">
-                                            {row.metric}
-                                        </td>
-                                        {row.values.map((val, j) => (
-                                            <td key={j} className="px-5 py-3.5 font-medium">
-                                                {val}
-                                            </td>
-                                        ))}
+                    {properties.length > 0 ? (
+                        <div className="overflow-x-auto border border-(--db-border) rounded-md">
+                            <table className="w-full min-w-150 text-sm">
+                                <thead>
+                                    <tr className="bg-(--db-table-header-bg) divide-x divide-(--db-border) text-left text-sm font-semibold text-(--db-text-primary)">
+                                        <th className="px-5.5 py-3 whitespace-nowrap w-45">Property</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">Type</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">District</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">Value</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">Est. ROI</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">Rental Yield</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">Appreciation</th>
+                                        <th className="px-5.5 py-3 whitespace-nowrap">AI Score</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {properties.map((p) => (
+                                        <tr
+                                            key={p.name}
+                                            className="border-b divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 hover:bg-(--db-sidebar-bg) odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) transition-colors"
+                                        >
+                                            <td className="px-5 py-3.5 font-medium text-(--db-text-primary) whitespace-nowrap">
+                                                {p.name}
+                                            </td>
+                                            <td className="px-5 py-3.5 font-medium">{p.type}</td>
+                                            <td className="px-5 py-3.5 font-medium">{p.district}</td>
+                                            <td className="px-5 py-3.5 font-medium">{p.price}</td>
+                                            <td className="px-5 py-3.5 font-medium">{p.roi}</td>
+                                            <td className="px-5 py-3.5 font-medium">{p.rentalYield}</td>
+                                            <td className="px-5 py-3.5 font-medium">{p.appreciation}</td>
+                                            <td className="px-5 py-3.5 font-medium">{p.aiScore}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center py-12 text-sm text-(--db-text-primary)">
+                            No data found
+                        </div>
+                    )}
                 </Card>
 
                 {/* ── AI Investment Recommendation ── */}
