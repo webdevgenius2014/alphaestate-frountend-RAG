@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
+import { toast } from "react-hot-toast";
 import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import { SortIcon } from "@/app/(user dashboard)/constants";
@@ -26,6 +27,14 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
     );
 }
 
+const EXT_BY_MIME: Record<string, string> = {
+    "text/csv": "csv",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/pdf": "pdf",
+    "application/json": "json",
+};
+
 export default function UsersManagementPage() {
     const [activePage, setActivePage] = useState(1);
     const [adminUsers, setAdminUsers] = useState<any[]>([]);
@@ -41,6 +50,7 @@ export default function UsersManagementPage() {
     const [planFilter, setPlanFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [periodFilter, setPeriodFilter] = useState("");
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         const t = setTimeout(() => {
@@ -78,6 +88,38 @@ export default function UsersManagementPage() {
 
     const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
+    const handleExport = async () => {
+        setExporting(true);
+        const res = await appService.exportAdminUsers({
+            search: activeSearch || undefined,
+            plan: planFilter || undefined,
+            status: statusFilter || undefined,
+            period: periodFilter || undefined,
+        });
+        setExporting(false);
+
+        if (!res?.data || res.status >= 400) {
+            toast.error("Failed to export users.");
+            return;
+        }
+
+        const contentType = res.headers?.["content-type"] || "text/csv";
+        const disposition: string = res.headers?.["content-disposition"] || "";
+        const nameMatch = disposition.match(/filename="?([^"; ]+)"?/i);
+        const ext = EXT_BY_MIME[contentType.split(";")[0].trim()] || "csv";
+        const filename = nameMatch?.[1] || `users.${ext}`;
+
+        const blob = new Blob([res.data], { type: contentType });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <>
             <div className="flex flex-col gap-5">
@@ -91,8 +133,8 @@ export default function UsersManagementPage() {
                             Manage user accounts, subscriptions, and platform access.
                         </p>
                     </div>
-                    <Button variant="navy" className="w-auto! py-2.5!">
-                        EXPORT USERS
+                    <Button variant="navy" className="w-auto! py-2.5!" onClick={handleExport} disabled={exporting}>
+                        {exporting ? "EXPORTING..." : "EXPORT USERS"}
                     </Button>
                 </div>
 

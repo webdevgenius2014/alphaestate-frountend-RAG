@@ -67,12 +67,16 @@ function titleCase(s: string): string {
    return s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function capitalize(s: string): string {
+   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
 function toDisplayRow(item: any): DisplayRow {
    return {
       id: item.id,
       name: item.projectName ?? item.name ?? "",
       district: item.district ?? item.districtName ?? "",
-      type: item.propertyType ?? item.type ?? "",
+      type: capitalize(item.propertyType ?? item.type ?? ""),
       price: formatPrice(item.displayPrice ?? item.askingPriceAed ?? item.price),
       status: mapStatus(item.status),
       raw: item,

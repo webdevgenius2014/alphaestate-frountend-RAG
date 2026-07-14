@@ -3,7 +3,7 @@ import instance, { getCookie } from "./interceptor";
 import ApiConfig from "../config/apiConfig";
 
 class AppService {
-
+  // auth 
   async refreshToken() {
     try {
       return await axios.post(ApiConfig.refreshToken, {}, { withCredentials: true });
@@ -389,8 +389,7 @@ class AppService {
     }
   }
 
-  // Admin Profile
-  
+  // Admin Profile  
   async getAdminProfile() {
     try {
       return await instance.get(ApiConfig.adminProfile);
@@ -468,6 +467,25 @@ class AppService {
     try {
       const url = ApiConfig.deleteAdminUsers.replace("{id}", id);
       return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async exportAdminUsers(filters?: { search?: string; plan?: string; status?: string; period?: string }) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(
+              ([_, v]) => v !== undefined && v !== null && v !== ""
+            )
+          )
+        : {};
+
+      return await instance.get(ApiConfig.exportUsers, {
+        params: cleanFilters,
+        responseType: "blob",
+      });
     } catch (error: any) {
       return error.response;
     }
@@ -597,7 +615,6 @@ class AppService {
       return error.response;
     }
   }
-
 
   // Admin Platform Settings
   async getPlatformGeneralInfo() {
