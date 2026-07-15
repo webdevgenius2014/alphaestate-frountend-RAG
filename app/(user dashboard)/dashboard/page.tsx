@@ -85,7 +85,8 @@ export default function DashboardPage() {
                             </div>
                             <img src="/globe.gif" alt="" className="w-full max-w-29.75 scale-140 relative left-6 md:-left-13 md:-top-4 mb-5 md:mb-0" />
                         </div>
-                        <video src="/12922667_1920_1080_30fps.mp4" autoPlay muted playsInline loop className="absolute inset-0 w-full h-full object-cover"></video>
+                        <img src="/12922667_1920_1080_30fps.gif" alt="" className="absolute inset-0 w-full h-full object-cover" />
+
                     </div>
                 </div>
 
