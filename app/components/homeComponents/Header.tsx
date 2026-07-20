@@ -48,7 +48,7 @@ export const Header = (): React.JSX.Element => {
                      );
                   })}
                </nav>
-               <div className="relative flex justify-end w-full max-w-fit gap-2">
+               <div className="relative flex justify-end w-full max-w-fit gap-2 ml-auto">
                   <Link href="/login">
                      <button
                         type="button"
@@ -110,128 +110,105 @@ export const Header = (): React.JSX.Element => {
             </div>
          </header>
 
-
          <div
-            className="xl:hidden fixed inset-0 z-60 overflow-hidden pointer-events-none"
+            className="xl:hidden fixed inset-0 z-60 flex flex-col"
+            style={{
+               background: "linear-gradient(155deg,#0D1D34 0%,#070D1A 60%,#060C16 100%)",
+               opacity: menuOpen ? 1 : 0,
+               pointerEvents: menuOpen ? "auto" : "none",
+               transition: "opacity 400ms ease",
+            }}
          >
-            <div
-               className="absolute inset-0"
-               style={{
-                  background: "rgba(0,0,0,0.65)",
-                  backdropFilter: "blur(5px)",
-                  WebkitBackdropFilter: "blur(5px)",
-                  opacity: menuOpen ? 1 : 0,
-                  pointerEvents: menuOpen ? "auto" : "none",
-                  transition: "opacity 350ms ease",
-               }}
-               onClick={() => setMenuOpen(false)}
-            />
+            <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#D28A44] blur-[130px] opacity-[0.07] pointer-events-none" />
+            <div className="absolute -bottom-20 -left-16 w-64 h-64 rounded-full bg-[#3671C9] blur-[120px] opacity-[0.09] pointer-events-none" />
 
-            <aside
-               className="absolute top-0 right-0 h-full w-[min(300px,84vw)] flex flex-col overflow-hidden"
+            <div
+               className="flex items-center justify-between h-15 px-11 shrink-0"
                style={{
-                  background: "linear-gradient(155deg,#0D1D34 0%,#070D1A 50%,#060C16 100%)",
-                  boxShadow: "-12px 0 60px rgba(0,0,0,0.55),-1px 0 0 rgba(255,255,255,0.05)",
-                  transform: menuOpen ? "translateX(0)" : "translateX(100%)",
-                  transition: "transform 420ms cubic-bezier(0.32,0.72,0,1)",
-                  pointerEvents: menuOpen ? "auto" : "none",
+                  opacity: menuOpen ? 1 : 0,
+                  transform: menuOpen ? "translateY(12px)" : "translateY(-12px)",
+                  transition: `opacity 380ms ease ${menuOpen ? "60ms" : "0ms"}, transform 380ms cubic-bezier(0.34,1.1,0.64,1) ${menuOpen ? "60ms" : "0ms"}`,
                }}
             >
-               <div className="absolute -top-14 -right-14 w-56 h-56 rounded-full bg-[#D28A44] blur-[100px] opacity-[0.08] pointer-events-none" />
-               <div className="absolute -bottom-14 -left-10 w-44 h-44 rounded-full bg-[#3671C9] blur-[90px] opacity-10 pointer-events-none" />
-               <div
-                  className="absolute top-0 left-0 w-px h-full pointer-events-none"
-                  style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.04) 50%,transparent 100%)" }}
-               />
-
-               <div
-                  className="flex items-center justify-between h-20 px-6 shrink-0"
-                  style={{
-                     opacity: menuOpen ? 1 : 0,
-                     transform: menuOpen ? "translateY(0)" : "translateY(-10px)",
-                     transition: `opacity 360ms ease ${menuOpen ? "80ms" : "0ms"}, transform 360ms cubic-bezier(0.34,1.1,0.64,1) ${menuOpen ? "80ms" : "0ms"}`,
-                  }}
+               <Link href="/" onClick={() => setMenuOpen(false)}>
+                  <img className="w-36 h-8 opacity-90" alt="Alpha" src="/header-logo.svg" />
+               </Link>
+               <button
+                  type="button"
+                  aria-label="Close menu"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full border border-white/15 text-white/40 hover:text-white hover:border-[#D28A4450] hover:bg-[#D28A440D] transition-all duration-200"
                >
-                  <Link href="/" onClick={() => setMenuOpen(false)}>
-                     <img className="w-32 h-6.5 opacity-90" alt="Alpha" src="/header-logo.svg" />
-                  </Link>
-                  <button
-                     type="button"
-                     onClick={() => setMenuOpen(false)}
-                     className="w-8 h-8 flex items-center justify-center rounded-full border border-[#FFFFFF10] text-white/30 hover:text-white hover:border-[#D28A4440] hover:bg-[#D28A440D] transition-all duration-200"
+                  <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
+                     <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+               </button>
+            </div>
+            <div
+               className="h-px relative top-5 mx-6 shrink-0"
+               style={{ background: "linear-gradient(90deg,rgba(255,255,255,0.10),rgba(255,255,255,0.04) 60%,transparent)" }}
+            />
+
+            <nav className="flex flex-col justify-center flex-1 px-8 gap-1 overflow-y-auto">
+               {navItems.map((item, i) => (
+                  <div
+                     key={item.label}
+                     style={{
+                        opacity: menuOpen ? 1 : 0,
+                        transform: menuOpen ? "translateY(0)" : "translateY(32px)",
+                        transition: `opacity 500ms ease ${menuOpen ? 100 + i * 70 : 0}ms, transform 500ms cubic-bezier(0.34,1.05,0.64,1) ${menuOpen ? 100 + i * 70 : 0}ms`,
+                     }}
                   >
-                     <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                        <path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                     </svg>
-                  </button>
-               </div>
-
-               <div
-                  className="h-px mx-5 shrink-0"
-                  style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.09) 35%,rgba(255,255,255,0.04) 70%,transparent)" }}
-               />
-
-               <nav className="flex flex-col gap-1 px-3 py-5 flex-1 overflow-y-auto">
-                  {navItems.map((item, i) => (
                      <button
-                        key={item.label}
                         type="button"
                         onClick={() => {
                            setActiveItem(item.label);
                            setMenuOpen(false);
                            const id = item.label.toLowerCase().replace(/\s+/g, "-");
-                           setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 380);
+                           setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 420);
                         }}
-                        style={{
-                           opacity: menuOpen ? 1 : 0,
-                           transform: menuOpen ? "translateX(0)" : "translateX(24px)",
-                           transition: `opacity 400ms ease ${menuOpen ? 120 + i * 50 : 0}ms, transform 400ms cubic-bezier(0.34,1.1,0.64,1) ${menuOpen ? 120 + i * 50 : 0}ms`,
-                        }}
-                        className={`group flex items-center justify-between w-full px-4 py-3.5 rounded-xl transition-colors duration-200 border ${activeItem === item.label ? "text-[#D28A44] bg-[#D28A440F] border-[#D28A441E]" : "text-white/50 hover:text-white hover:bg-white/4 border-transparent"}`}
+                        className="group flex items-center justify-between w-full py-4 border-b border-white/6"
                      >
-                        <div className="flex items-center gap-3.5">
-                           <span
-                              className="text-[10px] tabular-nums font-medium"
-                              style={{ color: activeItem === item.label ? "#D28A44" : "rgba(255,255,255,0.18)" }}
-                           >
+                        <div className="flex items-baseline gap-4">
+                           <span className="text-[15px] tabular-nums font-medium" style={{ color: activeItem === item.label ? "#D28A44" : "rgba(255,255,255,0.20)" }}>
                               {String(i + 1).padStart(2, "0")}
                            </span>
-                           <span className="text-[13.5px] font-light tracking-[0.01em]">{item.label}</span>
+                           <span
+                              className="text-[25px] font-light tracking-[-0.01em] leading-none transition-colors duration-200"
+                              style={{ color: activeItem === item.label ? "#D28A44" : "rgba(255,255,255,0.85)" }}
+                           >
+                              {item.label}
+                           </span>
                         </div>
                         <svg
-                           width="13" height="13" viewBox="0 0 13 13" fill="none"
-                           className="shrink-0 transition-all duration-200 group-hover:translate-x-0.5"
-                           style={{ opacity: activeItem === item.label ? 0.55 : 0.18, color: activeItem === item.label ? "#D28A44" : "white" }}
+                           width="16" height="16" viewBox="0 0 13 13" fill="none"
+                           className="shrink-0 transition-transform duration-300 group-hover:translate-x-1"
+                           style={{ opacity: activeItem === item.label ? 0.7 : 0.22, color: activeItem === item.label ? "#D28A44" : "white" }}
                         >
                            <path d="M4.5 2.5l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                      </button>
-                  ))}
-               </nav>
+                  </div>
+               ))}
+            </nav>
 
-               <div
-                  className="h-px mx-5 shrink-0"
-                  style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.07) 35%,rgba(255,255,255,0.03) 70%,transparent)" }}
-               />
-
-               <div
-                  className="flex flex-col gap-3 px-5 pt-5 pb-10 shrink-0"
-                  style={{
-                     opacity: menuOpen ? 1 : 0,
-                     transform: menuOpen ? "translateY(0)" : "translateY(16px)",
-                     transition: `opacity 400ms ease ${menuOpen ? 130 + navItems.length * 50 : 0}ms, transform 400ms cubic-bezier(0.34,1.1,0.64,1) ${menuOpen ? 130 + navItems.length * 50 : 0}ms`,
-                  }}
-               >
-                  <Link href="/login" className="block" onClick={() => setMenuOpen(false)}>
-                     <button type="button" className="w-full h-12 text-white text-[13px] font-medium rounded-full border border-white/20 hover:bg-[#D28A44] hover:border-[#D28A44] transition-all duration-200">
-                        LOGIN
-                     </button>
-                  </Link>
-                  <Link href="/signup" className="block" onClick={() => setMenuOpen(false)}>
-                     <Button variant="white" className="w-full! max-w-full! uppercase py-3! text-[13px]! rounded-full!">Get Started</Button>
-                  </Link>
-               </div>
-            </aside>
+            <div
+               className="flex flex-col gap-3 px-6 pt-5 pb-10 shrink-0"
+               style={{
+                  opacity: menuOpen ? 1 : 0,
+                  transform: menuOpen ? "translateY(0)" : "translateY(20px)",
+                  transition: `opacity 450ms ease ${menuOpen ? 120 + navItems.length * 70 : 0}ms, transform 450ms cubic-bezier(0.34,1.1,0.64,1) ${menuOpen ? 120 + navItems.length * 70 : 0}ms`,
+               }}
+            >
+               <Link href="/login" className="block" onClick={() => setMenuOpen(false)}>
+                  <button type="button" className="w-full h-14 text-white text-[13px] font-medium rounded-full border border-white/20 hover:bg-[#D28A44] hover:border-[#D28A44] transition-all duration-200">
+                     LOGIN
+                  </button>
+               </Link>
+               <Link href="/signup" className="block" onClick={() => setMenuOpen(false)}>
+                  <Button variant="white" className="w-full! max-w-full! uppercase py-4! text-[13px]! rounded-full!">Get Started</Button>
+               </Link>
+            </div>
          </div>
       </div>
    );

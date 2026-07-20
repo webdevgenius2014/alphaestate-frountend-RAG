@@ -132,11 +132,11 @@ export const Footer = () => {
 
                 {/* Bottom bar */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-5 pb-7">
-                    <p className="text-[#4F5B66] text-[16px] font-light">
+                    <p className="text-[#4F5B66] text-sm md:text-[16px] font-light">
                         © Copyright 2026, Alpha Estate   |   All Rights Reserved
                     </p>
                     <div className="flex flex-wrap items-center gap-6">
-                        <div className="flex items-center gap-4 text-[#4F5B66] text-[16px] font-light">
+                        <div className="flex items-center gap-4 text-[#4F5B66] text-sm md:text-[16px] font-light">
                             <Link href="/privacy-policy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link>
                             <Link href="/terms-of-service" className="hover:text-white transition-colors duration-200">Terms and Conditions</Link>
                         </div>

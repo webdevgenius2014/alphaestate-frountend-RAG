@@ -51,8 +51,8 @@ export function PriceTrendChart({ data: apiData }: { data?: Array<{ month: strin
     const chartData = apiData ?? PRICE_TREND_DATA;
 
     return (
-        <div className="bg-(--db-main-bg) p-[24px_21px]">
-            <ResponsiveContainer width="100%" height={450}>
+        <div className="bg-(--db-main-bg) md:p-[24px_21px] p-4 h-112.5">
+            <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
                         <linearGradient id="yasGrad" x1="0" y1="0" x2="0" y2="1">

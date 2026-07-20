@@ -240,7 +240,7 @@ export function LogoutModal({ onClose }: { onClose: () => void }) {
                     </div>
 
                     <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2.5 leading-8">
-                        Are You Sure You Want To<br />Log Out Of Your Alpha Estate<br />Account?
+                        Are You Sure You Want To <br className="sm:inline-block hidden" /> Log Out Of Your Alpha Estate <br className="sm:inline-block hidden" /> Account?
                     </h2>
                     <p className="text-sm text-(--db-text-primary) font-normal mb-6 max-w-sm mx-auto">
                         You'll need to sign in again to access your AI analytics, saved properties, and investment tools.

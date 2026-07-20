@@ -58,7 +58,7 @@ export default function Navbar() {
                     </button>
 
                     <div
-                        className={`absolute right-0 top-full mt-2 w-full max-w-78.5 md:w-78.5 bg-(--db-dropdown-bg) rounded-lg shadow-xl z-50 overflow-hidden transition-all duration-200 ease-out origin-top-right ${notifOpen
+                        className={`md:absolute md:right-0 md:top-full md:left-[unset] md:mt-2 md:w-78.5 fixed top-17.5 left-4 right-4 bg-(--db-dropdown-bg) rounded-lg shadow-xl z-50 overflow-hidden transition-all duration-200 ease-out origin-top-right ${notifOpen
                                 ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
                                 : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
                             }`}

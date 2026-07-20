@@ -117,7 +117,7 @@ export default function ReportsPage() {
 
                             <div className="flex items-center flex-wrap gap-4 pt-1">
                                 <Button variant="primary" className="py-2.5!" onClick={() => setGenerateOpen(true)}>GENERATE REPORT</Button>
-                                <ModalButton className="max-w-fit px-5 py-2.5!">RESET FORM</ModalButton>
+                                <ModalButton className="max-w-fit md:px-5 px-4 py-2.5!">RESET FORM</ModalButton>
                             </div>
                         </div>
                     </div>

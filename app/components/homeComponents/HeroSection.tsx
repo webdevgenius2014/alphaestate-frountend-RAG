@@ -150,12 +150,12 @@ export const HeroSection = () => {
 
                     <div className="rounded-[10px] bg-[#051327] p-3.5 lg:p-5 backdrop-blur-sm">
                         <div className="f-down-a flex items-center justify-between gap-x-2.5 gap-y-2 flex-wrap bg-[#051327] border rounded-[11px] border-[#FFFFFF21] px-2.5 lg:px-3.5 py-2.75 mb-2.5" >
-                            <div className="flex gap-2 items-center text-[13px] lg:text-[14px]">
+                            <div className="flex gap-2 items-center text-[12px] md:text-[13px] lg:text-[14px]">
                                 AlphaAI Analyst
-                                <p className="bg-[#0E2445] rounded-full px-2 text-[13px] lg:text-[14px]">4.0</p>
+                                <p className="bg-[#0E2445] rounded-full px-2 text-[12px] md:text-[13px] lg:text-[14px]">4.0</p>
                             </div>
 
-                            <span className="inline-flex items-center gap-1.5 bg-[#0E2445] rounded-full px-2 lg:px-2.5 min-h-6.25 font-medium text-[12px] lg:text-[13px]">
+                            <span className="inline-flex items-center gap-1.5 bg-[#0E2445] rounded-full px-2 lg:px-2.5 min-h-6.25 font-medium text-[11px] lg:text-[13px]">
                                 Market History
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
                                     <g clipPath="url(#clip0_1_1266)">
