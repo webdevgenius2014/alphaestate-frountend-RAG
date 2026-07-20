@@ -201,7 +201,7 @@ export default function PropertiesManagementPage() {
                   Manage property listings, market opportunities, and investment inventory across the platform.
                </p>
             </div>
-            <div className="flex flex-wrap items-end gap-4 ml-auto">
+            <div className="flex flex-wrap items-end gap-4 sm:ml-auto">
             <Button variant="primary" className="py-2.5! px-6 shrink-0" onClick={() => router.push("/properties-management/add-property")}>ADD PROPERTY</Button>
             <Button variant="secondary" onClick={() => setCsvModalOpen(true)}>IMPORT CSV</Button>
             </div>

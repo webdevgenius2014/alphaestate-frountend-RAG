@@ -613,7 +613,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                 </SectionCard>
 
                 <SectionCard title="Revenue Insights" sub="Key financial metrics and growth indicators">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
                         {(() => {
                             const revenueData = revenueInsights?.summary ?? revenueInsights ?? dashboardStats;
                             return revenueData ? [
@@ -625,12 +625,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                         })().map((item) => (
                             <div
                                 key={item.label}
-                                className="bg-(--db-main-bg) rounded-md p-5 flex flex-col gap-1"
+                                className="bg-(--db-main-bg) rounded-md p-4 md:p-5 flex flex-col gap-1"
                             >
-                                <p className="text-sm text-(--db-text-primary) font-medium mb-2 leading-snug">{item.label}</p>
+                                <p className="text-[11px] md:text-sm text-(--db-text-primary) font-medium mb-1 md:mb-2 leading-snug">{item.label}</p>
                                 <AnimatedNumber
                                     value={item.value}
-                                    className="text-lg font-medium text-(--db-text-primary)"
+                                    className="text-base md:text-lg font-medium text-(--db-text-primary)"
                                 />
                             </div>
                         ))}

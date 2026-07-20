@@ -73,7 +73,7 @@ export const PricingSection = () => {
                                 <span className="leading-none">
                                     {yearly ? plan.yearlyPrice : plan.monthlyPrice}
                                 </span>
-                                <span className="text-[20px]">/ month</span>
+                                <span className="text-[20px]">/ {yearly ? 'Year' : 'Month'}</span>
                             </div>
                             <p className="text-[#FFFFFFCC] relative z-1 text-[13px] font-light leading-6.25 mb-7.25">{plan.tagline}</p>
 

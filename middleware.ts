@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_ROUTES, USER_ROUTES, isAdmin, getHomePath } from "@/lib/roles";
 
-const publicRoutes = [
+const authRoutes = [
   "/login",
   "/signup",
   "/resend-email",
   "/forgot-password",
   "/reset-password",
+];
+
+const alwaysPublicRoutes = [
   "/privacy-policy",
   "/terms-of-service",
 ];
@@ -24,7 +27,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  if (publicRoutes.includes(path)) {
+  // Legal/info pages are always accessible regardless of auth state
+  if (alwaysPublicRoutes.includes(path)) {
+    return NextResponse.next();
+  }
+
+  // Auth pages redirect logged-in users to their home
+  if (authRoutes.includes(path)) {
     if (refreshToken) {
       return NextResponse.redirect(new URL(getHomePath(role), req.url));
     }

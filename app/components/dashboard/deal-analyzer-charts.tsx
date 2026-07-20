@@ -71,7 +71,7 @@ export function DealScoreGauge({ score = 85 }: { score?: number }) {
                 </PieChart>
             </ResponsiveContainer>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none pb-1">
-                <AnimatedNumber value={`${score}%`} className="text-3xl font-bold text-(--db-text-primary) leading-none" />
+                <AnimatedNumber value={`${score}%`} className="text-2xl truncate font-bold text-(--db-text-primary) leading-none" />
             </div>
         </div>
     );
