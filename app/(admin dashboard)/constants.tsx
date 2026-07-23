@@ -1335,6 +1335,7 @@ export const TABS = [
     { id: "data-management", label: "District Data Management" },
     { id: "market-analytics", label: "Market Analytics Data" },
     { id: "deal-analyzer", label: "Deal Analyzer Records" },
+    { id: "rental-ingestion", label: "Rental Ingestion" },
 ] as const;
 
 export const tdCls = "px-5 py-3.5 text-(--db-text-primary) whitespace-nowrap";

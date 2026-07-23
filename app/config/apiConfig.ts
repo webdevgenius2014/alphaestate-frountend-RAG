@@ -100,6 +100,11 @@ const ApiConfig = {
   adminGetCSVById: `${apiURL}/admin/ingestion/logs/{id}`,
   adminImportCSV: `${apiURL}/admin/ingestion/upload`,
 
+  // Rental Ingestion
+  rentalUploadIndex: `${apiURL}/admin/ingestion/rental/upload-index`,
+  rentalUploadBulk: `${apiURL}/admin/ingestion/rental/upload`,
+  rentalCoverage: `${apiURL}/admin/ingestion/rental/coverage`,
+
 
 
  // admin platform managment

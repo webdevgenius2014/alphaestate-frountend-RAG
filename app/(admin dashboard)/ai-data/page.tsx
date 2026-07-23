@@ -6,6 +6,7 @@ import { AIIntelligenceEngine } from "@/app/components/dashboard/ai-intelligence
 import { DistrictDataManagement } from "@/app/components/dashboard/district-data-management";
 import { MarketAnalyticsData } from "@/app/components/dashboard/market-analytics-data";
 import { DealAnalyzerRecords } from "@/app/components/dashboard/deal-analyzer-records";
+import { RentalIngestionManagement } from "@/app/components/dashboard/rental-ingestion-management";
 import { PropertyDetailDrawer } from "@/app/components/dashboard/property-detail-drawer";
 import { TABS, type DrawerRecord } from "../constants";
 
@@ -52,6 +53,7 @@ export default function AIDataPage() {
             {activeTab === "data-management" && <DistrictDataManagement onEye={(d) => setDrawerRecord(d)} />}
             {activeTab === "market-analytics" && <MarketAnalyticsData />}
             {activeTab === "deal-analyzer" && <DealAnalyzerRecords />}
+            {activeTab === "rental-ingestion" && <RentalIngestionManagement />}
 
             {drawerRecord && <PropertyDetailDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
         </div>

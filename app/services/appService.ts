@@ -707,6 +707,35 @@ class AppService {
     }
   }
 
+  // Rental Ingestion
+  async uploadRentalIndexFile(payload: FormData) {
+    try {
+      return await instance.post(ApiConfig.rentalUploadIndex, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadRentalFiles(payload: FormData) {
+    try {
+      return await instance.post(ApiConfig.rentalUploadBulk, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getRentalCoverage() {
+    try {
+      return await instance.get(ApiConfig.rentalCoverage);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Admin Activity Logs
   async getAdminActivityLogs(
     page: number = 1,
