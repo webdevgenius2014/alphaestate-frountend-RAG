@@ -64,7 +64,7 @@ function PropertyCard({ prop }: { prop: SavedProperty }) {
                         src={prop.image}
                         alt={prop.name}
                         className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                     />
                 )}
             </div>
@@ -149,7 +149,7 @@ export default function SavedPage() {
                             rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
                             appreciation: m.appreciationLevel ?? "N/A",
                             appreciationCls: m.appreciationLevel === "High" ? "text-green-500" : "text-yellow-500",
-                            aiScore: String(m.aiScore ?? "N/A"),
+                            aiScore: `${(m.aiScore ?? 0).toFixed(1)}%`,
                             signal: m.investmentSignal ?? "",
                             signalCls: "text-green-500",
                         };

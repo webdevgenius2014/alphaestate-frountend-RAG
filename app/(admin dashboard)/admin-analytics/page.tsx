@@ -69,6 +69,7 @@ export default function AnalyticsPage() {
     }, [districtPeriod, districtFilter]);
 
     useEffect(() => {
+        appService.computeAiScore();
         appService.getAnalyticsSubscriptionPerformance().then((res) => {
             if (res?.data?.data) setSubscriptionPerformance(res.data.data);
         });
@@ -133,7 +134,7 @@ export default function AnalyticsPage() {
                             disabled={triggeringAnalysis}
                         >
                             {triggeringAnalysis ? "TRIGGERING..." : "TRIGGER ANALYSIS"}
-                      </Button>
+                    </Button>
                 </div>
 
                 <Card className="p-4!">

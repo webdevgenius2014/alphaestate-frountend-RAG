@@ -822,6 +822,14 @@ class AppService {
     }
   }
 
+   async computeAiScore() {
+    try {
+      return await instance.post(ApiConfig.computeAiScore);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async getAnalyticsSubscriptionPerformance() {
     try {
       return await instance.get(ApiConfig.subscriptionPerformance);

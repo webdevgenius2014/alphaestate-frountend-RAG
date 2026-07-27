@@ -205,7 +205,9 @@ export default function AnalyticsPage() {
                                           : undefined,
                                   }
                                 : null,
-                            null,
+                             marketOverview?.aiMarketSignal != null
+                                ? { value: `${marketOverview.aiMarketSignal}` }
+                                : null,
                         ][i];
                         const val = overrides?.value ?? s.value;
                         const sub = overrides?.sub ?? s.sub;

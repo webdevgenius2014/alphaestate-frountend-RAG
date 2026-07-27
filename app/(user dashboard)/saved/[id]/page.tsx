@@ -54,7 +54,7 @@ export default function PropertyDetailPage() {
                             slug: p.id,
                             name: p.projectName,
                             district: p.district ?? p.districtName,
-                            image: p.coverImageUrl ?? "",
+                            image: p.coverImageUrl ?? "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
                             sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
@@ -63,7 +63,7 @@ export default function PropertyDetailPage() {
                             rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
                             appreciation: m.appreciationLevel ?? "N/A",
                             appreciationCls: m.appreciationLevel === "High" ? "text-green-500" : "text-yellow-500",
-                            aiScore: String(m.aiScore ?? "N/A"),
+                            aiScore: `${(m.aiScore ?? 0).toFixed(1)}%`,
                             signal: m.investmentSignal ?? "",
                             signalCls: "text-green-500",
                         };
@@ -303,7 +303,7 @@ export default function PropertyDetailPage() {
                                     src={src}
                                     alt={`${saved.name} view ${i + 2}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                                 />
                             </button>
                         ))}
@@ -475,7 +475,7 @@ export default function PropertyDetailPage() {
                                     src={prop.image}
                                     alt={prop.name}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                                 />
                             </div>
                             <div className="px-1.5 py-1.5 flex flex-col flex-1">
