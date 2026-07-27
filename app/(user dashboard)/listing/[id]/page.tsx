@@ -54,16 +54,16 @@ export default function PropertyDetailPage() {
                             slug: p.id,
                             name: p.projectName,
                             district: p.district ?? p.districtName,
-                            image: p.coverImageUrl ?? "",
+                            image: p.coverImageUrl ?? "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
                             sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
                             price: p.priceFormatted ?? `AED ${(p.priceAed ?? p.displayPrice ?? 0).toLocaleString()}`,
-                            roi: `${(m.roi ?? 0).toFixed(1)}%`,
-                            rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
-                            appreciation: m.appreciationLevel ?? "N/A",
+                            roi: `${(p.roi ?? 0).toFixed(1)}%`,
+                            rentalYield: `${(p.rentalYield ?? 0).toFixed(1)}%`,
+                            appreciation: `${(p.yoyGrowth ?? 0).toFixed(1)}%`,
                             appreciationCls: m.appreciationLevel === "High" ? "text-green-500" : "text-yellow-500",
-                            aiScore: String(m.aiScore ?? "N/A"),
+                            aiScore: `${(p.aiScore ?? 0).toFixed(1)}%`,
                             signal: m.investmentSignal ?? "",
                             signalCls: "text-green-500",
                         };
@@ -227,13 +227,13 @@ export default function PropertyDetailPage() {
         rentalYield: `${(parseFloat(property.rentalYield ?? "0") * 100).toFixed(1)}%`,
         appreciation: `${(parseFloat(property.yoyGrowth ?? "0") * 100).toFixed(1)}%`,
         appreciationCls: property.districtTrendDirection === "rising" ? "text-green-500" : "text-yellow-500",
-        aiScore: `${(parseFloat(property.capRate ?? "0") * 100).toFixed(1)}%`,
+        aiScore: `${parseFloat(property.aiScore ?? "0") .toFixed(1)}%`,
         signal: property.districtMarketSignal,
         signalCls: property.districtMarketSignal === "bullish" ? "text-green-500" : "text-yellow-500",
     };
 
     const detail = {
-        images: images.length > 0 ? images : [""],
+        images: images.length > 0 ? images : ["/property-1.png"],
         dealScore: Math.round(parseFloat(property.roi ?? "0") * 1000),
         aiDescription: property.description ?? "This property demonstrates strong rental demand and stable appreciation momentum compared to nearby comparable developments.",
         saleType: property.recentTransactions?.[0]?.saleType ?? "Ready",
@@ -302,7 +302,7 @@ export default function PropertyDetailPage() {
                                     src={src}
                                     alt={`${saved.name} view ${i + 2}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                                 />
                             </button>
                         ))}
@@ -495,7 +495,7 @@ export default function PropertyDetailPage() {
                                     src={prop.image}
                                     alt={prop.name}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                                 />
                             </div>
                             <div className="px-1.5 py-1.5 flex flex-col flex-1">

@@ -68,6 +68,7 @@ const ApiConfig = {
   marketIntelligence: `${apiURL}/admin/analytics/market-intelligence`,  
   usage: `${apiURL}/admin/analytics/usage`,
   triggerAnalysis: `${apiURL}/admin/analytics/compute`,
+  computeAiScore: `${apiURL}/admin/analytics/compute-ai-scores`,
 
   // admin subscriptions-billing
   dashboardSubscription: `${apiURL}/admin/subscriptions/dashboard`,

@@ -114,7 +114,7 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
             alt={prop.name}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
+              (e.target as HTMLImageElement).src = "/property-1.png";
             }}
           />
         )}
@@ -212,7 +212,9 @@ export default function SavedPage() {
                 item.districtTrendDirection === "rising"
                   ? "text-green-500"
                   : "text-yellow-500",
-              aiScore: `${((item.capRate ?? 0) * 100).toFixed(1)}%`,
+              // aiScore: `${((item.aiScore ?? 0) * 100).toFixed(1)}%`,
+              aiScore: `${(item.aiScore ?? 0).toFixed(1) }%`,
+
               signal: item.districtMarketSignal,
               signalCls:
                 item.districtMarketSignal === "bullish"
