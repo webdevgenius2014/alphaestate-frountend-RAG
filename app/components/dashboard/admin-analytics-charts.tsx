@@ -225,7 +225,7 @@ export function AdminPlanGrowthChart({ data: apiData }: { data?: Array<{ distric
                     const isHidden = hidden.has(idx);
                     return (
                         <button
-                            key={item.district}
+                            key={idx}
                             onClick={() => toggle(idx)}
                             className="flex items-center gap-1.5 text-xs outline-none transition-opacity"
                             style={{ opacity: isHidden ? 0.35 : 1 }}
@@ -437,7 +437,7 @@ export function AdminRevenueBreakdownChart({ data: apiData }: { data?: { avgSqft
                     const isHidden = hidden.has(idx);
                     return (
                         <button
-                            key={item.name}
+                            key={idx}
                             onClick={() => toggle(idx)}
                             className="flex items-center justify-between gap-2 outline-none transition-opacity"
                             style={{ opacity: isHidden ? 0.35 : 1 }}

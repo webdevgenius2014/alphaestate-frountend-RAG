@@ -26,6 +26,24 @@ function TrendArrow() {
     );
 }
 
+function transformRentalYieldByDistrict(rows: Array<{ district: string; districtName?: string; rentalYield?: number }>) {
+    const byDistrict = new Map<string, { sum: number; count: number }>();
+    for (const row of rows) {
+        const district = row.districtName ?? row.district;
+        if (!district) continue;
+        const yieldValue = row.rentalYield ?? 0;
+        const entry = byDistrict.get(district) ?? { sum: 0, count: 0 };
+        entry.sum += yieldValue;
+        entry.count += 1;
+        byDistrict.set(district, entry);
+    }
+    return Array.from(byDistrict.entries()).map(([district, { sum, count }]) => ({
+        district,
+        buy: 0,
+        rental: +(sum / count).toFixed(2),
+    }));
+}
+
 function SectionLabel({ children }: { children: ReactNode }) {
     return <p className="text-sm font-medium text-(--db-text-primary)">{children}</p>;
 }
@@ -119,15 +137,7 @@ export default function AnalyticsPage() {
 
     useEffect(() => {
         appService.getRentalYieldByDistrict(rentalYieldPeriod).then((res) => {
-            if (res?.data?.data) {
-                setRentalYieldByDistrict(
-                    res.data.data.map((d: any) => ({
-                        district: d.districtName ?? d.district,
-                        buy: 0,
-                        rental: d.avgRentalYield ?? d.rental ?? 0,
-                    }))
-                );
-            }
+            if (res?.data?.data) setRentalYieldByDistrict(transformRentalYieldByDistrict(res.data.data));
         });
     }, [rentalYieldPeriod]);
 

@@ -20,6 +20,14 @@ const ApiConfig = {
   userProfileAvtar: `${apiURL}/users/me/avatar`,
   userProfile2Fa: `${apiURL}/users/me/2Fa/toggle`,
 
+  //dashboard
+  verifiedListings:  `${apiURL}/analytics/properties/stats`,
+  liveMarket:  `${apiURL}/districts?show_in_dashboard=true`,
+  priceTrendChart: `${apiURL}/analytics/market/price-trend`,
+  rentalYieldByDistrict:  `${apiURL}/analytics/market/price-trend`,
+  districtCap: `${apiURL}/analytics/market/district-comparison`,
+  topProperties: `${apiURL}/analytics/market/top-properties`,
+
   // Subscription
   subsriptionPlans: `${apiURL}/subscriptions/plans`,
   mySubsriptionPlans: `${apiURL}/subscriptions/me`,

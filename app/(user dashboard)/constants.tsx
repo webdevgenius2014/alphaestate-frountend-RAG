@@ -887,9 +887,6 @@ export const MARKET_LOCATIONS: MarketLocation[] = [
   { name: "Yas Island", price: "AED 1,619", up: true },
   { name: "Al Reem Island", price: "AED 1,479", up: true },
   { name: "Saadiyat Island", price: "AED 1,696", up: false },
-  { name: "Yas Island", price: "AED 1,619", up: true },
-  { name: "Al Reem Island", price: "AED 1,479", up: true },
-  { name: "Saadiyat Island", price: "AED 1,696", up: false },
 ];
 
 export const TOP_PROPERTIES: InvestmentProperty[] = [
