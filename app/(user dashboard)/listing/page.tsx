@@ -205,9 +205,9 @@ export default function SavedPage() {
               beds: item.layout,
               sqft: String(Math.round((item.landAreaSqm ?? 0) * 10.764)),
               price: `AED ${(item.displayPrice ?? 0).toLocaleString()}`,
-              roi: `${((item.roi ?? 0) * 100).toFixed(1)}%`,
-              rentalYield: `${((item.rentalYield ?? 0) * 100).toFixed(1)}%`,
-              appreciation: `${((item.yoyGrowth ?? 0) * 100).toFixed(1)}%`,
+              roi: `${(item.roi ?? 0).toFixed(1)}%`,
+              rentalYield: `${(item.rentalYield ?? 0).toFixed(1)}%`,
+              appreciation: `${(item.yoyGrowth ?? 0).toFixed(1)}%`,
               appreciationCls:
                 item.districtTrendDirection === "rising"
                   ? "text-green-500"
@@ -305,7 +305,7 @@ export default function SavedPage() {
           ) : properties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {properties.map((prop) => (
-                <PropertyCard key={prop.name} prop={prop} isSaved={(prop as any).isSaved} />
+                <PropertyCard key={prop.slug} prop={prop} isSaved={(prop as any).isSaved} />
               ))}
             </div>
           ) : (

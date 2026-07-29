@@ -1,12 +1,32 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import type { Swiper as SwiperInstance } from "swiper";
 import "swiper/css";
-import { MARKET_LOCATIONS, ArrowIcon } from "@/app/(user dashboard)/constants";
+import { MARKET_LOCATIONS, ArrowIcon, type MarketLocation } from "@/app/(user dashboard)/constants";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
+import appService from "@/app/services/appService";
+
+function toMarketLocation(d: any): MarketLocation {
+    const name = d.name ?? d.district ?? "";
+    const priceValue = d.avgPriceSqm ?? d.avgPricePerSqft ?? d.pricePerSqft ?? d.avgPrice ?? d.price ?? 0;
+    const price =
+        typeof priceValue === "number"
+            ? `AED ${priceValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+            : String(priceValue);
+    const changeValue = d.priceChangePercent ?? d.priceChange ?? d.change ?? 0;
+    const up =
+        typeof d.marketSignal === "string"
+            ? d.marketSignal.toLowerCase() === "bullish"
+            : typeof d.up === "boolean"
+            ? d.up
+            : typeof d.isUp === "boolean"
+            ? d.isUp
+            : Number(changeValue) >= 0;
+    return { name, price, up };
+}
 
 function TrendArrow() {
     return (
@@ -20,6 +40,16 @@ const NAV_BTN = "flex w-5.5 h-5.5 justify-center items-center border border-(--d
 
 export function MarketSlider() {
     const swiperRef = useRef<SwiperInstance | null>(null);
+    const [locations, setLocations] = useState<MarketLocation[]>(MARKET_LOCATIONS);
+
+    useEffect(() => {
+        appService.getLiveMarketOverview().then((res) => {
+            const items = res?.data?.data ?? [];
+            if (Array.isArray(items) && items.length) {
+                setLocations(items.map(toMarketLocation));
+            }
+        });
+    }, []);
 
     return (
         <div className="bg-(--db-sidebar-bg) h-full rounded-md p-5 flex flex-col gap-4">
@@ -55,7 +85,7 @@ export function MarketSlider() {
                 onSwiper={(swiper) => { swiperRef.current = swiper; }}
                 className="w-full overflow-hidden!"
             >
-                {MARKET_LOCATIONS.map((loc, i) => (
+                {locations.map((loc, i) => (
                     <SwiperSlide key={i}>
                         <div className="bg-(--db-main-bg) p-3.75 flex flex-col gap-2.5">
                             <div className="flex items-center gap-2.5">

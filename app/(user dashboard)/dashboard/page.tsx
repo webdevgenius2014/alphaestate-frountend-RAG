@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Button from "@/app/components/ui/button";
 import { PriceTrendChart, RentalYieldChart, CapRateChart } from "@/app/components/dashboard/charts";
@@ -12,9 +12,71 @@ import {
     PROPERTY_STATUS_STYLES,
     INVESTMENT_SIGNALS,
     SortIcon,
+    type InvestmentProperty,
 } from "@/app/(user dashboard)/constants";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
+import appService from "@/app/services/appService";
 
+function formatMonthLabel(monthStr: string) {
+    const [year, month] = monthStr.split("-").map(Number);
+    return new Date(year, month - 1, 1).toLocaleString("en-US", { month: "short" });
+}
+
+function transformPriceTrend(rows: Array<{ month: string; district: string; avgPricePerSqm: number }>) {
+    const byMonth = new Map<string, { yas: number; alReem: number }>();
+    for (const row of rows) {
+        if (!byMonth.has(row.month)) byMonth.set(row.month, { yas: 0, alReem: 0 });
+        const entry = byMonth.get(row.month)!;
+        const district = String(row.district ?? "").toLowerCase();
+        if (district === "yas island") entry.yas = row.avgPricePerSqm;
+        else if (district === "al reem island") entry.alReem = row.avgPricePerSqm;
+    }
+    return Array.from(byMonth.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, vals]) => ({ month: formatMonthLabel(month), ...vals }));
+}
+
+function transformRentalYieldByDistrict(rows: Array<{ district: string; districtName?: string; rentalYield?: number }>) {
+    const byDistrict = new Map<string, { sum: number; count: number }>();
+    for (const row of rows) {
+        const district = row.districtName ?? row.district;
+        if (!district) continue;
+        const yieldValue = row.rentalYield ?? 0;
+        const entry = byDistrict.get(district) ?? { sum: 0, count: 0 };
+        entry.sum += yieldValue;
+        entry.count += 1;
+        byDistrict.set(district, entry);
+    }
+    return Array.from(byDistrict.entries()).map(([district, { sum, count }]) => ({
+        district,
+        buy: 0,
+        rental: +(sum / count).toFixed(2),
+    }));
+}
+
+function toSaleTypeLabel(s: string): string {
+    return s.split(/[-_\s]+/).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("-");
+}
+
+function toInvestmentProperty(p: any): InvestmentProperty {
+    const priceValue = p.displayPrice ?? p.price ?? p.listPrice ?? 0;
+    const price = typeof priceValue === "number" ? `AED ${priceValue.toLocaleString()}` : String(priceValue);
+    const sqftValue = p.pricePerSqft ?? p.pricePerSqm ?? p.sqft ?? 0;
+    const sqft = typeof sqftValue === "number" ? sqftValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(sqftValue);
+    const yieldValue = p.rentalYield ?? p.yield ?? p.yield_;
+    const yield_ = yieldValue == null ? "–" : typeof yieldValue === "number" ? `${yieldValue.toFixed(1)}%` : String(yieldValue);
+    const roiValue = p.roi ?? p.roiPercent;
+    const roi = roiValue == null ? "–" : typeof roiValue === "number" ? `${roiValue.toFixed(1)}%` : String(roiValue);
+    return {
+        name: p.projectName ?? p.name ?? p.title ?? p.propertyName ?? "",
+        district: p.district ?? p.districtName ?? "",
+        price,
+        sqft,
+        yield_,
+        roi,
+        status: p.saleType ? toSaleTypeLabel(p.saleType) : p.status ?? "Ready",
+    };
+}
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -31,6 +93,63 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 export default function DashboardPage() {
     const { user } = useTheme();
+    const [verifiedListings, setVerifiedListings] = useState<string | null>(null);
+    const [priceTrend, setPriceTrend] = useState<any>(null);
+    const [priceTrendPeriod, setPriceTrendPeriod] = useState<"last_year" | "last_6months" | "last_2_years" | "all_time">("last_year");
+    const [rentalYieldByDistrict, setRentalYieldByDistrict] = useState<any>(null);
+    const [rentalYieldPeriod, setRentalYieldPeriod] = useState<"last_year" | "last_6months" | "last_2_years" | "all_time">("last_year");
+    const [districtCapRate, setDistrictCapRate] = useState<any>(null);
+    const [topProperties, setTopProperties] = useState<InvestmentProperty[]>(TOP_PROPERTIES);
+
+    useEffect(() => {
+        appService.getVerifiedListingsStats().then((res) => {
+            const active = res?.data?.data?.active;
+            if (active != null) setVerifiedListings(Number(active).toLocaleString());
+        });
+    }, []);
+
+    useEffect(() => {
+        appService.getPriceTrend(priceTrendPeriod).then((res) => {
+            if (res?.data?.data) setPriceTrend(transformPriceTrend(res.data.data));
+        });
+    }, [priceTrendPeriod]);
+
+    useEffect(() => {
+        appService.getRentalYieldByDistrictChart(rentalYieldPeriod).then((res) => {
+            if (res?.data?.data) setRentalYieldByDistrict(transformRentalYieldByDistrict(res.data.data));
+        });
+    }, [rentalYieldPeriod]);
+
+    useEffect(() => {
+        appService.getDistrictCapRateMap().then((res) => {
+            if (res?.data?.data) {
+                setDistrictCapRate(
+                    res.data.data.map((d: any) => {
+                        const raw = d.avgRoi ?? d.avgCapRate ?? d.capRate ?? d.value ?? 0;
+                        return {
+                            name: d.districtName ?? d.district ?? d.name,
+                            value: raw <= 1 ? +(raw * 100).toFixed(1) : +raw.toFixed(1),
+                        };
+                    })
+                );
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        appService.getTopInvestmentProperties().then((res) => {
+            const items = res?.data?.data ?? [];
+            if (Array.isArray(items) && items.length) {
+                setTopProperties(items.map(toInvestmentProperty));
+            }
+        });
+    }, []);
+
+    const dashboardStats = DASHBOARD_STATS.map((s) =>
+        s.label === "Verified Listings" && verifiedListings
+            ? { ...s, value: verifiedListings }
+            : s
+    );
 
     return (
         <div className="flex flex-col min-h-full">
@@ -54,7 +173,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {DASHBOARD_STATS.map((s) => (
+                    {dashboardStats.map((s) => (
                         <div key={s.label} className="bg-(--db-sidebar-bg) rounded-md p-[13px_14px_21px] flex flex-col">
                             <div className="flex items-center justify-start gap-2 mb-2.5">
                                 <div className="shrink-0 bg-[#D28A441F] p-1.75 rounded-sm">{s.icon}</div>
@@ -97,17 +216,22 @@ export default function DashboardPage() {
                             <p className="text-[13px] text-(--db-text-primary) mt-0.5">12-month rolling · Top 2 districts</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                            <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                                <option>Last Year</option>
-                                <option>6 months</option>
-                                <option>All time</option>
+                            <select
+                                className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                                value={priceTrendPeriod}
+                                onChange={(e) => setPriceTrendPeriod(e.target.value as "last_year" | "last_6months" | "last_2_years" | "all_time")}
+                            >
+                                <option value="last_year">Last Year</option>
+                                <option value="last_6months">6 Months</option>
+                                <option value="last_2_years">Last 2 Years</option>
+                                <option value="all_time">All time</option>
                             </select>
                             <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                                 <SortIcon />
                             </button>
                         </div>
                     </div>
-                    <PriceTrendChart />
+                    <PriceTrendChart data={priceTrend ?? undefined} />
                 </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[auto_300px] gap-4">
@@ -118,16 +242,22 @@ export default function DashboardPage() {
                                 <p className="text-xs text-(--db-text-primary) mt-0.5">Current quarter · Freehold only</p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                                <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                                    <option>Last Year</option>
-                                    <option>6 months</option>
+                                <select
+                                    className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                                    value={rentalYieldPeriod}
+                                    onChange={(e) => setRentalYieldPeriod(e.target.value as "last_year" | "last_6months" | "last_2_years" | "all_time")}
+                                >
+                                    <option value="last_year">Last Year</option>
+                                    <option value="last_6months">6 Months</option>
+                                    <option value="last_2_years">Last 2 Years</option>
+                                    <option value="all_time">All time</option>
                                 </select>
                                 <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                                     <SortIcon />
                                 </button>
                             </div>
                         </div>
-                        <RentalYieldChart />
+                        <RentalYieldChart data={rentalYieldByDistrict ?? undefined} />
                     </Card>
 
                     <Card className="rounded-none!">
@@ -135,7 +265,7 @@ export default function DashboardPage() {
                             <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">District Cap Rate Map</h2>
                             <p className="text-xs text-(--db-text-primary) mt-0.5">Q1 2026 · All districts</p>
                         </div>
-                        <CapRateChart />
+                        <CapRateChart data={districtCapRate ?? undefined} />
                     </Card>
                 </div>
 
@@ -175,7 +305,7 @@ export default function DashboardPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {TOP_PROPERTIES.map((p, i) => (
+                                {topProperties.map((p, i) => (
                                     <tr key={i} className="border-b text-sm divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 hover:bg-(--db-sidebar-bg) odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) transition-colors">
                                         <td className="px-5 py-3.5 font-medium">{p.name}</td>
                                         <td className="px-5 py-3.5">{p.district}</td>

@@ -234,10 +234,61 @@ class AppService {
     }
   }
 
+     async liveMarket(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
+    try {
+      return await instance.get(ApiConfig.listingProperties, {
+        params: { page, limit, ...filters },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Districts
   async getAllDistricts() {
     try {
       return await instance.get(ApiConfig.allDistricts);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Dashboard
+  async getVerifiedListingsStats() {
+    try {
+      return await instance.get(ApiConfig.verifiedListings);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getLiveMarketOverview() {
+    try {
+      return await instance.get(ApiConfig.liveMarket);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getRentalYieldByDistrictChart(period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+    try {
+      return await instance.get(ApiConfig.rentalYieldByDistrict, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getDistrictCapRateMap(district: string = "all") {
+    try {
+      return await instance.get(ApiConfig.districtCap, { params: { district } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getTopInvestmentProperties(limit?: number) {
+    try {
+      return await instance.get(ApiConfig.topProperties, { params: limit ? { limit } : undefined });
     } catch (error: any) {
       return error.response;
     }
@@ -256,7 +307,7 @@ class AppService {
     }
   }
 
-  async getPriceTrend(period?: "last_year" | "last_2_years" | "all_time") {
+  async getPriceTrend(period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
     try {
       return await instance.get(ApiConfig.priceTrend, { params: period ? { period } : undefined });
     } catch (error: any) {

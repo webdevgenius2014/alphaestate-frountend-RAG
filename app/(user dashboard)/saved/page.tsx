@@ -230,7 +230,7 @@ export default function SavedPage() {
                         </div>
                     ) : properties.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                            {properties.map((prop) => <PropertyCard key={prop.name} prop={prop} />)}
+                            {properties.map((prop) => <PropertyCard key={prop.slug} prop={prop} />)}
                         </div>
                     ) : (
                         <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 rounded-lg border border-dashed border-[#D28A4440] bg-[#D28A440A] text-center gap-4">
@@ -279,7 +279,7 @@ export default function SavedPage() {
                                 <tbody>
                                     {properties.map((p) => (
                                         <tr
-                                            key={p.name}
+                                            key={p.slug}
                                             className="border-b divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 hover:bg-(--db-sidebar-bg) odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) transition-colors"
                                         >
                                             <td className="px-5 py-3.5 font-medium text-(--db-text-primary) whitespace-nowrap">
