@@ -235,7 +235,7 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
                     </BarChart>
                 </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 justify-center">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 justify-center max-h-[84px] overflow-y-auto pr-1 thin-scroll mt-4">
                 {baseRows.map((item, idx) => {
                     const isHidden = hidden.has(idx);
                     return (
