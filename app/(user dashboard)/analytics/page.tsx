@@ -342,7 +342,7 @@ export default function AnalyticsPage() {
                         <div className="mb-4">
                             <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">AI Market Intelligence</h2>
                         </div>
-                        <AIMarketIntelWidget />
+                        <AIMarketIntelWidget data={marketOverview ?? undefined} />
                     </Card>
                 </div>
 
