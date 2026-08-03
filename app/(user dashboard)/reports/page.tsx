@@ -43,11 +43,13 @@ function humanizeReportType(value?: string) {
 
 function toReportRow(r: any): ReportRow {
     return {
+        id: String(r.id ?? r._id ?? ""),
         name: r.name ?? r.reportName ?? "Untitled Report",
         type: humanizeReportType(r.type ?? r.reportType),
         district: r.district ?? "-",
         date: r.createdAt ? formatReportDate(r.createdAt) : (r.date ?? "-"),
         status: r.status ?? "Ready",
+        fileUrl: r.fileUrl ?? undefined,
     };
 }
 
@@ -121,8 +123,27 @@ export default function ReportsPage() {
 
     const [reports, setReports] = useState<ReportRow[]>([]);
     const [reportsLoading, setReportsLoading] = useState(true);
+    const [sharingId, setSharingId] = useState<string | null>(null);
 
     const isValidationSelected = selectedTypes.has("validation");
+
+    async function handleShareRow(row: ReportRow) {
+        if (sharingId) return;
+        setSharingId(row.id);
+        const res = await appService.shareReportHistory(row.id);
+        setSharingId(null);
+        const shareUrl = res?.data?.data?.shareUrl ?? res?.data?.shareUrl;
+        if ((res?.status === 200 || res?.status === 201) && shareUrl) {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success("Share link copied to clipboard.");
+            } catch {
+                toast.success(shareUrl);
+            }
+        } else {
+            toast.error(res?.data?.message || res?.data?.error || "Failed to generate share link.");
+        }
+    }
 
     function refreshReports() {
         appService.getReportsHistory(1, 20).then((res) => {
@@ -331,7 +352,7 @@ export default function ReportsPage() {
                                     <td className="px-5 py-3.5">
                                         <div className="flex items-center gap-2">
                                             <button className={actionBtnCls} title="Download" onClick={() => setDownloadReport(row)}><ReportDownloadIcon /></button>
-                                            <button className={actionBtnCls} title="Share"><ReportShareIcon /></button>
+                                            <button className={actionBtnCls} title="Share" onClick={() => handleShareRow(row)} disabled={sharingId === row.id}><ReportShareIcon /></button>
                                             <button className={`${actionBtnCls} hover:text-rose-500 hover:border-rose-400`} title="Delete" onClick={() => setDeleteReport(row)}><ReportTrashIcon /></button>
                                         </div>
                                     </td>
@@ -347,7 +368,15 @@ export default function ReportsPage() {
                 <DownloadReportModal report={downloadReport} onClose={() => setDownloadReport(null)} />
             )}
             {deleteReport && (
-                <DeleteReportModal report={deleteReport} onClose={() => setDeleteReport(null)} onConfirm={() => setDeleteReport(null)} />
+                <DeleteReportModal
+                    report={deleteReport}
+                    onClose={() => setDeleteReport(null)}
+                    onConfirm={() => {
+                        setReports((prev) => prev.filter((r) => r.id !== deleteReport?.id));
+                        setDeleteReport(null);
+                        toast.success("Report deleted.");
+                    }}
+                />
             )}
             {generateConfig && (
                 <GenerateReportModal config={generateConfig} onClose={() => setGenerateConfig(null)} onLogged={refreshReports} />
