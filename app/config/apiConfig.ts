@@ -46,6 +46,13 @@ const ApiConfig = {
   //districts
   allDistricts: `${apiURL}/districts`,
 
+  // Notifications
+  notifications: `${apiURL}/notifications`,
+  notificationsUnreadCount: `${apiURL}/notifications/unread-count`,
+  notificationRead: `${apiURL}/notifications/{id}/read`,
+  notificationsReadAll: `${apiURL}/notifications/read-all`,
+  notificationById: `${apiURL}/notifications/{id}`,
+
   // Deal Analyzer
   dealAnalyzerAnalyze: `${apiURL}/deal-analyzer/analyze`,
   dealAnalyzerComparables: `${apiURL}/deal-analyzer/comparables`,

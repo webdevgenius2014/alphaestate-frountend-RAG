@@ -253,6 +253,49 @@ class AppService {
     }
   }
 
+  // Notifications
+  async getNotifications(page: number = 1, limit: number = 20) {
+    try {
+      return await instance.get(ApiConfig.notifications, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getUnreadNotificationCount() {
+    try {
+      return await instance.get(ApiConfig.notificationsUnreadCount);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async markNotificationRead(id: string) {
+    try {
+      const url = ApiConfig.notificationRead.replace("{id}", id);
+      return await instance.patch(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async markAllNotificationsRead() {
+    try {
+      return await instance.patch(ApiConfig.notificationsReadAll);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteNotification(id: string) {
+    try {
+      const url = ApiConfig.notificationById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Deal Analyzer
   async analyzeDeal(payload: {
     propertyType: string;
