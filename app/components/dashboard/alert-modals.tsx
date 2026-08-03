@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Input from "@/app/components/ui/input";
 import ModalButton from "@/app/components/ui/modal-button";
@@ -8,6 +8,7 @@ import { SelectChevron, type AlertFeedItem } from "@/app/(user dashboard)/consta
 import Button from "../ui/button";
 import appService from "@/app/services/appService";
 import { toast } from "react-hot-toast";
+import { buildReportPdf, type ReportSection } from "@/app/utils/reportPdf";
 
 function clearAuthCookies() {
   ["access_token", "refresh_token", "user_role"].forEach((name) => {
@@ -334,8 +335,189 @@ export function DownloadReportModal({ report, onClose }: { report: ReportRow; on
 
 // ── Generate Report Modal ─────────────────────────────────────────────────
 
-export function GenerateReportModal({ reportName, onClose }: { reportName: string; onClose: () => void }) {
+function slugifyReportValue(value: string) {
+    return (value || "")
+        .toLowerCase()
+        .replace(/\s*\/\s*/g, "-")
+        .replace(/\s+/g, "-");
+}
+
+export type GenerateReportConfig = {
+    reportName: string;
+    format: string;
+    types: string[];
+    district: string;
+    districtId?: string;
+    propertyType: string;
+    period: "last_year" | "last_6months" | "last_2_years" | "all_time";
+    saleType?: string;
+    areaSqm?: number;
+    askingPriceAed?: number;
+};
+
+const REPORT_TYPE_LOG_LABEL: Record<string, string> = {
+    district: "district_analysis",
+    investment: "investment_comparison",
+    validation: "deal_validation",
+    snapshot: "market_snapshot",
+};
+
+export function GenerateReportModal({ config, onClose, onLogged }: { config: GenerateReportConfig; onClose: () => void; onLogged?: () => void }) {
     useModalEsc(onClose);
+    const { reportName, format, types, district, districtId, propertyType, period, saleType, areaSqm, askingPriceAed } = config;
+
+    const [status, setStatus] = useState<"loading" | "success" | "error" | "unsupported">("loading");
+    const [errorMsg, setErrorMsg] = useState("");
+    const [summary, setSummary] = useState<string[]>([]);
+    const docRef = useRef<any>(null);
+    const blobRef = useRef<Blob | null>(null);
+
+    function logGeneration(fileUrl: string) {
+        const reportType = REPORT_TYPE_LOG_LABEL[types[0]] ?? types[0] ?? "report";
+        appService
+            .logReportGeneration({
+                reportType,
+                reportName,
+                district: district || undefined,
+                timePeriod: period,
+                status: "completed",
+                fileUrl,
+            })
+            .then(() => onLogged?.())
+            .catch(() => {});
+    }
+
+    useEffect(() => {
+        if (format !== "PDF Report" && format !== "Excel Spreadsheet") {
+            setStatus("unsupported");
+            return;
+        }
+
+        let cancelled = false;
+
+        async function run() {
+            try {
+                if (format === "Excel Spreadsheet") {
+                    const res = await appService.exportAnalyticsReport({
+                        district: district || undefined,
+                        propertyType: propertyType || undefined,
+                        saleType: saleType ? slugifyReportValue(saleType) : undefined,
+                    });
+                    if (cancelled) return;
+                    if ((res?.status === 200 || res?.status === 201) && res?.data) {
+                        blobRef.current = res.data as Blob;
+                        setSummary([
+                            "Excel workbook generated",
+                            `District: ${district || "All districts"}`,
+                            `Property Type: ${propertyType || "All types"}`,
+                        ]);
+                        setStatus("success");
+                        logGeneration(URL.createObjectURL(blobRef.current));
+                    } else {
+                        setErrorMsg(res?.data?.message || "Failed to generate Excel export.");
+                        setStatus("error");
+                    }
+                    return;
+                }
+
+                const sections: ReportSection[] = [];
+                const bullets: string[] = [];
+
+                if (types.includes("district")) {
+                    const [cmpRes, trendRes, snapRes] = await Promise.all([
+                        appService.getDistrictRoi(districtId ? undefined : district, period, districtId ? [districtId] : undefined),
+                        appService.getPriceTrend(period, district || undefined),
+                        appService.getMarketSnapshots(district || undefined),
+                    ]);
+                    sections.push({
+                        title: "District Analysis",
+                        districtComparison: cmpRes?.data?.data ?? [],
+                        priceTrend: trendRes?.data?.data ?? [],
+                        snapshot: snapRes?.data?.data ?? null,
+                    });
+                    bullets.push(`District analysis for ${district || "selected district"}`);
+                }
+
+                if (types.includes("investment")) {
+                    const cmpRes = await appService.getDistrictRoi("all", period);
+                    sections.push({
+                        title: "Investment Comparison",
+                        districtComparison: cmpRes?.data?.data ?? [],
+                    });
+                    bullets.push("Investment comparison across districts");
+                }
+
+                if (types.includes("validation")) {
+                    if (!district || !areaSqm || !askingPriceAed) {
+                        throw new Error("Deal Validation Report requires district, area, and asking price.");
+                    }
+                    const res = await appService.analyzeDeal({
+                        propertyType: slugifyReportValue(propertyType),
+                        district,
+                        areaSqm,
+                        askingPriceAed,
+                        saleType: slugifyReportValue(saleType || "ready"),
+                    });
+                    if (!(res?.status === 200 || res?.status === 201) || !res?.data?.data) {
+                        throw new Error(res?.data?.message || "Deal analysis failed.");
+                    }
+                    sections.push({ title: "Deal Validation", dealResult: res.data.data });
+                    bullets.push("Deal validation analysis");
+                }
+
+                if (types.includes("snapshot")) {
+                    const [snapRes, overviewRes] = await Promise.all([
+                        appService.getMarketSnapshots(district || undefined, period),
+                        appService.getUserAnalytics(),
+                    ]);
+                    sections.push({
+                        title: "Market Snapshot",
+                        snapshot: snapRes?.data?.data ?? null,
+                        overview: overviewRes?.data?.data ?? null,
+                    });
+                    bullets.push("Market snapshot overview");
+                }
+
+                if (!sections.length) throw new Error("Select at least one report type.");
+
+                const doc = buildReportPdf({
+                    reportName,
+                    district: district || undefined,
+                    propertyType: propertyType || undefined,
+                    period,
+                    sections,
+                });
+                if (cancelled) return;
+                docRef.current = doc;
+                setSummary(bullets);
+                setStatus("success");
+                logGeneration(URL.createObjectURL(doc.output("blob")));
+            } catch (err: any) {
+                if (cancelled) return;
+                setErrorMsg(err?.message || "Failed to generate report.");
+                setStatus("error");
+            }
+        }
+
+        run();
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    function handleDownload() {
+        if (format === "Excel Spreadsheet" && blobRef.current) {
+            const url = URL.createObjectURL(blobRef.current);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${reportName.replace(/\s+/g, "_")}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } else if (docRef.current) {
+            docRef.current.save(`${reportName.replace(/\s+/g, "_")}.pdf`);
+        }
+    }
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
@@ -360,28 +542,59 @@ export function GenerateReportModal({ reportName, onClose }: { reportName: strin
                         </svg>
                     </div>
 
-                    <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">AI Generating Report...</h2>
-                    <p className="text-sm text-(--db-text-primary) font-normal mb-5 max-w-98 mx-auto">
-                        Analyzing verified transaction records and compiling structured market intelligence.
-                    </p>
+                    {status === "loading" && (
+                        <>
+                            <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">Generating Report...</h2>
+                            <p className="text-sm text-(--db-text-primary) font-normal mb-5 max-w-98 mx-auto">
+                                Fetching verified transaction records and compiling your report.
+                            </p>
+                        </>
+                    )}
 
-                    <div className="bg-[#D28A442E] rounded-[7px] p-4 text-left mb-6">
-                        <p className="text-[15px] font-medium text-(--db-text-primary) mb-1">{reportName}</p>
-                        <p className="text-[13px] text-[#D28A44] font-medium mb-3">Generated Successfully</p>
-                        <ul className="space-y-2">
-                            {["248 Transactions Analyzed", "AI Market Summary Included", "Investment Signals Processed"].map((item) => (
-                                <li key={item} className="text-[13px] text-(--db-text-primary) flex items-center gap-2">
-                                    <span >✓</span> {item}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    {status === "unsupported" && (
+                        <>
+                            <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">Format Not Available Yet</h2>
+                            <p className="text-sm text-(--db-text-primary) font-normal mb-5 max-w-98 mx-auto">
+                                {format} export isn't available yet. Please choose PDF Report or Excel Spreadsheet.
+                            </p>
+                        </>
+                    )}
 
-                    <div className="px-7 pb-7 pt-3 flex gap-3 max-w-89.25 mx-auto">
-                        <Button onClick={onClose} variant="primary" className="py-3! max-w-fit px-4">
-                            DOWNLOAD PDF
-                        </Button>
-                        <ModalButton onClick={onClose} className="py-3!">SHARE REPORT</ModalButton>
+                    {status === "error" && (
+                        <>
+                            <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">Generation Failed</h2>
+                            <p className="text-sm text-(--db-text-primary) font-normal mb-5 max-w-98 mx-auto">{errorMsg}</p>
+                        </>
+                    )}
+
+                    {status === "success" && (
+                        <>
+                            <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">Report Ready</h2>
+                            <p className="text-sm text-(--db-text-primary) font-normal mb-5 max-w-98 mx-auto">
+                                Your market intelligence report has been compiled successfully.
+                            </p>
+
+                            <div className="bg-[#D28A442E] rounded-[7px] p-4 text-left mb-6">
+                                <p className="text-[15px] font-medium text-(--db-text-primary) mb-1">{reportName}</p>
+                                <p className="text-[13px] text-[#D28A44] font-medium mb-3">Generated Successfully</p>
+                                <ul className="space-y-2">
+                                    {summary.map((item) => (
+                                        <li key={item} className="text-[13px] text-(--db-text-primary) flex items-center gap-2">
+                                            <span>✓</span> {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </>
+                    )}
+
+                    <div className="px-0 pt-3 flex gap-3 max-w-89.25 mx-auto">
+                        {status === "success" && (
+                            <Button onClick={handleDownload} variant="primary" className="py-3! max-w-fit px-4">
+                                DOWNLOAD {format === "Excel Spreadsheet" ? "EXCEL" : "PDF"}
+                            </Button>
+                        )}
+                        <ModalButton onClick={onClose} className="py-3!">CLOSE</ModalButton>
                     </div>
                 </div>
             </div>
@@ -434,6 +647,102 @@ export function DeleteReportModal({ report, onClose, onConfirm }: { report: Repo
                             DELETE
                         </button>
                         <ModalButton onClick={onClose} className="py-3.5!">KEEP REPORT</ModalButton>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+}
+
+// ── Export History Modal ──────────────────────────────────────────────────
+
+function humanizeReportType(value?: string) {
+    if (!value) return "-";
+    return value
+        .split("_")
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+}
+
+export function ExportHistoryModal({ onClose }: { onClose: () => void }) {
+    useModalEsc(onClose);
+    const [loading, setLoading] = useState(true);
+    const [rows, setRows] = useState<any[]>([]);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        appService.getReportsHistory(1, 20).then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const d = res.data?.data;
+                const items = Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : Array.isArray(d?.data) ? d.data : [];
+                setRows(items);
+            } else {
+                setError(res?.data?.message || res?.data?.error || "Failed to load export history.");
+            }
+            setLoading(false);
+        });
+    }, []);
+
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+            <div className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-175 shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-4 right-4 z-20">
+                    <img src="/close.svg" alt="" />
+                </button>
+                <div className="px-7 pt-8 pb-7">
+                    <h2 className="text-[21px] font-medium text-(--db-text-primary) mb-1">Export History</h2>
+                    <p className="text-sm text-(--db-text-primary) mb-5">
+                        A record of every report and export generated on your account.
+                    </p>
+
+                    <div className="overflow-x-auto border border-(--db-border) rounded-md">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-(--db-table-header-bg) divide-x divide-(--db-border) text-left text-sm font-semibold text-(--db-text-primary)">
+                                    <th className="px-4 py-2.5 whitespace-nowrap">Name</th>
+                                    <th className="px-4 py-2.5 whitespace-nowrap">Type</th>
+                                    <th className="px-4 py-2.5 whitespace-nowrap">District</th>
+                                    <th className="px-4 py-2.5 whitespace-nowrap">Time Period</th>
+                                    <th className="px-4 py-2.5 whitespace-nowrap">Date</th>
+                                    <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-4 py-6 text-center text-(--db-text-primary)">Loading...</td>
+                                    </tr>
+                                ) : error ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-4 py-6 text-center text-(--db-text-primary)">{error}</td>
+                                    </tr>
+                                ) : rows.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="px-4 py-6 text-center text-(--db-text-primary)">No data found</td>
+                                    </tr>
+                                ) : (
+                                    rows.map((r, i) => (
+                                        <tr
+                                            key={r.id ?? i}
+                                            className="border-b border-(--db-border) last:border-0 divide-x divide-(--db-border) text-(--db-text-primary) odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg)"
+                                        >
+                                            <td className="px-4 py-2.5 whitespace-nowrap font-medium">{r.name ?? r.reportName ?? "-"}</td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap">{humanizeReportType(r.type ?? r.reportType)}</td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap">{r.district ?? "-"}</td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap">{humanizeReportType(r.timePeriod)}</td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap">
+                                                {r.createdAt
+                                                    ? new Date(r.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                                                    : r.date ?? "-"}
+                                            </td>
+                                            <td className="px-4 py-2.5 whitespace-nowrap">{r.status ?? "-"}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

@@ -26,12 +26,12 @@ function TrendArrow() {
     );
 }
 
-function transformRentalYieldByDistrict(rows: Array<{ district: string; districtName?: string; rentalYield?: number }>) {
+function transformRentalYieldByDistrict(rows: Array<{ district: string; districtName?: string; avgRentalYield?: number; rentalYield?: number }>) {
     const byDistrict = new Map<string, { sum: number; count: number }>();
     for (const row of rows) {
         const district = row.districtName ?? row.district;
         if (!district) continue;
-        const yieldValue = row.rentalYield ?? 0;
+        const yieldValue = row.avgRentalYield ?? row.rentalYield ?? 0;
         const entry = byDistrict.get(district) ?? { sum: 0, count: 0 };
         entry.sum += yieldValue;
         entry.count += 1;
@@ -342,7 +342,7 @@ export default function AnalyticsPage() {
                         <div className="mb-4">
                             <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">AI Market Intelligence</h2>
                         </div>
-                        <AIMarketIntelWidget />
+                        <AIMarketIntelWidget data={marketOverview ?? undefined} />
                     </Card>
                 </div>
 

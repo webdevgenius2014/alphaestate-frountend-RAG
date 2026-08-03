@@ -2,11 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { formatDistanceToNow } from "date-fns";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
-import { NotificationIcon, NOTIFICATIONS } from "@/app/(user dashboard)/constants";
+import { NotificationIcon, ReportTrashIcon } from "@/app/(user dashboard)/constants";
+import appService from "@/app/services/appService";
 
 function formatLabel(segment: string) {
     return segment.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+type NotificationRow = { id: string; text: string; time: string; isRead: boolean };
+
+function toNotificationRow(n: any): NotificationRow {
+    return {
+        id: String(n.id ?? n._id ?? ""),
+        text: n.message ?? n.text ?? n.title ?? "",
+        time: n.createdAt
+            ? formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })
+            : (n.time ?? ""),
+        isRead: n.isRead ?? n.read ?? false,
+    };
 }
 
 export default function Navbar() {
@@ -17,6 +32,62 @@ export default function Navbar() {
 
     const [notifOpen, setNotifOpen] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
+
+    const [notifications, setNotifications] = useState<NotificationRow[]>([]);
+    const [notifLoading, setNotifLoading] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        appService.getUnreadNotificationCount().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const payload = res.data?.data ?? res.data;
+                setUnreadCount(payload?.count ?? 0);
+            }
+        });
+    }, []);
+
+    useEffect(() => {
+        if (!notifOpen) return;
+        setNotifLoading(true);
+        appService.getNotifications(1, 20).then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const payload = res.data?.data ?? res.data;
+                const items = Array.isArray(payload)
+                    ? payload
+                    : Array.isArray(payload?.data)
+                    ? payload.data
+                    : Array.isArray(payload?.items)
+                    ? payload.items
+                    : [];
+                setNotifications(items.map(toNotificationRow));
+                if (payload?.unreadCount != null) setUnreadCount(payload.unreadCount);
+            }
+            setNotifLoading(false);
+        });
+    }, [notifOpen]);
+
+    function handleMarkRead(id: string) {
+        const target = notifications.find((n) => n.id === id);
+        if (!target || target.isRead) return;
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        appService.markNotificationRead(id);
+    }
+
+    function handleMarkAllRead() {
+        if (unreadCount === 0) return;
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+        setUnreadCount(0);
+        appService.markAllNotificationsRead();
+    }
+
+    function handleDelete(id: string, e: React.MouseEvent) {
+        e.stopPropagation();
+        const wasUnread = notifications.find((n) => n.id === id)?.isRead === false;
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
+        appService.deleteNotification(id);
+    }
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -52,9 +123,14 @@ export default function Navbar() {
                 <div ref={notifRef} className={`relative ${notifOpen ? "z-80" : "z-10"}`}>
                     <button
                         onClick={() => setNotifOpen((v) => !v)}
-                        className={`w-7.5 h-7.5 rounded-sm ${notifOpen? ' bg-[#D28A44] text-[#F6ECDF]' : 'text-[#D28A44] bg-(--db-sidebar-bg)'} flex justify-center items-center `}
+                        className={`relative w-7.5 h-7.5 rounded-sm ${notifOpen? ' bg-[#D28A44] text-[#F6ECDF]' : 'text-[#D28A44] bg-(--db-sidebar-bg)'} flex justify-center items-center `}
                     >
                         <NotificationIcon />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full bg-[#CF2D48] text-white text-[10px] font-semibold flex items-center justify-center">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                        )}
                     </button>
 
                     <div
@@ -64,23 +140,55 @@ export default function Navbar() {
                             }`}
                             style={{ backgroundColor: 'var(--db-dropdown-bg)' }}
                     >
+                        <div className="flex items-center justify-between px-5 pt-4.75">
+                            <p className="text-sm font-semibold text-(--db-text-primary)">Notifications</p>
+                            {unreadCount > 0 && (
+                                <button
+                                    onClick={handleMarkAllRead}
+                                    className="text-[11px] font-medium text-[#D28A44] hover:underline"
+                                >
+                                    Mark all as read
+                                </button>
+                            )}
+                        </div>
                         <div className="px-5 py-5.75 max-h-150 overflow-y-auto thin-scroll">
-                            {NOTIFICATIONS.map((item, i) => (
-                                <div key={item.id}>
-                                    <div className="flex items-start gap-3">
-                                        <span className="text-[#D28A44] shrink-0 mt-0.5">
-                                            <NotificationIcon />
-                                        </span>
-                                        <div>
-                                            <p className="text-sm font-normal text-(--db-text-primary)">{item.text}</p>
-                                            <p className="text-[10px] font-normal text-(--db-text-primary) mt-0.5">{item.time}</p>
+                            {notifLoading ? (
+                                <p className="text-sm text-(--db-text-muted) text-center py-4">Loading...</p>
+                            ) : notifications.length === 0 ? (
+                                <p className="text-sm text-(--db-text-muted) text-center py-4">No notifications</p>
+                            ) : (
+                                notifications.map((item, i) => (
+                                    <div key={item.id}>
+                                        <div
+                                            className="flex items-start gap-3 cursor-pointer group"
+                                            onClick={() => handleMarkRead(item.id)}
+                                        >
+                                            <span className="text-[#D28A44] shrink-0 mt-0.5">
+                                                <NotificationIcon />
+                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm text-(--db-text-primary) ${item.isRead ? "font-normal" : "font-semibold"}`}>
+                                                    {item.text}
+                                                </p>
+                                                <p className="text-[10px] font-normal text-(--db-text-primary) mt-0.5">{item.time}</p>
+                                            </div>
+                                            {!item.isRead && (
+                                                <span className="w-2 h-2 rounded-full bg-[#D28A44] shrink-0 mt-1.5" />
+                                            )}
+                                            <button
+                                                onClick={(e) => handleDelete(item.id, e)}
+                                                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-(--db-text-muted) hover:text-rose-500"
+                                                title="Delete"
+                                            >
+                                                <ReportTrashIcon />
+                                            </button>
                                         </div>
+                                        {i < notifications.length - 1 && (
+                                            <div className="border-b border-(--db-chat-text) my-5" />
+                                        )}
                                     </div>
-                                    {i < NOTIFICATIONS.length - 1 && (
-                                        <div className="border-b border-(--db-chat-text) my-5" />
-                                    )}
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

@@ -46,6 +46,17 @@ const ApiConfig = {
   //districts
   allDistricts: `${apiURL}/districts`,
 
+  // Notifications
+  notifications: `${apiURL}/notifications`,
+  notificationsUnreadCount: `${apiURL}/notifications/unread-count`,
+  notificationRead: `${apiURL}/notifications/{id}/read`,
+  notificationsReadAll: `${apiURL}/notifications/read-all`,
+  notificationById: `${apiURL}/notifications/{id}`,
+
+  // Deal Analyzer
+  dealAnalyzerAnalyze: `${apiURL}/deal-analyzer/analyze`,
+  dealAnalyzerComparables: `${apiURL}/deal-analyzer/comparables`,
+
   //user analytics page
   userAnalytics: `${apiURL}/analytics/market/overview`,
   priceTrend: `${apiURL}/analytics/market/price-trend`,
@@ -54,6 +65,11 @@ const ApiConfig = {
   rentalYield: `${apiURL}/analytics/market/district-comparison`,
   capRateMap: `${apiURL}/analytics/market/cap-rate-map`,
   exportReport: `${apiURL}/analytics/export/excel`,
+  marketSnapshots: `${apiURL}/analytics/market/snapshots`,
+
+  // Reports
+  reportsHistory: `${apiURL}/reports/history`,
+  reportsLog: `${apiURL}/reports/log`,
 
   // Admin
   // Dashbord 

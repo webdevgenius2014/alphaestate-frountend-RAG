@@ -284,7 +284,42 @@ function TrendArrow() {
     );
 }
 
-export function AIMarketIntelWidget() {
+function formatChangePct(v: number) {
+    return `${v > 0 ? "+" : ""}${v.toFixed(1)}%`;
+}
+
+function TrendIndicator({ value }: { value: number }) {
+    const positive = value >= 0;
+    const color = positive ? "#5E9F62" : "#CF2D48";
+    const bg = positive ? "#5E9F621C" : "#CF2D481C";
+    return (
+        <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color }}>
+            <span className="w-6 h-6 rounded-full flex justify-center items-center shrink-0" style={{ background: bg, color }}>
+                <span className={positive ? "" : "inline-block rotate-180"}>
+                    <TrendArrow />
+                </span>
+            </span>
+            <AnimatedNumber value={formatChangePct(value)} className="text-xs font-semibold" />
+        </div>
+    );
+}
+
+export function AIMarketIntelWidget({
+    data,
+}: {
+    data?: {
+        bullishDistrictsCount?: number;
+        bullishDistrictsPct?: number;
+        totalTransactionVolume?: number;
+        totalTransactionVolumeChange?: number;
+    };
+}) {
+    const bullishCount = data?.bullishDistrictsCount ?? 0;
+    const bullishPct = data?.bullishDistrictsPct ?? 0;
+    const volume = data?.totalTransactionVolume ?? 0;
+    const volumeChange = data?.totalTransactionVolumeChange ?? 0;
+    const volumeLabel = `AED ${(volume / 1_000_000_000).toFixed(1)}B`;
+
     return (
         <div className="flex flex-col gap-5">
             {/* Semicircle gauge */}
@@ -331,13 +366,8 @@ export function AIMarketIntelWidget() {
                         <span className="text-xs text-(--db-text-primary)">Bullish Districts</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                        <AnimatedNumber value="12 Active" className="text-xl font-bold text-(--db-text-primary)" />
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#5E9F62]">
-                            <span className="bg-[#5E9F621C] text-[#5E9F62] w-6 h-6 rounded-full flex justify-center items-center shrink-0">
-                                <TrendArrow />
-                            </span>
-                            <AnimatedNumber value="+4.8%" className="text-xs font-semibold text-[#5E9F62]" />
-                        </div>
+                        <AnimatedNumber value={`${bullishCount} Active`} className="text-xl font-bold text-(--db-text-primary)" />
+                        <TrendIndicator value={bullishPct} />
                     </div>
                 </div>
 
@@ -349,13 +379,8 @@ export function AIMarketIntelWidget() {
                         <span className="text-xs text-(--db-text-primary)">Investment Volume</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                        <AnimatedNumber value="AED 30.9B" className="text-xl font-bold text-(--db-text-primary)" />
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#5E9F62]">
-                            <span className="bg-[#5E9F621C] text-[#5E9F62] w-6 h-6 rounded-full flex justify-center items-center shrink-0">
-                                <TrendArrow />
-                            </span>
-                            <AnimatedNumber value="+5.1%" className="text-xs font-semibold text-[#5E9F62]" />
-                        </div>
+                        <AnimatedNumber value={volumeLabel} className="text-xl font-bold text-(--db-text-primary)" />
+                        <TrendIndicator value={volumeChange} />
                     </div>
                 </div>
             </div>

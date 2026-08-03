@@ -633,6 +633,7 @@ export type DashboardStat = {
 };
 export type MarketLocation = { name: string; price: string; up: boolean };
 export type InvestmentProperty = {
+  id?: string;
   name: string;
   district: string;
   price: string;
@@ -1798,7 +1799,27 @@ export const INVESTMENT_MOVEMENT_DATA: InvestmentMovementPoint[] = [
   { month: "Jun", yas: 950, alReem: 855, saadiyat: 785 },
 ];
 
+// ── Listing filters ───────────────────────────────────────────────────────
+
+export const LISTING_PROPERTY_TYPE_OPTIONS = [
+  "Apartment",
+  "Villa",
+  "Townhouse / Attached Villa",
+  "Plot for Villa",
+  "Duplex",
+  "Farm",
+  "Residential Complex",
+  "Office",
+  "Other",
+];
+export const LISTING_ASSET_CLASS_OPTIONS = ["Residential", "Commercial", "Agricultural", "Other"];
+export const LISTING_MARKET_TYPE_OPTIONS = ["Off-Plan", "Ready", "Court-Mandated"];
+
 // ── Deal Analyzer data ────────────────────────────────────────────────────
+
+export const PROPERTY_TYPE_OPTIONS = ["Apartment", "Villa", "Townhouse / Attached Villa", "Plot for Villa", "Duplex", "Office", "Other"];
+export const SALE_TYPE_OPTIONS = ["Off-Plan", "Ready", "Court-Mandated"];
+export const BEDROOM_OPTIONS = ["Studio", "1 Bed", "2 Beds", "3 Beds", "4 Beds", "5+ Beds"];
 
 export type PriceVsMarketPoint = {
   category: string;
@@ -1810,7 +1831,7 @@ export type ComparableTransaction = {
   propertyType: string;
   district: string;
   pricePerSqm: string;
-  status: "Ready" | "Off-Plan";
+  status: "Ready" | "Off-Plan" | "Court-Mandated";
 };
 
 export const PRICE_VS_MARKET_DATA: PriceVsMarketPoint[] = [
@@ -2053,6 +2074,7 @@ function DaIconDemand() {
 export const DEAL_STATUS_CLS: Record<string, string> = {
   Ready: "bg-[#5E9F621A] text-[#5E9F62]",
   "Off-Plan": "bg-[#C46A6A33] text-[#CF2D48]",
+  "Court-Mandated": "bg-[#8A8A8A26] text-[#6B6B6B]",
 };
 
 export const DEAL_ASSESSMENT_STATS = [
@@ -3850,11 +3872,10 @@ export const REPORT_PROPERTY_TYPES = [
   "Retail",
 ];
 export const REPORT_TIME_PERIODS = [
-  "Last 30 Days",
-  "Last 3 Months",
   "Last 6 Months",
   "Last Year",
-  "Custom Range",
+  "Last 2 Years",
+  "All Time",
 ];
 export const REPORT_FORMATS = [
   "PDF Report",

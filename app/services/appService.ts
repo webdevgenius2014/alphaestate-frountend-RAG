@@ -253,6 +253,86 @@ class AppService {
     }
   }
 
+  // Notifications
+  async getNotifications(page: number = 1, limit: number = 20) {
+    try {
+      return await instance.get(ApiConfig.notifications, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getUnreadNotificationCount() {
+    try {
+      return await instance.get(ApiConfig.notificationsUnreadCount);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async markNotificationRead(id: string) {
+    try {
+      const url = ApiConfig.notificationRead.replace("{id}", id);
+      return await instance.patch(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async markAllNotificationsRead() {
+    try {
+      return await instance.patch(ApiConfig.notificationsReadAll);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteNotification(id: string) {
+    try {
+      const url = ApiConfig.notificationById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Deal Analyzer
+  async analyzeDeal(payload: {
+    propertyType: string;
+    district: string;
+    areaSqm: number;
+    askingPriceAed: number;
+    saleType: string;
+    bedrooms?: string;
+    expectedAnnualRentAed?: number;
+    saveResult?: boolean;
+  }) {
+    try {
+      return await instance.post(ApiConfig.dealAnalyzerAnalyze, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getDealComparables(filters?: {
+    district?: string;
+    propertyType?: string;
+    saleType?: string;
+    bedrooms?: string;
+    limit?: number;
+  }) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+          )
+        : {};
+      return await instance.get(ApiConfig.dealAnalyzerComparables, { params: cleanFilters });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Dashboard
   async getVerifiedListingsStats() {
     try {
@@ -307,9 +387,12 @@ class AppService {
     }
   }
 
-  async getPriceTrend(period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+  async getPriceTrend(period?: "last_year" | "last_6months" | "last_2_years" | "all_time", districts?: string) {
     try {
-      return await instance.get(ApiConfig.priceTrend, { params: period ? { period } : undefined });
+      const params: Record<string, string> = {};
+      if (period) params.period = period;
+      if (districts) params.districts = districts;
+      return await instance.get(ApiConfig.priceTrend, { params: Object.keys(params).length ? params : undefined });
     } catch (error: any) {
       return error.response;
     }
@@ -371,6 +454,41 @@ class AppService {
       return await instance.post(ApiConfig.exportReport, body, {
         responseType: "blob",
       });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getMarketSnapshots(district?: string, period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+    try {
+      const params: Record<string, string> = {};
+      if (district) params.district = district;
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.marketSnapshots, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Reports
+  async getReportsHistory(page: number = 1, limit: number = 10) {
+    try {
+      return await instance.get(ApiConfig.reportsHistory, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async logReportGeneration(payload: {
+    reportType: string;
+    reportName: string;
+    district?: string;
+    timePeriod?: string;
+    status: string;
+    fileUrl?: string;
+  }) {
+    try {
+      return await instance.post(ApiConfig.reportsLog, payload);
     } catch (error: any) {
       return error.response;
     }

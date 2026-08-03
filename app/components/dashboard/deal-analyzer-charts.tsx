@@ -136,7 +136,7 @@ function fmtAxis(v: number) {
     return `AED ${Math.round(v / 1000)}K`;
 }
 
-export function PriceVsMarketChart() {
+export function PriceVsMarketChart({ data }: { data?: Array<{ label: string; userDeal: number | null; marketAvg: number }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<string>>(new Set());
     const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -148,11 +148,20 @@ export function PriceVsMarketChart() {
             return next;
         });
 
-    const chartData = PRICE_VS_MARKET_DATA.map((d) => ({
+    const source: Array<{ category: string; yourDeal: number | null; marketAvg: number }> = data
+        ? data.map((d) => ({ category: d.label, yourDeal: d.userDeal, marketAvg: d.marketAvg }))
+        : PRICE_VS_MARKET_DATA;
+
+    const chartData = source.map((d) => ({
         ...d,
-        yourDeal: hidden.has("yourDeal") ? 0 : d.yourDeal,
+        yourDeal: hidden.has("yourDeal") ? 0 : d.yourDeal ?? undefined,
         marketAvg: hidden.has("marketAvg") ? 0 : d.marketAvg,
     }));
+
+    const maxVal = Math.max(1, ...source.flatMap((d) => [d.yourDeal, d.marketAvg]).filter((v): v is number => v != null));
+    const step = Math.ceil(maxVal / 4 / 100000) * 100000 || 100000;
+    const yDomain: [number, number] = [0, step * 4];
+    const yTicks = [0, step, step * 2, step * 3, step * 4];
 
     return (
         <div>
@@ -184,8 +193,8 @@ export function PriceVsMarketChart() {
                             axisLine={false}
                             tickLine={false}
                             width={76}
-                            domain={[0, 2800000]}
-                            ticks={[0, 700000, 1400000, 2100000, 2800000]}
+                            domain={yDomain}
+                            ticks={yTicks}
                         />
                         <Tooltip
                             formatter={(v, name) => [fmtAED(Number(v)), name]}
@@ -241,7 +250,7 @@ const TREND_SERIES = [
     { key: "price" as const, name: "Avg Price / SQM", color: "#D28A44" },
 ];
 
-export function DistrictPriceTrendChart() {
+export function DistrictPriceTrendChart({ data }: { data?: Array<{ month: string; price: number }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -252,12 +261,21 @@ export function DistrictPriceTrendChart() {
             return next;
         });
 
+    const source = data ?? DEAL_PRICE_TREND_DATA;
+    const values = source.map((d) => d.price);
+    const maxVal = Math.max(1, ...values);
+    const minVal = Math.min(...values, maxVal);
+    const step = Math.max(1, Math.ceil((maxVal - minVal || maxVal) / 4 / 1000) * 1000);
+    const yMin = Math.max(0, Math.floor(minVal / step) * step - step);
+    const yDomain: [number, number] = [yMin, yMin + step * 4];
+    const yTicks = [yMin, yMin + step, yMin + step * 2, yMin + step * 3, yMin + step * 4];
+
     return (
         <div>
             <div className="bg-(--db-main-bg) rounded-lg p-4">
                 <ResponsiveContainer width="100%" height={450}>
                     <LineChart
-                        data={DEAL_PRICE_TREND_DATA}
+                        data={source}
                         margin={{ top: 10, right: 12, left: -10, bottom: 0 }}
                     >
                         <CartesianGrid vertical={false} stroke="var(--db-border)" strokeDasharray="4 4" />
@@ -274,11 +292,11 @@ export function DistrictPriceTrendChart() {
                             tickLine={false}
                             tickFormatter={fmtAED}
                             width={80}
-                            domain={[1700000, 2200000]}
-                            ticks={[1800000, 1900000, 2000000, 2100000, 2150000]}
+                            domain={yDomain}
+                            ticks={yTicks}
                         />
                         <Tooltip
-                            formatter={(v) => [fmtAED(Number(v)), "Avg Price / SQM"]}
+                            formatter={(v) => [`AED ${Number(v).toLocaleString()}`, "Avg Price / SQM"]}
                             contentStyle={tooltipStyle.contentStyle}
                             labelStyle={tooltipStyle.labelStyle}
                             cursor={{ stroke: "var(--db-border)", strokeWidth: 1 }}
