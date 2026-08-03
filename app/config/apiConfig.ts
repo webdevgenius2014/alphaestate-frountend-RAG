@@ -46,6 +46,10 @@ const ApiConfig = {
   //districts
   allDistricts: `${apiURL}/districts`,
 
+  // Deal Analyzer
+  dealAnalyzerAnalyze: `${apiURL}/deal-analyzer/analyze`,
+  dealAnalyzerComparables: `${apiURL}/deal-analyzer/comparables`,
+
   //user analytics page
   userAnalytics: `${apiURL}/analytics/market/overview`,
   priceTrend: `${apiURL}/analytics/market/price-trend`,

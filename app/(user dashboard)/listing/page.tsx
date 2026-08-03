@@ -15,6 +15,9 @@ import {
   type SavedProperty,
   SortIcon,
   SavedLocIcon,
+  LISTING_PROPERTY_TYPE_OPTIONS as PROPERTY_TYPE_OPTIONS,
+  LISTING_ASSET_CLASS_OPTIONS as ASSET_CLASS_OPTIONS,
+  LISTING_MARKET_TYPE_OPTIONS as MARKET_TYPE_OPTIONS,
 } from "@/app/(user dashboard)/constants";
 import appService from "@/app/services/appService";
 
@@ -34,6 +37,13 @@ function Card({
 
 const filterSelectCls =
   "text-sm min-w-[98px] border border-(--db-border) rounded-md px-3 py-2 bg-(--db-main-bg) text-(--db-text-primary) outline-none appearance-none focus:border-[#D28A44]/60 transition cursor-pointer pr-8";
+
+type ListingFilters = {
+  district: string;
+  propertyType: string;
+  assetClass: string;
+  saleType: string;
+};
 
 function PropertyCardSkeleton() {
   return (
@@ -189,9 +199,36 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
 export default function SavedPage() {
   const [properties, setProperties] = useState<SavedProperty[]>([]);
   const [loading, setLoading] = useState(true);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [filters, setFilters] = useState<ListingFilters>({
+    district: "",
+    propertyType: "",
+    assetClass: "",
+    saleType: "",
+  });
 
   useEffect(() => {
-    appService.getListingProperties().then((res) => {
+    appService.getAllDistricts().then((res) => {
+      if (res?.status === 200 || res?.status === 201) {
+        const items = res.data?.data ?? [];
+        setDistricts(
+          items
+            .map((item: any) => (typeof item === "string" ? item : item.name ?? item.district ?? ""))
+            .filter(Boolean),
+        );
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const cleanFilters: Record<string, string> = {};
+    if (filters.district) cleanFilters.district = filters.district;
+    if (filters.propertyType) cleanFilters.propertyType = filters.propertyType;
+    if (filters.assetClass) cleanFilters.assetClass = filters.assetClass.toLowerCase();
+    if (filters.saleType) cleanFilters.saleType = filters.saleType.toLowerCase().replace(/\s+/g, "-");
+
+    appService.getListingProperties(1, 20, cleanFilters).then((res) => {
       if (res?.status === 200 || res?.status === 201) {
         const items = res.data?.data?.items ?? [];
         setProperties(
@@ -227,7 +264,7 @@ export default function SavedPage() {
       }
       setLoading(false);
     });
-  }, []);
+  }, [filters]);
 
   return (
     <div className="flex flex-col min-h-full">
@@ -268,16 +305,26 @@ export default function SavedPage() {
             <div className="flex gap-1 items-center">
               {(
                 [
-                  "District",
-                  "Property Type",
-                  "Investment Signal",
-                  "Market Type",
-                ] as const
-              ).map((lbl) => (
-                <div key={lbl} className="relative">
-                  <select className={filterSelectCls} aria-label={lbl}>
-                    <option>{lbl}</option>
-                    <option>All</option>
+                  { label: "District", key: "district" as const, options: districts },
+                  { label: "Property Type", key: "propertyType" as const, options: PROPERTY_TYPE_OPTIONS },
+                  { label: "Asset Class", key: "assetClass" as const, options: ASSET_CLASS_OPTIONS },
+                  { label: "Market Type", key: "saleType" as const, options: MARKET_TYPE_OPTIONS },
+                ]
+              ).map(({ label, key, options }) => (
+                <div key={key} className="relative">
+                  <select
+                    className={filterSelectCls}
+                    aria-label={label}
+                    value={filters[key]}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, [key]: e.target.value }))}
+                  >
+                    <option value="">{label}</option>
+                    <option value="">All</option>
+                    {options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <SelectChevron />

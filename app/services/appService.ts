@@ -253,6 +253,43 @@ class AppService {
     }
   }
 
+  // Deal Analyzer
+  async analyzeDeal(payload: {
+    propertyType: string;
+    district: string;
+    areaSqm: number;
+    askingPriceAed: number;
+    saleType: string;
+    bedrooms?: string;
+    expectedAnnualRentAed?: number;
+    saveResult?: boolean;
+  }) {
+    try {
+      return await instance.post(ApiConfig.dealAnalyzerAnalyze, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getDealComparables(filters?: {
+    district?: string;
+    propertyType?: string;
+    saleType?: string;
+    bedrooms?: string;
+    limit?: number;
+  }) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+          )
+        : {};
+      return await instance.get(ApiConfig.dealAnalyzerComparables, { params: cleanFilters });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Dashboard
   async getVerifiedListingsStats() {
     try {
@@ -307,9 +344,12 @@ class AppService {
     }
   }
 
-  async getPriceTrend(period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+  async getPriceTrend(period?: "last_year" | "last_6months" | "last_2_years" | "all_time", districts?: string) {
     try {
-      return await instance.get(ApiConfig.priceTrend, { params: period ? { period } : undefined });
+      const params: Record<string, string> = {};
+      if (period) params.period = period;
+      if (districts) params.districts = districts;
+      return await instance.get(ApiConfig.priceTrend, { params: Object.keys(params).length ? params : undefined });
     } catch (error: any) {
       return error.response;
     }
