@@ -7,7 +7,7 @@ import { DealAssessmentGauge, PriceVsMarketChart, DistrictPriceTrendChart } from
 import {
     DEAL_STATUS_CLS, DEAL_ASSESSMENT_STATS, DEAL_MARKET_DATA,
     SelectChevron, SortIcon, type ComparableTransaction,
-    PROPERTY_TYPE_OPTIONS, SALE_TYPE_OPTIONS, BEDROOM_OPTIONS,
+    PROPERTY_TYPE_OPTIONS, SALE_TYPE_OPTIONS, BEDROOM_OPTIONS, BEDROOM_API_VALUES,
 } from "@/app/(user dashboard)/constants";
 import ModalButton from "@/app/components/ui/modal-button";
 import appService from "@/app/services/appService";
@@ -152,7 +152,7 @@ export default function DealAnalyzerPage() {
             district: form.district,
             propertyType: slugify(form.propertyType),
             saleType: slugify(form.saleType),
-            bedrooms: form.bedrooms ? slugify(form.bedrooms) : undefined,
+            bedrooms: form.bedrooms ? bedroomsToApiValue(form.bedrooms) : undefined,
             limit: 10,
         }).then((res) => {
             if (res?.status === 200 || res?.status === 201) {
@@ -167,6 +167,10 @@ export default function DealAnalyzerPage() {
             .toLowerCase()
             .replace(/\s*\/\s*/g, "-")
             .replace(/\s+/g, "-");
+    }
+
+    function bedroomsToApiValue(value: string) {
+        return BEDROOM_API_VALUES[value] ?? value.toLowerCase();
     }
 
     function parseNumber(value: string) {
@@ -189,7 +193,7 @@ export default function DealAnalyzerPage() {
             saleType: slugify(form.saleType),
             saveResult: true,
         };
-        if (form.bedrooms) payload.bedrooms = slugify(form.bedrooms);
+        if (form.bedrooms) payload.bedrooms = bedroomsToApiValue(form.bedrooms);
         if (form.expectedAnnualRent) payload.expectedAnnualRentAed = parseNumber(form.expectedAnnualRent);
 
         const res = await appService.analyzeDeal(payload as any);

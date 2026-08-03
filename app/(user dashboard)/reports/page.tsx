@@ -99,7 +99,7 @@ const actionBtnCls = "w-[23px] h-[23px] rounded-sm flex items-center justify-cen
 
 export default function ReportsPage() {
     const [selectedTypes, setSelectedTypes] = useState<Set<string>>(() => new Set(["district"]));
-    const toggleType = (id: string) => setSelectedTypes((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+    const toggleType = (id: string) => setSelectedTypes(new Set([id]));
 
     const [districts, setDistricts] = useState<Array<{ id?: string; name: string }>>([]);
     const [district, setDistrict] = useState("");
@@ -218,7 +218,7 @@ export default function ReportsPage() {
                                     className={`rounded-[3px] p-3.75 flex-col flex cursor-pointer transition-colors ${selectedTypes.has(rt.id) ? "bg-[#D28A444D]" : "bg-[#D28A441A]"}`}
                                 >
                                     <div className="flex items-start gap-3 mb-0.5">
-                                        <input type="checkbox" value={rt.id} checked={selectedTypes.has(rt.id)} onChange={() => toggleType(rt.id)} className="hidden" />
+                                        <input type="radio" name="report-type" value={rt.id} checked={selectedTypes.has(rt.id)} onChange={() => toggleType(rt.id)} className="hidden" />
                                         <span className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selectedTypes.has(rt.id) ? "border-[#D28A44]" : "border-[#D28A44]"}`}>
                                             {selectedTypes.has(rt.id) && <span className="w-3 h-3 rounded-full bg-[#D28A44] block" />}
                                         </span>
