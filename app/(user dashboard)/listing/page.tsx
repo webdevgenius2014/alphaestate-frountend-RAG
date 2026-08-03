@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import {
@@ -196,7 +196,12 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
   );
 }
 
-export default function SavedPage() {
+function ListingPageContent() {
+  const searchParams = useSearchParams();
+  const sortBy = searchParams.get("sortBy");
+  const sortOrder = searchParams.get("sortOrder");
+  const status = searchParams.get("status");
+
   const [properties, setProperties] = useState<SavedProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [districts, setDistricts] = useState<string[]>([]);
@@ -227,6 +232,9 @@ export default function SavedPage() {
     if (filters.propertyType) cleanFilters.propertyType = filters.propertyType;
     if (filters.assetClass) cleanFilters.assetClass = filters.assetClass.toLowerCase();
     if (filters.saleType) cleanFilters.saleType = filters.saleType.toLowerCase().replace(/\s+/g, "-");
+    if (sortBy) cleanFilters.sortBy = sortBy;
+    if (sortOrder) cleanFilters.sortOrder = sortOrder;
+    if (status) cleanFilters.status = status;
 
     appService.getListingProperties(1, 20, cleanFilters).then((res) => {
       if (res?.status === 200 || res?.status === 201) {
@@ -264,7 +272,7 @@ export default function SavedPage() {
       }
       setLoading(false);
     });
-  }, [filters]);
+  }, [filters, sortBy, sortOrder, status]);
 
   return (
     <div className="flex flex-col min-h-full">
@@ -422,5 +430,13 @@ export default function SavedPage() {
                 </div> */}
       </div>
     </div>
+  );
+}
+
+export default function ListingPage() {
+  return (
+    <Suspense fallback={null}>
+      <ListingPageContent />
+    </Suspense>
   );
 }

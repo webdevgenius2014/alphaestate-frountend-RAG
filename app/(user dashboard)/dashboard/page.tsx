@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Button from "@/app/components/ui/button";
 import { PriceTrendChart, RentalYieldChart, CapRateChart } from "@/app/components/dashboard/charts";
 import { MarketSlider } from "@/app/components/dashboard/market-slider";
@@ -12,6 +13,7 @@ import {
     PROPERTY_STATUS_STYLES,
     INVESTMENT_SIGNALS,
     SortIcon,
+    SecurityEyeIcon,
     type InvestmentProperty,
 } from "@/app/(user dashboard)/constants";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
@@ -68,6 +70,7 @@ function toInvestmentProperty(p: any): InvestmentProperty {
     const roiValue = p.roi ?? p.roiPercent;
     const roi = roiValue == null ? "–" : typeof roiValue === "number" ? `${roiValue.toFixed(1)}%` : String(roiValue);
     return {
+        id: p.id ?? p._id ?? p.propertyId ?? undefined,
         name: p.projectName ?? p.name ?? p.title ?? p.propertyName ?? "",
         district: p.district ?? p.districtName ?? "",
         price,
@@ -92,6 +95,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 
 export default function DashboardPage() {
+    const router = useRouter();
     const { user } = useTheme();
     const [verifiedListings, setVerifiedListings] = useState<string | null>(null);
     const [priceTrend, setPriceTrend] = useState<any>(null);
@@ -274,7 +278,7 @@ export default function DashboardPage() {
                             <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">Top Investment Properties</h2>
                             <p className="text-xs text-(--db-text-primary) mt-0.5">Ranked by AI-insight, ready to move</p>
                         </div>
-                        <Button variant="secondary">VIEW ALL</Button>
+                        <Button variant="secondary" onClick={() => router.push("/listing?sortBy=ai_score&sortOrder=DESC")}>VIEW ALL</Button>
                     </div>
                     <div className="mt-5 overflow-x-auto border border-(--db-border) rounded-md">
                         <table className="w-full text-sm">
@@ -301,6 +305,9 @@ export default function DashboardPage() {
                                     <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Status
                                     </th>
+                                    <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -317,6 +324,16 @@ export default function DashboardPage() {
                                                 <span className="w-1.75 h-1.75 rounded-full block bg-current"></span>
                                                 {p.status}
                                             </span>
+                                        </td>
+                                        <td className="px-5 py-3.5">
+                                            <button
+                                                onClick={() => p.id && router.push(`/listing/${p.id}`)}
+                                                disabled={!p.id}
+                                                className="flex items-center gap-1.5 text-xs font-semibold text-[#D28A44] disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                                            >
+                                                <SecurityEyeIcon />
+                                                View
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}

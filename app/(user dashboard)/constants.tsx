@@ -633,6 +633,7 @@ export type DashboardStat = {
 };
 export type MarketLocation = { name: string; price: string; up: boolean };
 export type InvestmentProperty = {
+  id?: string;
   name: string;
   district: string;
   price: string;
