@@ -494,6 +494,24 @@ class AppService {
     }
   }
 
+  async shareReportHistory(id: string) {
+    try {
+      const url = ApiConfig.reportHistoryShare.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteReportHistory(id: string) {
+    try {
+      const url = ApiConfig.reportHistoryById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Saved Property
   async getListingSavedProperties(
   page: number = 1,

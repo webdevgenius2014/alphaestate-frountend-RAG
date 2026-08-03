@@ -276,10 +276,42 @@ const DELETE_ACCOUNT_LOSE_ITEMS = [
 
 // ── Download Report Modal ─────────────────────────────────────────────────
 
-export type ReportRow = { name: string; type: string; district: string; date: string; status: string };
+export type ReportRow = { id: string; name: string; type: string; district: string; date: string; status: string; fileUrl?: string };
 
 export function DownloadReportModal({ report, onClose }: { report: ReportRow; onClose: () => void }) {
     useModalEsc(onClose);
+    const [sharing, setSharing] = useState(false);
+
+    function handleDownload() {
+        if (!report.fileUrl) {
+            toast.error("No file available for this report.");
+            return;
+        }
+        const a = document.createElement("a");
+        a.href = report.fileUrl;
+        a.download = `${report.name.replace(/\s+/g, "_")}.pdf`;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.click();
+    }
+
+    async function handleShare() {
+        if (sharing) return;
+        setSharing(true);
+        const res = await appService.shareReportHistory(report.id);
+        setSharing(false);
+        const shareUrl = res?.data?.data?.shareUrl ?? res?.data?.shareUrl;
+        if ((res?.status === 200 || res?.status === 201) && shareUrl) {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success("Share link copied to clipboard.");
+            } catch {
+                toast.success(shareUrl);
+            }
+        } else {
+            toast.error(res?.data?.message || res?.data?.error || "Failed to generate share link.");
+        }
+    }
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
@@ -322,10 +354,12 @@ export function DownloadReportModal({ report, onClose }: { report: ReportRow; on
                 </div>
 
                 <div className="px-7 pb-7 pt-3 flex gap-3 max-w-89.25 mx-auto">
-                    <Button onClick={onClose} variant="primary" className="py-3! max-w-fit px-3">
+                    <Button onClick={handleDownload} variant="primary" className="py-3! max-w-fit px-3">
                         DOWNLOAD PDF
                     </Button>
-                    <ModalButton onClick={onClose} className="py-3!">SHARE REPORT</ModalButton>
+                    <ModalButton onClick={handleShare} disabled={sharing} className="py-3!">
+                        {sharing ? "SHARING..." : "SHARE REPORT"}
+                    </ModalButton>
                 </div>
             </div>
         </div>,
@@ -607,6 +641,19 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
 
 export function DeleteReportModal({ report, onClose, onConfirm }: { report: ReportRow; onClose: () => void; onConfirm: () => void }) {
     useModalEsc(onClose);
+    const [deleting, setDeleting] = useState(false);
+
+    async function handleDelete() {
+        if (deleting) return;
+        setDeleting(true);
+        const res = await appService.deleteReportHistory(report.id);
+        setDeleting(false);
+        if (res?.status === 200 || res?.status === 201 || res?.status === 204) {
+            onConfirm();
+        } else {
+            toast.error(res?.data?.message || res?.data?.error || "Failed to delete report.");
+        }
+    }
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
@@ -641,12 +688,13 @@ export function DeleteReportModal({ report, onClose, onConfirm }: { report: Repo
 
                     <div className="flex gap-3 max-w-89.25 mx-auto">
                         <button
-                            onClick={onConfirm}
-                            className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3.5 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors"
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3.5 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors disabled:opacity-60"
                         >
-                            DELETE
+                            {deleting ? "DELETING..." : "DELETE"}
                         </button>
-                        <ModalButton onClick={onClose} className="py-3.5!">KEEP REPORT</ModalButton>
+                        <ModalButton onClick={onClose} className="py-3.5!" disabled={deleting}>KEEP REPORT</ModalButton>
                     </div>
                 </div>
             </div>

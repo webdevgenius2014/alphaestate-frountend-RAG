@@ -70,6 +70,8 @@ const ApiConfig = {
   // Reports
   reportsHistory: `${apiURL}/reports/history`,
   reportsLog: `${apiURL}/reports/log`,
+  reportHistoryById: `${apiURL}/reports/history/{id}`,
+  reportHistoryShare: `${apiURL}/reports/history/{id}/share`,
 
   // Admin
   // Dashbord 
