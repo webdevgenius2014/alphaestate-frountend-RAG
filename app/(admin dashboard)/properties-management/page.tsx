@@ -201,14 +201,14 @@ export default function PropertiesManagementPage() {
                   Manage property listings, market opportunities, and investment inventory across the platform.
                </p>
             </div>
-            <div className="flex flex-wrap items-end gap-4 ml-auto">
+            <div className="flex flex-wrap items-end gap-4 sm:ml-auto">
             <Button variant="primary" className="py-2.5! px-6 shrink-0" onClick={() => router.push("/properties-management/add-property")}>ADD PROPERTY</Button>
             <Button variant="secondary" onClick={() => setCsvModalOpen(true)}>IMPORT CSV</Button>
             </div>
          </div>
 
          {/* Stat cards */}
-         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {PROPERTY_STATS.map((s, i) => {
                const apiValues = [
                   stats?.total != null ? String(stats.total) : null,
@@ -232,7 +232,7 @@ export default function PropertiesManagementPage() {
          </div>
 
          {/* Search + filters */}
-         <div className="flex flex-wrap justify-between bg-(--db-sidebar-bg) rounded-md p-4 items-center gap-3">
+         <div className="md:flex grid flex-wrap justify-between bg-(--db-sidebar-bg) rounded-md p-4 items-center gap-3">
             <div className="flex flex-1 pr-1.5 max-w-99.75 items-center border border-(--db-border) rounded-sm overflow-hidden bg-(--db-main-bg)">
                <input
                   type="text"
@@ -245,7 +245,7 @@ export default function PropertiesManagementPage() {
                   <SearchIcon />
                </button>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center overflow-x-auto gap-2 shrink-0">
                {([
                   { value: district, set: setDistrict, opts: ["District", "Yas Island", "Saadiyat Island", "Al Reem Island", "Downtown Dubai"] },
                   { value: status, set: setStatus, opts: ["Status", "Active", "Featured", "Draft"] },

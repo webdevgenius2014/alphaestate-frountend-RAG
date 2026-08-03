@@ -72,7 +72,7 @@ function PaidBadge({ status }: { status: "paid" | "failed" | "pending" }) {
 const tdCls = "px-5 py-3.5 text-(--db-text-primary) whitespace-nowrap";
 const thCls = "px-5 py-3 font-semibold whitespace-nowrap text-left";
 const PAGE_LIMIT = 10;
-const UPCOMING_PAGE_SIZE = 10;
+const UPCOMING_PAGE_SIZE = 3;
 
 function resolveUser(row: any): string {
     const u = row.user ?? row.fullName ?? row.userName ?? "";
@@ -88,7 +88,7 @@ function str(val: any): string {
 
 function formatAedCompact(n: any): string {
     const num = Number(n);
-    if (n == null || n === "" || Number.isNaN(num)) return "";
+    if (n == null || n === "-" || Number.isNaN(num)) return "-";
     const abs = Math.abs(num);
     if (abs >= 1e9) return `AED ${+(num / 1e9).toFixed(1)}B`;
     if (abs >= 1e6) return `AED ${+(num / 1e6).toFixed(1)}M`;
@@ -113,6 +113,7 @@ export default function SubscriptionsBillingPage() {
     const [upcomingPage, setUpcomingPage] = useState(1);
     const [plans, setPlans] = useState<any[]>([]);
     const [planActiveUsers, setPlanActiveUsers] = useState<Record<string, number>>({});
+    const [planTab, setPlanTab] = useState<"monthly" | "annual">("monthly");
     const [subPerformance, setSubPerformance] = useState<any>(null);
     const [revenueInsights, setRevenueInsights] = useState<any>(null);
 
@@ -319,7 +320,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
             </div>
 
             {/* Subscription Performance + Plan Management */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[30%_auto] gap-5">
+            <div className="grid grid-cols-1 xl:grid-cols-[30%_auto] gap-5">
                 <div className="bg-(--db-sidebar-bg) rounded-md p-5">
                     <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">Subscription Performance</h2>
                     <p className="text-[13px] text-(--db-text-primary) mb-5">
@@ -329,14 +330,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                 </div>
 
                 <SectionCard title="Plan Management" sub="Manage available subscription plans.">
+                    <div className="flex gap-2 mb-4">
+                        {(["monthly", "annual"] as const).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setPlanTab(tab)}
+                                className={`px-4 py-1.5 rounded-sm text-sm font-medium transition-colors capitalize ${
+                                    planTab === tab
+                                        ? "bg-[#D28A44] text-white"
+                                        : "bg-(--db-main-bg) border border-(--db-border) text-(--db-text-primary) hover:bg-[#D28A4421]"
+                                }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {(plans.length > 0 ? plans : BILLING_PLANS).map((p: any) => (
+                        {(plans.length > 0 ? plans : BILLING_PLANS)
+                            .filter((p: any) => (p.billingInterval ?? "monthly").toLowerCase() === planTab)
+                            .map((p: any) => (
                             <div
                                 key={p.name ?? p.planName}
                                 className="flex flex-col gap-3 bg-[#D28A4421] rounded-sm p-4"
                             >
                                 <div className="flex flex-col gap-1">
-                                    <span className="font-medium text-[20px] text-(--db-text-primary)">{p.name ?? p.planName}</span>
+                                    <span className="font-medium text-[20px] text-(--db-text-primary)">{(p.name ?? p.planName ?? "").replace(/\s*(monthly|annual)\s*/i, "").trim()}</span>
                                     <span className="text-[#D28A44] font-medium text-[20px]">{p.priceAed ?? p.price ?? p.monthlyPrice} / {p.billingInterval ?? "month"}</span>
                                 </div>
                                 <p className="text-[10px] text-(--db-text-primary) leading-relaxed flex-1">{p.description}</p>
@@ -595,24 +613,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:
                 </SectionCard>
 
                 <SectionCard title="Revenue Insights" sub="Key financial metrics and growth indicators">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4">
                         {(() => {
                             const revenueData = revenueInsights?.summary ?? revenueInsights ?? dashboardStats;
                             return revenueData ? [
                                 { label: "Monthly Revenue", value: formatAedCompact(revenueData?.monthlyRevenue) },
                                 { label: "Yearly Revenue", value: formatAedCompact(revenueData?.yearlyRevenue ?? revenueData?.annualRevenue) },
                                 { label: "Revenue Per User", value: formatAedCompact(revenueData?.revenuePerUser) },
-                                { label: "Subscription Growth", value: revenueData?.subscriptionGrowth != null ? `${revenueData.subscriptionGrowth}%` : "" },
+                                { label: "Subscription Growth", value: revenueData?.subscriptionGrowth != null ? `${revenueData.subscriptionGrowth}%` : "-" },
                             ] : BILLING_INSIGHTS;
                         })().map((item) => (
                             <div
                                 key={item.label}
-                                className="bg-(--db-main-bg) rounded-md p-5 flex flex-col gap-1"
+                                className="bg-(--db-main-bg) rounded-md p-4 md:p-5 flex flex-col gap-1"
                             >
-                                <p className="text-sm text-(--db-text-primary) font-medium mb-2 leading-snug">{item.label}</p>
+                                <p className="text-[11px] md:text-sm text-(--db-text-primary) font-medium mb-1 md:mb-2 leading-snug">{item.label}</p>
                                 <AnimatedNumber
                                     value={item.value}
-                                    className="text-lg font-medium text-(--db-text-primary)"
+                                    className="text-base md:text-lg font-medium text-(--db-text-primary)"
                                 />
                             </div>
                         ))}

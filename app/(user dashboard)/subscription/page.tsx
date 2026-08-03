@@ -242,7 +242,7 @@ function SubscriptionPageContent() {
                                     value={`AED ${billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice}`}
                                     className="text-[30px] font-medium leading-[100%] text-[#D28A44]"
                                 />
-                                <span className="text-[20px] text-[#D28A44] ml-1 leading-[100%]">/ month</span>
+                                <span className="text-[20px] text-[#D28A44] ml-1 leading-[100%]">/ {`${billing === "monthly" ? "Monthly" : "Yearly"}`}</span>
                             </p>
 
                             <p className="text-[13px] text-(--db-text-primary) mb-5">{plan.description}</p>

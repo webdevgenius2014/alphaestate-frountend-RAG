@@ -192,7 +192,7 @@ export default function SavedPage() {
                             </button>
                             <span className="text-sm font-medium text-(--db-text-primary) shrink-0">Filter By</span>
                         </div>
-                        <div className="flex gap-1 items-center">
+                        <div className="flex gap-1 overflow-x-auto items-center">
                             {FILTER_LABELS.map((lbl) => (
                                 <div key={lbl} className="relative">
                                     <select
@@ -233,8 +233,24 @@ export default function SavedPage() {
                             {properties.map((prop) => <PropertyCard key={prop.slug} prop={prop} />)}
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center py-12 text-sm text-(--db-text-primary)">
-                            No data found
+                        <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 rounded-lg border border-dashed border-[#D28A4440] bg-[#D28A440A] text-center gap-4">
+                            <div className="relative">
+                                <div className="w-20 h-20 rounded-2xl bg-(--db-sidebar-bg) border border-[#D28A4430] flex items-center justify-center shadow-sm">
+                                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4.5 33V14.25L18 4.5L31.5 14.25V33" stroke="#D28A44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M13.5 33V22.5H22.5V33" stroke="#D28A44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M1.5 33H34.5" stroke="#D28A44" strokeWidth="1.8" strokeLinecap="round" />
+                                        <circle cx="18" cy="15" r="2.5" stroke="#D28A44" strokeWidth="1.5" opacity="0.5" />
+                                    </svg>
+                                </div>
+                                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#D28A44] flex items-center justify-center">
+                                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                                </span>
+                            </div>
+                            <div>
+                                <p className="text-[15px] font-semibold text-(--db-text-primary) mb-1">No Saved Properties Yet</p>
+                                <p className="text-[12.5px] text-(--db-text-muted) max-w-70 leading-relaxed mx-auto">You haven't saved any properties yet. Browse available listings and save your favorites to access them here anytime.</p>
+                            </div>
                         </div>
                     )}
                 </Card>
@@ -282,8 +298,24 @@ export default function SavedPage() {
                             </table>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center py-12 text-sm text-(--db-text-primary)">
-                            No data found
+                        <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 rounded-lg border border-dashed border-[#D28A4440] bg-[#D28A440A] text-center gap-4">
+                            <div className="relative">
+                                <div className="w-20 h-20 rounded-2xl bg-(--db-sidebar-bg) border border-[#D28A4430] flex items-center justify-center shadow-sm">
+                                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4.5 33V14.25L18 4.5L31.5 14.25V33" stroke="#D28A44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M13.5 33V22.5H22.5V33" stroke="#D28A44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="M1.5 33H34.5" stroke="#D28A44" strokeWidth="1.8" strokeLinecap="round" />
+                                        <circle cx="18" cy="15" r="2.5" stroke="#D28A44" strokeWidth="1.5" opacity="0.5" />
+                                    </svg>
+                                </div>
+                                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#D28A44] flex items-center justify-center">
+                                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5h6" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" /></svg>
+                                </span>
+                            </div>
+                            <div>
+                                <p className="text-[15px] font-semibold text-(--db-text-primary) mb-1">No Properties to Compare</p>
+                                <p className="text-[12.5px] text-(--db-text-muted) max-w-70 leading-relaxed mx-auto">Add properties to your comparison list to view their features, pricing, and investment potential side by side.</p>
+                            </div>
                         </div>
                     )}
                 </Card>

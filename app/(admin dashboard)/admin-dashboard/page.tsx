@@ -270,7 +270,7 @@ export default function AdminDashboardPage() {
                                 <tbody>
                                     {recentActivity.map((row: any, i: number) => (
                                         <tr key={i} className="border-b divide-x divide-(--db-border) text-(--db-text-primary) border-(--db-border) last:border-0 odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
-                                            <td className="px-5 py-3.5 font-medium whitespace-nowrap">{row.userName}</td>
+                                            <td className="px-5 py-3.5 font-medium whitespace-nowrap">{row.userName ?? '-'}</td>
                                             <td className="px-5 py-3.5">{row.action}</td>
                                             <td className="px-5 py-3.5 whitespace-nowrap">{row.module}</td>
                                             <td className="px-5 py-3.5 whitespace-nowrap">{formatDate(row.createdAt)}</td>

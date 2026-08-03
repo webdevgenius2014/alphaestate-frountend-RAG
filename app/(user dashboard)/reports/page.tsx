@@ -206,7 +206,7 @@ export default function ReportsPage() {
             </div>
 
             <div className="mb-5 bg-(--db-sidebar-bg) p-5">
-                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-4/75">Generate Report</h2>
+                <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-4.75">Generate Report</h2>
 
                 <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] xl:grid-cols-[365px_auto] gap-5">
                     <div className="bg-(--db-main-bg) p-5 rounded-sm">

@@ -194,7 +194,7 @@ export default function DashboardPage() {
                         <MarketSlider />
                     </div>
 
-                    <div className="lg:col-span-2 bg-[#0B1F3A] rounded-[10px] p-5 overflow-hidden relative">
+                    <div className="lg:col-span-2 bg-[#0B1F3A] rounded-[10px] p-5 overflow-hidden relative" style={{ transform: "translateZ(0)", WebkitTransform: "translateZ(0)" }}>
                         <div className="absolute inset-0 bg-[linear-gradient(270deg,rgba(11,31,58,0)_0%,#0B1F3A_66.94%)] z-10" />
                         <div className="relative z-10 grid grid-cols-1 md:grid-cols-[auto_120px] items-center gap-4">
                             <div className="relative z-10 mb-6 md:mb-0">
@@ -206,9 +206,10 @@ export default function DashboardPage() {
                                     LAUNCH AI ANALYST
                                 </Button>
                             </div>
-                            <video src="/globe.webm" autoPlay muted playsInline loop className="w-full max-w-29.75 scale-200 relative md:-left-13 md:-top-4 mb-5 md:mb-0"></video>
+                            <img src="/globe.gif" alt="" className="w-full max-w-29.75 scale-140 relative left-6 md:-left-13 md:-top-4 mb-5 md:mb-0" />
                         </div>
-                        <video src="/12922667_1920_1080_30fps.mp4" autoPlay muted playsInline loop className="absolute inset-0 w-full h-full object-cover"></video>
+                        <img src="/12922667_1920_1080_30fps.gif" alt="" className="absolute inset-0 w-full h-full object-cover" />
+
                     </div>
                 </div>
 

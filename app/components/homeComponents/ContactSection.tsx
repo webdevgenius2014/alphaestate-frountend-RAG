@@ -42,11 +42,11 @@ export const ContactSection = () => {
 
                 {/* Form */}
                 <form
-                    className="max-w-273.5 mx-auto flex flex-col bg-[#05132733] border lg:p-8.75 p-5 rounded-[30px] border-[#272727] space-y-7.5"
+                    className="max-w-273.5 mx-auto flex flex-col bg-[#05132733] border lg:p-8.75 px-5 py-7 rounded-[30px] border-[#272727] md:space-y-7.5 space-y-4"
                     onSubmit={(e) => e.preventDefault()}
                 >
                     {/* Row 1 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 md:gap-5 gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-[#FFFFFFCC] text-[16px] leading-8.25 font-medium">First Name</label>
                             <input
@@ -70,7 +70,7 @@ export const ContactSection = () => {
                     </div>
 
                     {/* Row 2 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 md:gap-5 gap-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-[#FFFFFFCC] text-[16px] leading-8.25 font-medium">Email Address</label>
                             <input

@@ -129,7 +129,7 @@ export default function PropertyMap({ district, label }: PropertyMapProps) {
                     border-top-color: #1a1a2e;
                 }
             `}</style>
-            <div ref={wrapperRef} style={{ width: "100%", height: "100%", position: "relative" }}>
+            <div ref={wrapperRef} style={{ width: "100%", height: "100%", position: "relative", isolation: "isolate" }}>
                 <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
                 <button
                     onClick={toggleFullscreen}

@@ -1,5 +1,5 @@
 export function formatDate(value: string) {
-    if (!value) return "";
+    if (!value) return "-";
     const parsed = new Date(value);
     if (isNaN(parsed.getTime())) return String(value);
     return parsed.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
