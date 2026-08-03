@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
 import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
@@ -18,6 +19,7 @@ import {
 import ModalButton from "@/app/components/ui/modal-button";
 import { SortIcon } from "@/app/(user dashboard)/constants";
 import { formatDate } from "@/app/constant";
+import { generateAdminDashboardPdfBlob } from "@/app/components/dashboard/admin-dashboard-pdf";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -48,6 +50,7 @@ export default function AdminDashboardPage() {
     const { user } = useTheme();
     const [period, setPeriod] = useState("last_year");
     const [dashboard, setDashboard] = useState<any>(null);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
         appService.getAdminDashboard(period).then((res) => {
@@ -111,6 +114,49 @@ export default function AdminDashboardPage() {
           })
         : LIVE_ACTIVITY;
 
+    async function handleExportPdf() {
+        if (exporting) return;
+        setExporting(true);
+        try {
+            const dateLabel = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+            const blob = await generateAdminDashboardPdfBlob({
+                userName: user?.fullName ?? "Admin",
+                dateLabel,
+                stats: adminStats.map((s: any) => ({ label: s.label, value: s.value, change: s.change ?? "" })),
+                operationalItems: operationalItems.map((i: any) => ({ label: i.label, value: i.value })),
+                aiMetrics: aiMetrics.map((m: any) => ({ label: m.label, value: m.value })),
+                recentActivity: recentActivity.map((row: any) => ({
+                    userName: row.userName,
+                    action: row.action,
+                    module: row.module,
+                    time: formatDate(row.createdAt),
+                })),
+                liveActivity: liveActivity.map((i: any) => ({ label: i.label, value: i.value })),
+                systemServices: SYSTEM_SERVICES.map((svc) => ({ name: svc.name, status: svc.status, sub: svc.sub })),
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Admin_Dashboard_Export_${dateLabel.replace(/\s+/g, "_")}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            await appService.logReportGeneration({
+                reportType: "market_snapshot",
+                reportName: `Admin Dashboard Export - ${dateLabel}`,
+                status: "completed",
+            });
+            toast.success("Dashboard exported successfully.");
+        } catch (err) {
+            console.error("Admin dashboard PDF export failed:", err);
+            toast.error("Failed to export dashboard PDF.");
+        } finally {
+            setExporting(false);
+        }
+    }
+
     return (
         <div className="flex flex-col min-h-full">
             <div className="flex-1 space-y-5">
@@ -124,8 +170,8 @@ export default function AdminDashboardPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2.5 shrink-0">
-                        <Button variant="navy" className="w-auto! py-2.5!">
-                            EXPORT DASHBOARD
+                        <Button variant="navy" className="w-auto! py-2.5!" onClick={handleExportPdf} disabled={exporting}>
+                            {exporting ? "EXPORTING..." : "EXPORT DASHBOARD"}
                         </Button>
                         <ModalButton className="py-2.5! max-w-fit px-5 text-sm!">
                             SYSTEM STATUS
