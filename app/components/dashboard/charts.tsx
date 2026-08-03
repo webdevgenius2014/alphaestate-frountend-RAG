@@ -124,11 +124,11 @@ export function PriceTrendChart({ data: apiData }: { data?: Array<{ month: strin
     );
 }
 
-function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload?: { buy?: number; extra?: number; color?: string } }>; label?: string }) {
     if (!active || !payload?.length || !label) return null;
-    const idx = RENTAL_YIELD_DATA.findIndex((d) => d.district === label);
-    const color = CAP_RATE_DATA[idx]?.color ?? "#D28A44";
-    const rental = RENTAL_YIELD_DATA[idx]?.rental ?? 0;
+    const row = payload[0]?.payload;
+    const color = row?.color ?? "#D28A44";
+    const rental = (row?.buy ?? 0) + (row?.extra ?? 0);
     return (
         <div style={{
             background: "var(--db-sidebar-bg)",
@@ -166,6 +166,7 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
             district: d.district,
             buy: isHidden ? 0 : d.buy,
             extra: isHidden ? 0 : +(d.rental - d.buy).toFixed(2),
+            color: d.color,
         };
     });
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
 import { PriceTrendChart, RentalYieldChart, CapRateChart } from "@/app/components/dashboard/charts";
 import { MarketSlider } from "@/app/components/dashboard/market-slider";
@@ -18,6 +19,11 @@ import {
 } from "@/app/(user dashboard)/constants";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import appService from "@/app/services/appService";
+import { generateDashboardPdfBlob } from "@/app/components/dashboard/dashboard-pdf";
+
+function formatDashboardVolume(n: number) {
+    return `${(n / 1_000_000).toFixed(1)}M`;
+}
 
 function formatMonthLabel(monthStr: string) {
     const [year, month] = monthStr.split("-").map(Number);
@@ -97,20 +103,64 @@ function SectionLabel({ children }: { children: ReactNode }) {
 export default function DashboardPage() {
     const router = useRouter();
     const { user } = useTheme();
-    const [verifiedListings, setVerifiedListings] = useState<string | null>(null);
     const [priceTrend, setPriceTrend] = useState<any>(null);
     const [priceTrendPeriod, setPriceTrendPeriod] = useState<"last_year" | "last_6months" | "last_2_years" | "all_time">("last_year");
     const [rentalYieldByDistrict, setRentalYieldByDistrict] = useState<any>(null);
     const [rentalYieldPeriod, setRentalYieldPeriod] = useState<"last_year" | "last_6months" | "last_2_years" | "all_time">("last_year");
     const [districtCapRate, setDistrictCapRate] = useState<any>(null);
     const [topProperties, setTopProperties] = useState<InvestmentProperty[]>(TOP_PROPERTIES);
+    const [marketOverview, setMarketOverview] = useState<any>(null);
+    const [exporting, setExporting] = useState(false);
 
     useEffect(() => {
-        appService.getVerifiedListingsStats().then((res) => {
-            const active = res?.data?.data?.active;
-            if (active != null) setVerifiedListings(Number(active).toLocaleString());
+        appService.getUserAnalytics().then((res) => {
+            const payload = res?.data?.data ?? res?.data;
+            if (payload) setMarketOverview(payload);
         });
     }, []);
+
+    async function handleExportPdf() {
+        if (exporting) return;
+        setExporting(true);
+        try {
+            const dateLabel = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+            const blob = await generateDashboardPdfBlob({
+                userName: user?.fullName ?? "User",
+                dateLabel,
+                stats: dashboardStats.map((s) => ({ label: s.label, value: s.value, sub: s.sub ?? "" })),
+                topProperties: topProperties.map((p) => ({
+                    name: p.name,
+                    district: p.district,
+                    price: p.price,
+                    sqft: p.sqft,
+                    yield_: p.yield_,
+                    roi: p.roi,
+                    status: p.status,
+                })),
+                investmentSignals: INVESTMENT_SIGNALS.map((s) => ({ badge: s.badge, title: s.title })),
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Dashboard_Export_${dateLabel.replace(/\s+/g, "_")}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            await appService.logReportGeneration({
+                reportType: "market_snapshot",
+                reportName: `Dashboard Export - ${dateLabel}`,
+                status: "completed",
+            });
+            toast.success("Dashboard exported successfully.");
+        } catch (err) {
+            console.error("Dashboard PDF export failed:", err);
+            toast.error("Failed to export dashboard PDF.");
+        } finally {
+            setExporting(false);
+        }
+    }
 
     useEffect(() => {
         appService.getPriceTrend(priceTrendPeriod).then((res) => {
@@ -149,11 +199,21 @@ export default function DashboardPage() {
         });
     }, []);
 
-    const dashboardStats = DASHBOARD_STATS.map((s) =>
-        s.label === "Verified Listings" && verifiedListings
-            ? { ...s, value: verifiedListings }
-            : s
-    );
+    const dashboardStats = DASHBOARD_STATS.map((s) => {
+        if (s.label === "Verified Listings" && marketOverview?.activePropertiesCount != null) {
+            return { ...s, value: Number(marketOverview.activePropertiesCount).toLocaleString() };
+        }
+        if (s.label === "AI Market Intelligence" && marketOverview?.totalProperties != null) {
+            return { ...s, value: Number(marketOverview.totalProperties).toLocaleString() };
+        }
+        if (s.label === "Investment Score" && marketOverview?.bullishDistrictsPct != null) {
+            return { ...s, value: `${Number(marketOverview.bullishDistrictsPct).toFixed(0)}%` };
+        }
+        if (s.label === "Revenue Analytics" && marketOverview?.totalTransactionVolume != null) {
+            return { ...s, value: formatDashboardVolume(Number(marketOverview.totalTransactionVolume)) };
+        }
+        return s;
+    });
 
     return (
         <div className="flex flex-col min-h-full">
@@ -166,13 +226,18 @@ export default function DashboardPage() {
                             Track properties, market movements, investment insights, and AI-driven analytics all from one minimal command center.
                         </p>
                     </div>
-                    <Button variant="navy" className="w-auto! p-[10px_16px]! rounded-md! font-bold! text-xs! flex items-center gap-1.5 shrink-0">
+                    <Button
+                        variant="navy"
+                        className="w-auto! p-[10px_16px]! rounded-md! font-bold! text-xs! flex items-center gap-1.5 shrink-0"
+                        onClick={handleExportPdf}
+                        disabled={exporting}
+                    >
                         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
                             <path d="M8.5 10.625V2.125" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                             <path d="M14.875 10.625V13.4583C14.875 13.8341 14.7257 14.1944 14.4601 14.4601C14.1944 14.7257 13.8341 14.875 13.4583 14.875H3.54167C3.16594 14.875 2.80561 14.7257 2.53993 14.4601C2.27426 14.1944 2.125 13.8341 2.125 13.4583V10.625" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                             <path d="M4.95837 7.08334L8.50004 10.625L12.0417 7.08334" stroke="white" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        EXPORT PDF
+                        {exporting ? "EXPORTING..." : "EXPORT PDF"}
                     </Button>
                 </div>
 

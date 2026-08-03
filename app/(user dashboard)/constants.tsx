@@ -1821,6 +1821,17 @@ export const PROPERTY_TYPE_OPTIONS = ["Apartment", "Villa", "Townhouse / Attache
 export const SALE_TYPE_OPTIONS = ["Off-Plan", "Ready", "Court-Mandated"];
 export const BEDROOM_OPTIONS = ["Studio", "1 Bed", "2 Beds", "3 Beds", "4 Beds", "5+ Beds"];
 
+// API expects "1 bed", "2 beds", ... "5+ beds", "studio" — plain lowercase, space-separated,
+// not the hyphenated slug the generic slugify() helper would produce.
+export const BEDROOM_API_VALUES: Record<string, string> = {
+  "Studio": "studio",
+  "1 Bed": "1 bed",
+  "2 Beds": "2 beds",
+  "3 Beds": "3 beds",
+  "4 Beds": "4 beds",
+  "5+ Beds": "5+ beds",
+};
+
 export type PriceVsMarketPoint = {
   category: string;
   yourDeal: number;
