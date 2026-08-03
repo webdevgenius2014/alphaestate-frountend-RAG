@@ -3872,11 +3872,10 @@ export const REPORT_PROPERTY_TYPES = [
   "Retail",
 ];
 export const REPORT_TIME_PERIODS = [
-  "Last 30 Days",
-  "Last 3 Months",
   "Last 6 Months",
   "Last Year",
-  "Custom Range",
+  "Last 2 Years",
+  "All Time",
 ];
 export const REPORT_FORMATS = [
   "PDF Report",

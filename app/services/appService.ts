@@ -416,6 +416,41 @@ class AppService {
     }
   }
 
+  async getMarketSnapshots(district?: string, period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+    try {
+      const params: Record<string, string> = {};
+      if (district) params.district = district;
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.marketSnapshots, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // Reports
+  async getReportsHistory(page: number = 1, limit: number = 10) {
+    try {
+      return await instance.get(ApiConfig.reportsHistory, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async logReportGeneration(payload: {
+    reportType: string;
+    reportName: string;
+    district?: string;
+    timePeriod?: string;
+    status: string;
+    fileUrl?: string;
+  }) {
+    try {
+      return await instance.post(ApiConfig.reportsLog, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Saved Property
   async getListingSavedProperties(
   page: number = 1,

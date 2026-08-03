@@ -20,14 +20,20 @@ export default function Sidebar() {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
     const [logoutOpen, setLogoutOpen] = useState(false);
+    const [search, setSearch] = useState("");
     const { isDark, toggleTheme, isDrawerOpen, closeDrawer, user } = useTheme();
 
     const role = user?.role ?? null;
     const admin = isAdmin(role);
-    const menuItems = admin ? ADMIN_MENU_ITEMS : MENU_ITEMS;
-    const settingsItems = SETTINGS_ITEMS.filter(
+    const allMenuItems = admin ? ADMIN_MENU_ITEMS : MENU_ITEMS;
+    const allSettingsItems = SETTINGS_ITEMS.filter(
         (item) => !item.roles || item.roles.includes(role ?? "user")
     );
+
+    const query = search.trim().toLowerCase();
+    const menuItems = query ? allMenuItems.filter((item) => item.label.toLowerCase().includes(query)) : allMenuItems;
+    const settingsItems = query ? allSettingsItems.filter((item) => item.label.toLowerCase().includes(query)) : allSettingsItems;
+    const hasNoResults = query.length > 0 && menuItems.length === 0 && settingsItems.length === 0;
 
     const isActive = (href: string) =>
         pathname === href || pathname.startsWith(href + "/");
@@ -58,6 +64,8 @@ export default function Sidebar() {
                         <SearchIcon className="shrink-0 text-(--db-text-primary)" />
                         <input
                             type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search Here..."
                             className="flex-1 text-sm text-(--db-text-primary) outline-none bg-transparent placeholder-(--db-text-muted) min-w-0"
                         />
@@ -69,12 +77,17 @@ export default function Sidebar() {
             )}
 
             <nav className="flex-1 overflow-y-auto pb-5 thin-scroll">
-                {!collapsed && (
+                {!collapsed && hasNoResults && (
+                    <p className="text-sm text-(--db-text-muted) px-5 mb-3.25">No matching items found.</p>
+                )}
+
+                {!collapsed && menuItems.length > 0 && (
                     <p className="text-xs text-(--db-text-primary) font-normal uppercase px-5 mb-3.25">
                         Menu
                     </p>
                 )}
 
+                {menuItems.length > 0 && (
                 <div className={`space-y-2.5 mb-5 ${collapsed ? 'px-3' : 'px-5'} pb-5 border-b border-(--db-border)`}>
                     {menuItems.map((item) => {
                         const active = isActive(item.href);
@@ -101,13 +114,15 @@ export default function Sidebar() {
                         );
                     })}
                 </div>
+                )}
 
-                {!collapsed && (
+                {!collapsed && settingsItems.length > 0 && (
                     <p className="text-xs text-(--db-text-primary) font-normal uppercase px-5 mb-3.25">
                         Settings
                     </p>
                 )}
 
+                {settingsItems.length > 0 && (
                 <div className={`space-y-2.5 mb-5 ${collapsed ? 'px-3' : 'px-5'}`}>
                     {settingsItems.map((item) => {
                         if (item.isToggle) {
@@ -187,6 +202,7 @@ export default function Sidebar() {
                         );
                     })}
                 </div>
+                )}
             </nav>
 
             {logoutOpen && (

@@ -1,31 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import Button from "@/app/components/ui/button";
-import { DownloadReportModal, DeleteReportModal, GenerateReportModal, type ReportRow } from "@/app/components/dashboard/alert-modals";
+import { toast } from "react-hot-toast";
+import {
+    DownloadReportModal,
+    DeleteReportModal,
+    GenerateReportModal,
+    ExportHistoryModal,
+    type ReportRow,
+    type GenerateReportConfig,
+} from "@/app/components/dashboard/alert-modals";
 import {
     REPORT_TYPE_CARDS,
-    REPORT_DISTRICTS,
     REPORT_PROPERTY_TYPES,
     REPORT_TIME_PERIODS,
     REPORT_FORMATS,
-    REPORT_TABLE_ROWS,
+    SALE_TYPE_OPTIONS,
     ReportDownloadIcon,
     ReportShareIcon,
     ReportTrashIcon,
     SelectChevron,
 } from "@/app/(user dashboard)/constants";
+import appService from "@/app/services/appService";
+
+function formatReportDate(value?: string) {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function humanizeReportType(value?: string) {
+    if (!value) return "-";
+    return value
+        .split("_")
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+}
+
+function toReportRow(r: any): ReportRow {
+    return {
+        name: r.name ?? r.reportName ?? "Untitled Report",
+        type: humanizeReportType(r.type ?? r.reportType),
+        district: r.district ?? "-",
+        date: r.createdAt ? formatReportDate(r.createdAt) : (r.date ?? "-"),
+        status: r.status ?? "Ready",
+    };
+}
 
 const inputCls =
     "w-full border border-[#D28A441F] rounded-[3px] p-[12px_14px] bg-(--db-sidebar-bg) text-(--db-text-primary) text-[13px] outline-none focus:border-[#D28A44]/60 transition-colors appearance-none cursor-pointer";
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+function Toggle({ checked, disabled }: { checked: boolean; disabled?: boolean }) {
     return (
         <button
             type="button"
-            onClick={onChange}
-            className={`relative w-13.75 h-6 rounded-full border transition-colors ease-linear shrink-0 ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-main-bg) border-(--db-toggle-border)"}`}
+            disabled={disabled}
+            className={`relative w-13.75 h-6 rounded-full border transition-colors ease-linear shrink-0 ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-main-bg) border-(--db-toggle-border)"} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
         >
             <div className={`absolute top-px w-5 h-5 rounded-full shadow transition-all ease-linear ${checked ? "right-0.5 bg-(--db-main-bg)" : "left-0.5 bg-[#D28A44]"}`} />
         </button>
@@ -48,19 +82,116 @@ function SelectField({ label, options, value, onChange }: { label: string; optio
     );
 }
 
+function periodLabelToEnum(label: string): "last_year" | "last_6months" | "last_2_years" | "all_time" {
+    switch (label) {
+        case "Last 6 Months":
+            return "last_6months";
+        case "Last 2 Years":
+            return "last_2_years";
+        case "All Time":
+            return "all_time";
+        default:
+            return "last_year";
+    }
+}
+
 const actionBtnCls = "w-[23px] h-[23px] rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear";
 
 export default function ReportsPage() {
     const [selectedTypes, setSelectedTypes] = useState<Set<string>>(() => new Set(["district"]));
     const toggleType = (id: string) => setSelectedTypes((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
-    const [district, setDistrict] = useState(REPORT_DISTRICTS[0]);
+
+    const [districts, setDistricts] = useState<Array<{ id?: string; name: string }>>([]);
+    const [district, setDistrict] = useState("");
     const [propType, setPropType] = useState(REPORT_PROPERTY_TYPES[0]);
     const [timePeriod, setTimePeriod] = useState(REPORT_TIME_PERIODS[0]);
     const [format, setFormat] = useState(REPORT_FORMATS[0]);
-    const [aiInsights, setAiInsights] = useState(true);
+    const [aiInsights] = useState(false);
+
+    const [saleType, setSaleType] = useState(SALE_TYPE_OPTIONS[0]);
+    const [areaSqm, setAreaSqm] = useState("");
+    const [askingPrice, setAskingPrice] = useState("");
+
+    const [generateCooldown, setGenerateCooldown] = useState(false);
+
     const [downloadReport, setDownloadReport] = useState<ReportRow | null>(null);
-    const [deleteReport, setDeleteReport]     = useState<ReportRow | null>(null);
-    const [generateOpen, setGenerateOpen]     = useState(false);
+    const [deleteReport, setDeleteReport] = useState<ReportRow | null>(null);
+    const [generateConfig, setGenerateConfig] = useState<GenerateReportConfig | null>(null);
+    const [exportHistoryOpen, setExportHistoryOpen] = useState(false);
+
+    const [reports, setReports] = useState<ReportRow[]>([]);
+    const [reportsLoading, setReportsLoading] = useState(true);
+
+    const isValidationSelected = selectedTypes.has("validation");
+
+    function refreshReports() {
+        appService.getReportsHistory(1, 20).then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const d = res.data?.data;
+                const items = Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : Array.isArray(d?.data) ? d.data : [];
+                setReports(items.map(toReportRow));
+            }
+            setReportsLoading(false);
+        });
+    }
+
+    useEffect(() => {
+        refreshReports();
+    }, []);
+
+    useEffect(() => {
+        appService.getAllDistricts().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const items = res.data?.data ?? [];
+                const names = items
+                    .map((item: any) => (typeof item === "string" ? { name: item } : { id: item.id ?? item._id, name: item.name ?? item.district ?? "" }))
+                    .filter((d: any) => d.name);
+                setDistricts(names);
+                setDistrict((prev) => prev || names[0]?.name || "");
+            }
+        });
+    }, []);
+
+    function handleGenerate() {
+        if (generateCooldown) return;
+
+        if (isValidationSelected && (!district || !areaSqm || !askingPrice)) {
+            toast.error("Deal Validation Report requires district, area (SQM), and asking price.");
+            return;
+        }
+
+        setGenerateCooldown(true);
+        setTimeout(() => setGenerateCooldown(false), 15000);
+
+        const primaryType = REPORT_TYPE_CARDS.find((r) => selectedTypes.has(r.id));
+        const districtObj = districts.find((d) => d.name === district);
+
+        setGenerateConfig({
+            reportName: `${district || "Market"} ${primaryType?.title ?? "Analysis"}`,
+            format,
+            types: Array.from(selectedTypes),
+            district,
+            districtId: districtObj?.id,
+            propertyType: propType,
+            period: periodLabelToEnum(timePeriod),
+            saleType: isValidationSelected ? saleType : undefined,
+            areaSqm: isValidationSelected ? Number(areaSqm) : undefined,
+            askingPriceAed: isValidationSelected ? Number(askingPrice) : undefined,
+        });
+
+        handleReset();
+    }
+
+    function handleReset() {
+        setSelectedTypes(new Set(["district"]));
+        setDistrict(districts[0]?.name || "");
+        setPropType(REPORT_PROPERTY_TYPES[0]);
+        setTimePeriod(REPORT_TIME_PERIODS[0]);
+        setFormat(REPORT_FORMATS[0]);
+        setSaleType(SALE_TYPE_OPTIONS[0]);
+        setAreaSqm("");
+        setAskingPrice("");
+    }
 
     return (
         <div className="w-full">
@@ -71,7 +202,7 @@ export default function ReportsPage() {
                         Generate professional market intelligence reports powered by verified ADREC transaction data and AI-driven property analysis.
                     </p>
                 </div>
-                <ModalButton className="max-w-fit px-5 py-2.5! text-[13px]!">EXPORT HISTORY</ModalButton>
+                <ModalButton className="max-w-fit px-5 py-2.5! text-[13px]!" onClick={() => setExportHistoryOpen(true)}>EXPORT HISTORY</ModalButton>
             </div>
 
             <div className="mb-5 bg-(--db-sidebar-bg) p-5">
@@ -104,20 +235,53 @@ export default function ReportsPage() {
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <SelectField label="Report Type" options={REPORT_TYPE_CARDS.map(r => r.title)} value={REPORT_TYPE_CARDS.find(r => selectedTypes.has(r.id))?.title ?? REPORT_TYPE_CARDS[0].title} onChange={(v) => { const id = REPORT_TYPE_CARDS.find(r => r.title === v)?.id; if (id) setSelectedTypes(new Set([id])); }} />
-                                <SelectField label="District Selection" options={REPORT_DISTRICTS} value={district} onChange={setDistrict} />
+                                <SelectField label="District Selection" options={districts.length ? districts.map(d => d.name) : [""]} value={district} onChange={setDistrict} />
                             </div>
                             <SelectField label="Property Type" options={REPORT_PROPERTY_TYPES} value={propType} onChange={setPropType} />
                             <SelectField label="Time Period" options={REPORT_TIME_PERIODS} value={timePeriod} onChange={setTimePeriod} />
                             <SelectField label="Report Format" options={REPORT_FORMATS} value={format} onChange={setFormat} />
 
+                            {isValidationSelected && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p className="text-[15px] font-medium text-(--db-text-primary) mb-2">Area (SQM)</p>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder="145"
+                                            className={inputCls}
+                                            value={areaSqm}
+                                            onChange={(e) => setAreaSqm(e.target.value.replace(/[^0-9.]/g, ""))}
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="text-[15px] font-medium text-(--db-text-primary) mb-2">Asking Price (AED)</p>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder="2,400,000"
+                                            className={inputCls}
+                                            value={askingPrice}
+                                            onChange={(e) => setAskingPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                                        />
+                                    </div>
+                                    <SelectField label="Sale Type" options={SALE_TYPE_OPTIONS} value={saleType} onChange={setSaleType} />
+                                </div>
+                            )}
+
                             <div>
                                 <p className="text-[13px] font-medium text-(--db-text-primary) mb-2.5">Include AI Insights</p>
-                                <Toggle checked={aiInsights} onChange={() => setAiInsights((p) => !p)} />
+                                <Toggle checked={aiInsights} disabled />
+                                {generateCooldown && (
+                                    <p className="text-[11px] text-(--db-text-muted) mt-1.5">Coming soon .....</p>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-4 pt-1">
-                                <Button variant="primary" className="py-2.5!" onClick={() => setGenerateOpen(true)}>GENERATE REPORT</Button>
-                                <ModalButton className="max-w-fit px-5 py-2.5!">RESET FORM</ModalButton>
+                                <Button variant="primary" className="py-2.5!" onClick={handleGenerate} disabled={generateCooldown}>
+                                    {generateCooldown ? "PLEASE WAIT..." : "GENERATE REPORT"}
+                                </Button>
+                                <ModalButton className="max-w-fit px-5 py-2.5!" onClick={handleReset}>RESET FORM</ModalButton>
                             </div>
                         </div>
                     </div>
@@ -143,7 +307,16 @@ export default function ReportsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {REPORT_TABLE_ROWS.map((row, i) => (
+                            {reportsLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-5 py-6 text-center text-(--db-text-primary)">Loading...</td>
+                                </tr>
+                            ) : reports.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-5 py-6 text-center text-(--db-text-primary)">No data found</td>
+                                </tr>
+                            ) : (
+                            reports.map((row, i) => (
                                 <tr key={i} className="border-b border-(--db-border) last:border-0 divide-x divide-(--db-border) text-(--db-text-primary) odd:bg-(--db-main-bg) even:bg-(--db-sidebar-bg) hover:bg-(--db-sidebar-bg) transition-colors">
                                     <td className="px-5 py-3.5 font-medium whitespace-nowrap">{row.name}</td>
                                     <td className="px-5 py-3.5 whitespace-nowrap">{row.type}</td>
@@ -163,7 +336,8 @@ export default function ReportsPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -175,11 +349,11 @@ export default function ReportsPage() {
             {deleteReport && (
                 <DeleteReportModal report={deleteReport} onClose={() => setDeleteReport(null)} onConfirm={() => setDeleteReport(null)} />
             )}
-            {generateOpen && (
-                <GenerateReportModal
-                    reportName={`${district} ${REPORT_TYPE_CARDS.find(r => selectedTypes.has(r.id))?.title ?? "Analysis"}`}
-                    onClose={() => setGenerateOpen(false)}
-                />
+            {generateConfig && (
+                <GenerateReportModal config={generateConfig} onClose={() => setGenerateConfig(null)} onLogged={refreshReports} />
+            )}
+            {exportHistoryOpen && (
+                <ExportHistoryModal onClose={() => setExportHistoryOpen(false)} />
             )}
         </div>
     );
