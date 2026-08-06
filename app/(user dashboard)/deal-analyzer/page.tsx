@@ -6,12 +6,15 @@ import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import { DealAssessmentGauge, PriceVsMarketChart, DistrictPriceTrendChart } from "@/app/components/dashboard/deal-analyzer-charts";
 import {
     DEAL_STATUS_CLS, DEAL_ASSESSMENT_STATS, DEAL_MARKET_DATA,
-    SelectChevron, SortIcon, type ComparableTransaction,
+    SelectChevron, SortIcon, ReportDownloadIcon, type ComparableTransaction,
     PROPERTY_TYPE_OPTIONS, SALE_TYPE_OPTIONS, BEDROOM_OPTIONS, BEDROOM_API_VALUES,
 } from "@/app/(user dashboard)/constants";
 import ModalButton from "@/app/components/ui/modal-button";
+import Button from "@/app/components/ui/button";
 import appService from "@/app/services/appService";
 import { toast } from "react-hot-toast";
+import { useTheme } from "@/app/(user dashboard)/theme-provider";
+import { generateDealAnalyzerPdfBlob } from "@/app/components/dashboard/deal-analyzer-pdf";
 
 type DealAnalysisResult = {
     dealScore: number;
@@ -108,6 +111,7 @@ const fieldLbl = "block text-[15px] font-medium text-(--db-text-primary) mb-2.5"
 
 
 export default function DealAnalyzerPage() {
+    const { user } = useTheme();
     const [districts, setDistricts] = useState<string[]>([]);
     const [form, setForm] = useState({
         propertyType: PROPERTY_TYPE_OPTIONS[0],
@@ -122,6 +126,8 @@ export default function DealAnalyzerPage() {
     const [result, setResult] = useState<DealAnalysisResult | null>(null);
     const [priceTrend, setPriceTrend] = useState<Array<{ month: string; price: number }> | undefined>(undefined);
     const [comparables, setComparables] = useState<ComparableTransaction[] | null>(null);
+    const [exportingCsv, setExportingCsv] = useState(false);
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     useEffect(() => {
         appService.getAllDistricts().then((res) => {
@@ -171,6 +177,40 @@ export default function DealAnalyzerPage() {
 
     function bedroomsToApiValue(value: string) {
         return BEDROOM_API_VALUES[value] ?? value.toLowerCase();
+    }
+
+    async function handleExportComparablesCsv() {
+        if (exportingCsv || !form.district) return;
+        setExportingCsv(true);
+        try {
+            const res = await appService.exportDealComparablesCsv({
+                district: form.district,
+                propertyType: slugify(form.propertyType),
+                saleType: slugify(form.saleType),
+                bedrooms: form.bedrooms ? bedroomsToApiValue(form.bedrooms) : undefined,
+                limit: 10,
+            });
+
+            if ((res?.status === 200 || res?.status === 201) && res?.data) {
+                const disposition: string = res.headers?.["content-disposition"] || "";
+                const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
+                const filename = filenameMatch?.[1] || `comparables-${slugify(form.district)}-${slugify(form.propertyType)}.csv`;
+
+                const url = URL.createObjectURL(res.data as Blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success("Comparable transactions exported successfully.");
+            } else {
+                toast.error("Failed to export comparable transactions.");
+            }
+        } catch (err) {
+            toast.error("Failed to export comparable transactions.");
+        } finally {
+            setExportingCsv(false);
+        }
     }
 
     function parseNumber(value: string) {
@@ -228,6 +268,54 @@ export default function DealAnalyzerPage() {
         { ...DEAL_MARKET_DATA[3], value: result.demandActivity, valueColor: getDemandColor(result.demandActivity) },
     ] : DEAL_MARKET_DATA;
 
+    async function handleExportPdf() {
+        if (exportingPdf) return;
+        setExportingPdf(true);
+        try {
+            const dateLabel = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+            const blob = await generateDealAnalyzerPdfBlob({
+                userName: user?.fullName ?? "User",
+                dateLabel,
+                district: form.district || "-",
+                propertyType: form.propertyType,
+                saleType: form.saleType,
+                score,
+                verdictLabel,
+                verdictColor: band.color,
+                verdictBg: band.bg,
+                description,
+                assessmentStats: assessmentStats.map((s) => ({ label: s.label, value: String(s.value) })),
+                marketStats: marketStats.map((m) => ({ label: m.label, value: String(m.value) })),
+                priceVsMarket: (result?.priceVsMarketChart ?? []).map((row) => ({
+                    label: row.label,
+                    userDeal: row.userDeal != null ? formatAedMetric(row.userDeal) : "-",
+                    marketAvg: formatAedMetric(row.marketAvg),
+                })),
+                priceTrend: (priceTrend ?? []).map((row) => ({ month: row.month, price: formatAedMetric(row.price) })),
+                comparables: (comparables ?? []).map((row) => ({
+                    propertyType: row.propertyType,
+                    district: row.district,
+                    pricePerSqm: row.pricePerSqm,
+                    status: row.status,
+                })),
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Deal_Analyzer_Report_${dateLabel.replace(/\s+/g, "_")}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success("Deal analyzer report exported successfully.");
+        } catch (err) {
+            console.error("Deal analyzer PDF export failed:", err);
+            toast.error("Failed to export deal analyzer PDF.");
+        } finally {
+            setExportingPdf(false);
+        }
+    }
+
     return (
         <div className="flex flex-col min-h-full">
             <div className="flex-1 space-y-6">
@@ -240,7 +328,11 @@ export default function DealAnalyzerPage() {
                             Analyze property pricing against real Abu Dhabi transaction data using AI-powered market intelligence and government-tracked analytics.
                         </p>
                     </div>
-                    <div className="bg-[#5E9F622B] px-2.5 py-2 rounded-[3px] flex gap-2 items-start">
+                    <div className="flex items-center gap-2.5 shrink-0">
+                        <Button variant="navy" className="w-auto! py-2.5!" onClick={handleExportPdf} disabled={exportingPdf}>
+                            {exportingPdf ? "EXPORTING..." : "DOWNLOAD PDF"}
+                        </Button>
+                        <div className="bg-[#5E9F622B] px-2.5 py-2 rounded-[3px] flex gap-2 items-start">
                         <span className="w-2.25 h-2.25 mt-1.5 rounded-full block bg-[#5E9F62]" />
                         <div>
                             <span className="flex items-center gap-1.5 text-sm font-medium text-[#5E9F62]">
@@ -249,6 +341,7 @@ export default function DealAnalyzerPage() {
                             <span className="flex items-center gap-1.5 text-[10px] font-medium text-(--db-text-primary)">
                                 2,841 verified transaction records indexed
                             </span>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -395,7 +488,7 @@ export default function DealAnalyzerPage() {
                         {/* Stat sections */}
                         <div className="flex flex-col bg-(--db-main-bg) p-5 gap-5.75">
                             <div>
-                                <p className="text-[17px] font-semibold text-[#D28A44] mb-1.5">Notification Methods</p>
+                                <p className="text-[17px] font-semibold text-[#D28A44] mb-1.5">Deal Summary</p>
                                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
                                     {assessmentStats.map((s) => (
                                         <div key={s.label} className="bg-(--db-sidebar-bg) rounded-xs p-2.5">
@@ -462,6 +555,14 @@ export default function DealAnalyzerPage() {
                 <Card className="rounded-none!">
                     <div className="flex items-start flex-wrap justify-between gap-4 mb-4">
                         <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary)">Recent Comparable Transactions</h2>
+                        <button
+                            onClick={handleExportComparablesCsv}
+                            disabled={exportingCsv || !form.district}
+                            className="flex items-center justify-center gap-2 text-[13px] font-semibold text-[#D28A44] border border-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm px-4 py-2 transition-colors disabled:opacity-60"
+                        >
+                            <ReportDownloadIcon />
+                            {exportingCsv ? "DOWNLOADING..." : "DOWNLOAD CSV"}
+                        </button>
                     </div>
                     <div className="overflow-x-auto border border-(--db-border) rounded-md">
                         <table className="w-full min-w-125 text-sm">

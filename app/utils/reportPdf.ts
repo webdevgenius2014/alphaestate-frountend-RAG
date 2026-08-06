@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getWatermarkDataUrl, stampWatermark } from "./pdfWatermark";
 
 function humanizeKey(key: string): string {
     return key
@@ -8,10 +9,11 @@ function humanizeKey(key: string): string {
         .replace(/^./, (c) => c.toUpperCase());
 }
 
-function ensureSpace(doc: jsPDF, y: number, needed = 30): number {
+function ensureSpace(doc: jsPDF, y: number, watermarkDataUrl: string, needed = 30): number {
     const pageHeight = doc.internal.pageSize.getHeight();
     if (y + needed > pageHeight - 14) {
         doc.addPage();
+        stampWatermark(doc, watermarkDataUrl);
         return 20;
     }
     return y;
@@ -63,14 +65,16 @@ export type ReportSection = {
     dealResult?: Record<string, any> | null;
 };
 
-export function buildReportPdf(opts: {
+export async function buildReportPdf(opts: {
     reportName: string;
     district?: string;
     propertyType?: string;
     period?: string;
     sections: ReportSection[];
-}): jsPDF {
+}): Promise<jsPDF> {
     const doc = new jsPDF();
+    const watermarkDataUrl = await getWatermarkDataUrl();
+    stampWatermark(doc, watermarkDataUrl);
     let y = 20;
 
     y = addTitle(doc, opts.reportName, y);
@@ -93,7 +97,7 @@ export function buildReportPdf(opts: {
     y += 4;
 
     for (const section of opts.sections) {
-        y = ensureSpace(doc, y, 30);
+        y = ensureSpace(doc, y, watermarkDataUrl, 30);
         y = addSectionHeading(doc, section.title, y);
 
         if (section.districtComparison?.length) {
@@ -107,7 +111,7 @@ export function buildReportPdf(opts: {
                 r.trendDirection ?? "-",
                 r.marketSignal ?? "-",
             ]);
-            y = ensureSpace(doc, y, 20);
+            y = ensureSpace(doc, y, watermarkDataUrl, 20);
             y = addTable(doc, head, body, y);
         }
 
@@ -118,14 +122,14 @@ export function buildReportPdf(opts: {
                 r.district ?? "-",
                 r.avgPricePerSqm != null ? `AED ${Math.round(r.avgPricePerSqm).toLocaleString()}` : "-",
             ]);
-            y = ensureSpace(doc, y, 20);
+            y = ensureSpace(doc, y, watermarkDataUrl, 20);
             y = addTable(doc, head, body, y);
         }
 
         if (section.snapshot) {
             const entries = Object.entries(section.snapshot).filter(([, v]) => v != null && typeof v !== "object");
             if (entries.length) {
-                y = ensureSpace(doc, y, 20);
+                y = ensureSpace(doc, y, watermarkDataUrl, 20);
                 y = addKeyValueTable(doc, entries.map(([k, v]) => [humanizeKey(k), String(v)]), y);
             }
         }
@@ -133,7 +137,7 @@ export function buildReportPdf(opts: {
         if (section.overview) {
             const entries = Object.entries(section.overview).filter(([, v]) => v != null && typeof v !== "object");
             if (entries.length) {
-                y = ensureSpace(doc, y, 20);
+                y = ensureSpace(doc, y, watermarkDataUrl, 20);
                 y = addKeyValueTable(doc, entries.map(([k, v]) => [humanizeKey(k), String(v)]), y);
             }
         }
@@ -154,7 +158,7 @@ export function buildReportPdf(opts: {
                 ["ROI", d.roi != null ? `${Number(d.roi).toFixed(1)}%` : "-"],
                 ["Rental Yield", d.rentalYield != null ? `${Number(d.rentalYield).toFixed(1)}%` : "-"],
             ];
-            y = ensureSpace(doc, y, 20);
+            y = ensureSpace(doc, y, watermarkDataUrl, 20);
             y = addKeyValueTable(doc, rows, y);
         }
 

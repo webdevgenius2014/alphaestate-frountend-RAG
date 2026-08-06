@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
+import { PdfWatermark } from "./pdf-watermark";
 
 const styles = StyleSheet.create({
     page: { padding: 32, fontSize: 10, fontFamily: "Helvetica" },
@@ -42,6 +43,7 @@ function AdminDashboardPdfDocument({ data }: { data: AdminDashboardPdfData }) {
     return (
         <Document>
             <Page size="A4" style={styles.page}>
+                <PdfWatermark />
                 <Text style={styles.title}>Admin Dashboard Export</Text>
                 <Text style={styles.subtitle}>{data.userName} · {data.dateLabel}</Text>
 

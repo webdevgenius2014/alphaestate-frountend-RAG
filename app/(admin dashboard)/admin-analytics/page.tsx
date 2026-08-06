@@ -15,6 +15,8 @@ import { AdminANALYTICS_STATS, AI_METRICSANALAYTCS } from "../constants";
 import appService from "@/app/services/appService";
 import Button from "@/app/components/ui/button";
 import { toast } from "react-hot-toast";
+import { useTheme } from "@/app/(user dashboard)/theme-provider";
+import { generateAdminAnalyticsPdfBlob } from "@/app/components/dashboard/admin-analytics-pdf";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -35,6 +37,8 @@ function formatCompactNumber(n: number): string {
 }
 
 export default function AnalyticsPage() {
+    const { user } = useTheme();
+    const [exportingPdf, setExportingPdf]                       = useState(false);
     const [overview, setOverview]                               = useState<any>(null);
     const [overviewPeriod, setOverviewPeriod]                   = useState("");
     const [overviewDistrict, setOverviewDistrict]               = useState("");
@@ -115,6 +119,67 @@ export default function AnalyticsPage() {
         }
     };
 
+    async function handleExportPdf() {
+        if (exportingPdf) return;
+        setExportingPdf(true);
+        try {
+            const dateLabel = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+            const overviewApiVals = [
+                overview?.totalUsers,
+                overview?.activeSubscribers,
+                overview?.revenue,
+                overview?.totalAiQueries,
+            ];
+            const stats = AdminANALYTICS_STATS.map((s, i) => ({
+                label: s.label,
+                value: overviewApiVals[i] != null ? formatCompactNumber(overviewApiVals[i]) : s.value,
+            }));
+
+            const intelligenceApiVals = [
+                marketIntelligence?.strongestInvestmentDistrict,
+                marketIntelligence?.highestAppreciationDistrict,
+                marketIntelligence?.mostActiveMarket,
+                marketIntelligence?.marketSignal,
+            ];
+            const aiMetrics = AI_METRICSANALAYTCS.map((m, i) => ({
+                label: m.label,
+                value: String(intelligenceApiVals[i] ?? m.value),
+            }));
+
+            const blob = await generateAdminAnalyticsPdfBlob({
+                userName: user?.fullName ?? "Admin",
+                dateLabel,
+                filters: {
+                    period: overviewPeriod,
+                    district: overviewDistrict,
+                    propertyType: overviewPropertyType,
+                },
+                stats,
+                platformGrowth: platformGrowth ?? [],
+                districtPerformance: districtPerformance ?? [],
+                subscriptionPerformance: subscriptionPerformance ?? [],
+                investmentMovement: investmentMovement ?? null,
+                appreciationPotential: appreciationPotential ?? null,
+                aiMetrics,
+                usage: usage ?? [],
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Analytics_Export_${dateLabel.replace(/\s+/g, "_")}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success("Analytics exported successfully.");
+        } catch (err) {
+            console.error("Analytics PDF export failed:", err);
+            toast.error("Failed to export analytics PDF.");
+        } finally {
+            setExportingPdf(false);
+        }
+    }
+
     return (
         <div className="flex flex-col min-h-full">
 
@@ -127,14 +192,19 @@ export default function AnalyticsPage() {
                             Analyze platform growth, user engagement, revenue trends, and market intelligence performance.
                         </p>
                     </div>
-                     <Button
+                    <div className="flex items-center gap-2.5 shrink-0">
+                        <Button variant="navy" className="w-auto! py-2.5!" onClick={handleExportPdf} disabled={exportingPdf}>
+                            {exportingPdf ? "EXPORTING..." : "EXPORT ANALYTICS"}
+                        </Button>
+                        <Button
                             variant="navy"
                             className="w-auto! py-2.5!"
                             onClick={handleTriggerAnalysis}
                             disabled={triggeringAnalysis}
                         >
                             {triggeringAnalysis ? "TRIGGERING..." : "TRIGGER ANALYSIS"}
-                    </Button>
+                        </Button>
+                    </div>
                 </div>
 
                 <Card className="p-4!">

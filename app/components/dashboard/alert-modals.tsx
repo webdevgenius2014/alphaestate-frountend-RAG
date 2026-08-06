@@ -514,7 +514,7 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
 
                 if (!sections.length) throw new Error("Select at least one report type.");
 
-                const doc = buildReportPdf({
+                const doc = await buildReportPdf({
                     reportName,
                     district: district || undefined,
                     propertyType: propertyType || undefined,

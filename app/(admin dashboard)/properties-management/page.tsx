@@ -335,6 +335,14 @@ export default function PropertiesManagementPage() {
 
             {properties.length > 0 && (
                <div className="flex items-center justify-center gap-2">
+                  <button
+                     onClick={() => setPage(1)}
+                     disabled={page === 1}
+                     title="First page"
+                     className="w-8 h-8 rounded-sm text-[15px] font-medium transition-colors text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-(--db-text-primary)"
+                  >
+                     «
+                  </button>
                   {Array.from(
                      {
                         length: Math.min(
@@ -355,6 +363,14 @@ export default function PropertiesManagementPage() {
                         {p}
                      </button>
                   ))}
+                  <button
+                     onClick={() => setPage(totalPages)}
+                     disabled={page === totalPages}
+                     title="Last page"
+                     className="w-8 h-8 rounded-sm text-[15px] font-medium transition-colors text-(--db-text-primary) hover:bg-[#D28A44] hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-(--db-text-primary)"
+                  >
+                     »
+                  </button>
                </div>
             )}
 

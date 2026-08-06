@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@/app/(user dashboard)/constants";
 import appService from "@/app/services/appService";
 import { FILTER_LABELS, FILTER_OPTIONS, LABEL_TO_KEY, type FilterState } from "@/app/constant";
+import { ComparePropertiesModal } from "@/app/components/dashboard/compare-properties-modal";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -54,7 +56,12 @@ function PropertyCardSkeleton() {
     );
 }
 
-function PropertyCard({ prop }: { prop: SavedProperty }) {
+function PropertyCard({ prop, selected, selectionDisabled, onToggleSelect }: {
+    prop: SavedProperty;
+    selected: boolean;
+    selectionDisabled: boolean;
+    onToggleSelect: (id: string) => void;
+}) {
     const router = useRouter();
     return (
         <div className="bg-(--db-main-bg) rounded-md overflow-hidden border border-[#D28A444D] p-2.5 flex flex-col">
@@ -67,6 +74,18 @@ function PropertyCard({ prop }: { prop: SavedProperty }) {
                         onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                     />
                 )}
+                <label
+                    className={`absolute top-2 left-2 flex items-center gap-1.5 bg-black/30 rounded-sm px-2 py-1 text-[11px] font-medium text-white cursor-pointer ${selectionDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                    <input
+                        type="checkbox"
+                        checked={selected}
+                        disabled={selectionDisabled}
+                        onChange={() => onToggleSelect(prop.slug)}
+                        className="w-3.5 h-3.5 rounded-sm accent-[#D28A44] cursor-pointer"
+                    />
+                    Compare
+                </label>
             </div>
             <div className="px-1.5 py-1.5 flex flex-col flex-1">
                 <h3 className="text-base font-medium text-(--db-text-primary) mb-1">{prop.name}</h3>
@@ -105,9 +124,46 @@ function PropertyCard({ prop }: { prop: SavedProperty }) {
     );
 }
 
+const MAX_COMPARE = 4;
+
+type CompareRow = {
+    id: string;
+    name: string;
+    district: string;
+    area: string;
+    price: string;
+    roi: string;
+    rentalYield: string;
+    appreciation: string;
+    aiScore: string;
+    signal: string;
+};
+
+function mapCompareRow(item: any, index: number): CompareRow {
+    return {
+        id: item.savedPropertyId ?? item.id ?? String(index),
+        name: item.projectName ?? "-",
+        district: item.district ?? "-",
+        area: item.areaSqft != null ? `${Number(item.areaSqft).toLocaleString()} sqft`
+            : item.areaSqm != null ? `${Number(item.areaSqm).toLocaleString()} sqm`
+            : "-",
+        price: item.priceFormatted ?? (item.priceAed != null ? `AED ${Number(item.priceAed).toLocaleString()}` : "-"),
+        roi: item.roi != null ? `${Number(item.roi).toFixed(1)}%` : "-",
+        rentalYield: item.rentalYield != null ? `${Number(item.rentalYield).toFixed(1)}%` : "-",
+        appreciation: item.appreciationLevel ?? "-",
+        aiScore: item.aiScore != null ? `${Number(item.aiScore).toFixed(1)}%` : "-",
+        signal: item.investmentSignal ?? "-",
+    };
+}
+
 export default function SavedPage() {
     const [properties, setProperties] = useState<SavedProperty[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [comparing, setComparing] = useState(false);
+    const [compareRows, setCompareRows] = useState<CompareRow[] | null>(null);
+    const [showCompareModal, setShowCompareModal] = useState(false);
+    const [exportingCsv, setExportingCsv] = useState(false);
     const [districts, setDistricts] = useState<string[]>([]);
     const [filters, setFilters] = useState<FilterState>({
         district: "",
@@ -160,6 +216,59 @@ export default function SavedPage() {
         });
     }, [filters]);
 
+    function toggleSelect(id: string) {
+        setCompareRows(null);
+        setSelectedIds((prev) => {
+            if (prev.includes(id)) return prev.filter((x) => x !== id);
+            if (prev.length >= MAX_COMPARE) {
+                toast.error(`You can compare up to ${MAX_COMPARE} properties at a time.`);
+                return prev;
+            }
+            return [...prev, id];
+        });
+    }
+
+    async function handleCompare() {
+        if (selectedIds.length < 2 || comparing) return;
+        setComparing(true);
+        try {
+            const res = await appService.compareSavedProperties(selectedIds);
+            if ((res?.status === 200 || res?.status === 201) && res?.data?.data) {
+                const rows = res.data.data.properties ?? res.data.data;
+                setCompareRows((Array.isArray(rows) ? rows : []).map(mapCompareRow));
+                setShowCompareModal(true);
+            } else {
+                toast.error(res?.data?.message || "Failed to compare properties.");
+            }
+        } finally {
+            setComparing(false);
+        }
+    }
+
+    async function handleExportSaved() {
+        if (exportingCsv) return;
+        setExportingCsv(true);
+        try {
+            const res = await appService.exportSavedProperties();
+            if ((res?.status === 200 || res?.status === 201) && res?.data) {
+                const disposition: string = res.headers?.["content-disposition"] || "";
+                const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
+                const filename = filenameMatch?.[1] || `saved-properties-${new Date().toISOString().slice(0, 10)}.csv`;
+
+                const url = URL.createObjectURL(res.data as Blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                toast.error("Failed to export saved properties.");
+            }
+        } finally {
+            setExportingCsv(false);
+        }
+    }
+
     return (
         <div className="flex flex-col min-h-full">
             <div className="flex-1 space-y-6">
@@ -176,10 +285,14 @@ export default function SavedPage() {
                         <Button
                             variant="navy"
                             className="max-w-fit p-[11px_18px]! text-xs!"
+                            onClick={handleCompare}
+                            disabled={selectedIds.length < 2 || comparing}
                         >
-                            Compare Properties
+                            {comparing ? "COMPARING..." : `Compare Properties${selectedIds.length ? ` (${selectedIds.length})` : ""}`}
                         </Button>
-                        <ModalButton className="max-w-fit p-[11px_18px]! text-xs! uppercase">Generate PDF</ModalButton>
+                        <ModalButton className="max-w-fit p-[11px_18px]! text-xs! uppercase" onClick={handleExportSaved} disabled={exportingCsv}>
+                            {exportingCsv ? "EXPORTING..." : "EXPORT CSV"}
+                        </ModalButton>
                     </div>
                 </div>
 
@@ -230,7 +343,15 @@ export default function SavedPage() {
                         </div>
                     ) : properties.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                            {properties.map((prop) => <PropertyCard key={prop.slug} prop={prop} />)}
+                            {properties.map((prop) => (
+                                <PropertyCard
+                                    key={prop.slug}
+                                    prop={prop}
+                                    selected={selectedIds.includes(prop.slug)}
+                                    selectionDisabled={!selectedIds.includes(prop.slug) && selectedIds.length >= MAX_COMPARE}
+                                    onToggleSelect={toggleSelect}
+                                />
+                            ))}
                         </div>
                     ) : (
                         <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 rounded-lg border border-dashed border-[#D28A4440] bg-[#D28A440A] text-center gap-4">
@@ -339,6 +460,10 @@ export default function SavedPage() {
                 </div>
 
             </div>
+
+            {showCompareModal && compareRows && (
+                <ComparePropertiesModal rows={compareRows} onClose={() => setShowCompareModal(false)} />
+            )}
         </div>
     );
 }

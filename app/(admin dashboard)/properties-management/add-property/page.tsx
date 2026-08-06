@@ -192,13 +192,25 @@ export default function AddPropertyPage() {
         <div className="flex flex-col gap-6">
 
             {/* Header */}
-            <div>
-                <h1 className="text-xl md:text-[25px] mb-1.5 leading-none font-medium text-(--db-text-primary)">
-                    Add New Property
-                </h1>
-                <p className="text-sm text-(--db-text-primary) leading-5 font-normal">
-                    Create and publish a new investment property for investors across the Alpha Estate platform.
-                </p>
+            <div className="flex items-start gap-3">
+                <button
+                    type="button"
+                    onClick={() => router.back()}
+                    aria-label="Go back"
+                    className="flex items-center justify-center w-9 h-9 mt-0.5 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0 hover:bg-(--db-sidebar-bg) transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M11.25 3.75L6 9L11.25 14.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </button>
+                <div>
+                    <h1 className="text-xl md:text-[25px] mb-1.5 leading-none font-medium text-(--db-text-primary)">
+                        Add New Property
+                    </h1>
+                    <p className="text-sm text-(--db-text-primary) leading-5 font-normal">
+                        Create and publish a new investment property for investors across the Alpha Estate platform.
+                    </p>
+                </div>
             </div>
 
             {/* Form card */}

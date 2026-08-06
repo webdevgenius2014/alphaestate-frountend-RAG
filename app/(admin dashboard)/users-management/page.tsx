@@ -497,8 +497,11 @@ export default function UsersManagementPage() {
                                 >
                                     CLOSE
                                 </Button>
-                                <ModalButton className="py-3.5! text-base! max-w-full! w-full!">
-                                    SUSPEND USER
+                                <ModalButton
+                                    className="py-3.5! text-base! max-w-full! w-full!"
+                                    onClick={() => setSuspendIdx(selectedUser)}
+                                >
+                                    {user.isActive ? "SUSPEND USER" : "REACTIVATE USER"}
                                 </ModalButton>
                             </div>
                         </div>
@@ -511,7 +514,14 @@ export default function UsersManagementPage() {
                 onClose={closeSuspend}
                 onConfirm={() => {
                     const id = suspendIdx !== null ? adminUsers[suspendIdx]?.id : null;
-                    if (id) appService.suspendAdminUser(id).then(() => { refresh(); closeSuspend(); });
+                    if (!id) return;
+                    appService.suspendAdminUser(id).then(() => {
+                        refresh();
+                        if (selectedUser === suspendIdx) {
+                            appService.getAdminUserById(id).then((res) => { if (res?.data?.data) setSelectedUserDetail(res.data.data); });
+                        }
+                        closeSuspend();
+                    });
                 }}
                 userName={suspendIdx !== null ? (adminUsers[suspendIdx]?.fullName ?? "") : ""}
                 userEmail={suspendIdx !== null ? (adminUsers[suspendIdx]?.email ?? "") : ""}

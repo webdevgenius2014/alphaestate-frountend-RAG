@@ -1,6 +1,6 @@
 import axios from "axios";
 import instance, { getCookie } from "./interceptor";
-import ApiConfig from "../config/apiConfig";
+import ApiConfig from "../config/ApiConfig";
 
 class AppService {
   // auth 
@@ -333,6 +333,28 @@ class AppService {
     }
   }
 
+  async exportDealComparablesCsv(filters?: {
+    district?: string;
+    propertyType?: string;
+    saleType?: string;
+    bedrooms?: string;
+    limit?: number;
+  }) {
+    try {
+      const cleanFilters = filters
+        ? Object.fromEntries(
+            Object.entries(filters).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+          )
+        : {};
+      return await instance.get(ApiConfig.dealAnalyzerComparablesCsv, {
+        params: cleanFilters,
+        responseType: "blob",
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Dashboard
   async getVerifiedListingsStats() {
     try {
@@ -562,6 +584,24 @@ class AppService {
     try {
       const url = ApiConfig.savedPropertyById.replace("{id}", id);
       return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async compareSavedProperties(ids: string[]) {
+    try {
+      return await instance.post(ApiConfig.savedPropertiesCompare, { ids });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async exportSavedProperties() {
+    try {
+      return await instance.get(ApiConfig.savedPropertiesExport, {
+        responseType: "blob",
+      });
     } catch (error: any) {
       return error.response;
     }
@@ -1130,6 +1170,16 @@ class AppService {
     try {
       const url = ApiConfig.billingHistoryById.replace("{id}", id);
       return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async exportBillingReport() {
+    try {
+      return await instance.get(ApiConfig.exportBillingReport, {
+        responseType: "blob",
+      });
     } catch (error: any) {
       return error.response;
     }

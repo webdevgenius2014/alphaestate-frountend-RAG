@@ -42,6 +42,8 @@ const ApiConfig = {
   // Saver Property
   listingSavedProperties: `${apiURL}/users/me/saved`,
   savedPropertyById: `${apiURL}/properties/{id}/save`,
+  savedPropertiesCompare: `${apiURL}/users/me/saved/compare`,
+  savedPropertiesExport: `${apiURL}/users/me/saved/export`,
 
   //districts
   allDistricts: `${apiURL}/districts`,
@@ -56,6 +58,7 @@ const ApiConfig = {
   // Deal Analyzer
   dealAnalyzerAnalyze: `${apiURL}/deal-analyzer/analyze`,
   dealAnalyzerComparables: `${apiURL}/deal-analyzer/comparables`,
+  dealAnalyzerComparablesCsv: `${apiURL}/deal-analyzer/comparables/csv`,
 
   //user analytics page
   userAnalytics: `${apiURL}/analytics/market/overview`,
@@ -105,6 +108,7 @@ const ApiConfig = {
   plans: `${apiURL}/admin/subscriptions/plans`,
   revenueInsights: `${apiURL}/admin/subscriptions/revenue-insights`,
   plansById: `${apiURL}/admin/subscriptions/plans/{id}`,
+  exportBillingReport: `${apiURL}/admin/subscriptions/export-billing-report`,
   upgradeSubscription: `${apiURL}/admin/subscriptions/checkout-session`,
 
   // admin profile

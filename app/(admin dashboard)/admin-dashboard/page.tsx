@@ -20,6 +20,7 @@ import ModalButton from "@/app/components/ui/modal-button";
 import { SortIcon } from "@/app/(user dashboard)/constants";
 import { formatDate } from "@/app/constant";
 import { generateAdminDashboardPdfBlob } from "@/app/components/dashboard/admin-dashboard-pdf";
+import { SystemStatusModal } from "@/app/components/dashboard/system-status-modal";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -51,6 +52,7 @@ export default function AdminDashboardPage() {
     const [period, setPeriod] = useState("last_year");
     const [dashboard, setDashboard] = useState<any>(null);
     const [exporting, setExporting] = useState(false);
+    const [showSystemStatus, setShowSystemStatus] = useState(false);
 
     useEffect(() => {
         appService.getAdminDashboard(period).then((res) => {
@@ -173,7 +175,7 @@ export default function AdminDashboardPage() {
                         <Button variant="navy" className="w-auto! py-2.5!" onClick={handleExportPdf} disabled={exporting}>
                             {exporting ? "EXPORTING..." : "EXPORT DASHBOARD"}
                         </Button>
-                        <ModalButton className="py-2.5! max-w-fit px-5 text-sm!">
+                        <ModalButton className="py-2.5! max-w-fit px-5 text-sm!" onClick={() => setShowSystemStatus(true)}>
                             SYSTEM STATUS
                         </ModalButton>
                     </div>
@@ -368,6 +370,8 @@ export default function AdminDashboardPage() {
                 </Card>
 
             </div>
+
+            {showSystemStatus && <SystemStatusModal onClose={() => setShowSystemStatus(false)} />}
         </div>
     );
 }
