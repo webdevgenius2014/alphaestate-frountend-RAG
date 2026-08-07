@@ -501,7 +501,7 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
 
                 if (types.includes("snapshot")) {
                     const [snapRes, overviewRes] = await Promise.all([
-                        appService.getMarketSnapshots(district || undefined, period),
+                        appService.getMarketSnapshots(district || undefined),
                         appService.getUserAnalytics(),
                     ]);
                     sections.push({

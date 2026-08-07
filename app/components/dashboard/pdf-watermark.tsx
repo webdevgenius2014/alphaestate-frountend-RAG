@@ -28,7 +28,7 @@ const LOGO_PATHS = [
 
 const WATERMARK_WIDTH_PT = 420;
 const WATERMARK_HEIGHT_PT = WATERMARK_WIDTH_PT * (VIEWBOX_HEIGHT / VIEWBOX_WIDTH);
-const WATERMARK_OPACITY = 0.04;
+const WATERMARK_OPACITY = 0.08;
 
 /**
  * Fixed watermark rendered once per @react-pdf/renderer Page; must be the
