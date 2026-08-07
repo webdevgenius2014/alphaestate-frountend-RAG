@@ -2,7 +2,7 @@ import type { jsPDF } from "jspdf";
 
 const LOGO_VIEWBOX_WIDTH = 190;
 const LOGO_VIEWBOX_HEIGHT = 39;
-const WATERMARK_OPACITY = 0.04;
+const WATERMARK_OPACITY = 0.08;
 const WATERMARK_COLOR = "#0B1F3A";
 
 let cachedWatermarkDataUrl: Promise<string> | null = null;

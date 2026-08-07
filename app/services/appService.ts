@@ -481,10 +481,10 @@ class AppService {
     }
   }
 
-  async getMarketSnapshots(district?: string, period?: "last_year" | "last_6months" | "last_2_years" | "all_time") {
+  async getMarketSnapshots(district?: string, period?: "ttm_current" | "ttm_prior" | string) {
     try {
       const params: Record<string, string> = {};
-      if (district) params.district = district;
+      if (district) params.district = district.toLowerCase();
       if (period) params.period = period;
       return await instance.get(ApiConfig.marketSnapshots, { params: Object.keys(params).length ? params : undefined });
     } catch (error: any) {
