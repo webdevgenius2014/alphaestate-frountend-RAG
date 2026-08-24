@@ -196,7 +196,7 @@ export default function SavedPage() {
                             slug: p.id,
                             name: p.projectName,
                             district: p.district,
-                            image: p.coverImageUrl ?? "/property-1.png",
+                            image: p.coverImageUrl || "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
                             sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),

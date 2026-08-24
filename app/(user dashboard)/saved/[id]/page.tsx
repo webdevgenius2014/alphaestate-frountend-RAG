@@ -54,7 +54,7 @@ export default function PropertyDetailPage() {
                             slug: p.id,
                             name: p.projectName,
                             district: p.district ?? p.districtName,
-                            image: p.coverImageUrl ?? "/property-1.png",
+                            image: p.coverImageUrl || "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
                             sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
@@ -219,7 +219,7 @@ export default function PropertyDetailPage() {
         slug: property.id,
         name: property.projectName,
         district: property.districtName,
-        image: property.coverImageUrl ?? "",
+        image: property.coverImageUrl || "/property-1.png",
         type: property.propertyType,
         beds: property.layout,
         sqft: String(Math.round(parseFloat(property.landAreaSqm ?? "0") * 10.764)),
@@ -234,7 +234,7 @@ export default function PropertyDetailPage() {
     };
 
     const detail = {
-        images: images.length > 0 ? images : [""],
+        images: images.length > 0 ? images : ["/property-1.png"],
         dealScore: Math.round(parseFloat(property.roi ?? "0") * 1000),
         aiDescription: property.description ?? "This property demonstrates strong rental demand and stable appreciation momentum compared to nearby comparable developments.",
         saleType: property.recentTransactions?.[0]?.saleType ?? "Ready",
@@ -290,6 +290,7 @@ export default function PropertyDetailPage() {
                             src={detail.images[activeImg] ?? detail.images[0]}
                             alt={saved.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).src = "/property-1.png"; }}
                         />
                     </div>
                     <div className="grid grid-cols-4 gap-2.5">
