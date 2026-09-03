@@ -13,6 +13,15 @@ import {
 } from "@/app/(user dashboard)/constants";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import Button from "@/app/components/ui/button";
+import appService from "@/app/services/appService";
+
+type EngineStatus = "checking" | "online" | "offline";
+
+const ENGINE_STATUS_STYLES: Record<EngineStatus, { dot: string; label: string }> = {
+    checking: { dot: "bg-gray-400 animate-pulse", label: "Checking..." },
+    online: { dot: "bg-[#5E9F62]", label: "Abu Dhabi Real Estate AI" },
+    offline: { dot: "bg-red-500", label: "AI engine offline" },
+};
 
 
 function UserBubble({ msg }: { msg: AIChatMessage }) {
@@ -40,11 +49,12 @@ type RoiForm = {
     vacancyRate: string;
 };
 
-function AIBubble({ msg, activeTab, roiForm, setRoiForm }: {
+function AIBubble({ msg, activeTab, roiForm, setRoiForm, onSuggestionClick }: {
     msg: AIChatMessage;
     activeTab: "chat" | "roi";
     roiForm: RoiForm;
     setRoiForm: React.Dispatch<React.SetStateAction<RoiForm>>;
+    onSuggestionClick?: (suggestion: string) => void;
 }) {
     return (
         <div className="flex flex-col gap-2 max-w-full xl:max-w-164">
@@ -55,8 +65,23 @@ function AIBubble({ msg, activeTab, roiForm, setRoiForm }: {
                     </div>
                     <span className="text-xs font-normal text-(--db-text-primary)5">Alphaestate Analyst</span>
                 </div>
-                <div className="bg-(--db-chat-bubble-bg) rounded-[7px] p-4 xl:p-5 flex flex-col gap-4">
-                    <p className="text-sm text-(--db-chat-text)">{msg.content}</p>
+                <div className={`bg-(--db-chat-bubble-bg) rounded-[7px] p-4 xl:p-5 flex flex-col gap-4 ${msg.isError ? "border border-red-500/40" : ""}`}>
+                    <p className={`text-sm ${msg.isError ? "text-red-400" : "text-(--db-chat-text)"}`}>{msg.content}</p>
+
+                    {!!msg.suggestions?.length && (
+                        <div className="flex gap-2 flex-wrap">
+                            {msg.suggestions.map((s, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => onSuggestionClick?.(s)}
+                                    className="border border-[#D28A4480] text-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm text-[11px] px-2.5 py-1.5 transition-colors text-left"
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     {activeTab === "roi" ? (
                         <div className="bg-(--db-chat-tile-bg) rounded-md p-[11px_15px]">
@@ -254,11 +279,33 @@ export default function AIChatPage() {
     const [activeTab, setActiveTab] = useState<"chat" | "roi">("chat");
     const [roiForm, setRoiForm] = useState<RoiForm>({ purchasePrice: "", rentalIncome: "", district: "", propertyType: "Apartment", vacancyRate: "" });
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [engineStatus, setEngineStatus] = useState<EngineStatus>("checking");
+    const [sending, setSending] = useState(false);
+    const [sessionId] = useState(() => crypto.randomUUID());
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const checkHealth = () => {
+            appService.getChatEngineHealth().then((res) => {
+                if (cancelled) return;
+                setEngineStatus(res?.status === 200 && res?.data?.status === "ok" ? "online" : "offline");
+            });
+        };
+
+        checkHealth();
+        const interval = setInterval(checkHealth, 30_000);
+
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
+    }, []);
 
     useEffect(() => {
         let charIdx = 0;
@@ -288,11 +335,33 @@ export default function AIChatPage() {
         return () => clearTimeout(timeout);
     }, []);
 
-    const send = () => {
-        const text = input.trim();
-        if (!text) return;
-        setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user" as const, content: text }]);
+    const send = async (text?: string) => {
+        const query = (text ?? input).trim();
+        if (!query || sending) return;
+
+        setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user" as const, content: query }]);
         setInput("");
+        setSending(true);
+
+        const res = await appService.sendChatQuery(query, sessionId);
+
+        setMessages((prev) => [
+            ...prev,
+            res?.status === 200
+                ? {
+                    id: `${Date.now()}-a`,
+                    role: "assistant" as const,
+                    content: res.data.answer,
+                    suggestions: res.data.suggestions,
+                }
+                : {
+                    id: `${Date.now()}-a`,
+                    role: "assistant" as const,
+                    content: res?.data?.error || res?.data?.answer || "Something went wrong. Please try again.",
+                    isError: true,
+                },
+        ]);
+        setSending(false);
     };
 
     const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -353,8 +422,8 @@ export default function AIChatPage() {
                                 <path d="M1 1h12M1 5h12M1 9h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
                             </svg>
                         </button>
-                        <span className="w-2.5 h-2.5 block rounded-full bg-[#5E9F62] shrink-0" />
-                        <p className="text-[13px] xl:text-[15px] font-normal text-(--db-text-primary) truncate">Abu Dhabi Real Estate AI</p>
+                        <span className={`w-2.5 h-2.5 block rounded-full shrink-0 ${ENGINE_STATUS_STYLES[engineStatus].dot}`} />
+                        <p className="text-[13px] xl:text-[15px] font-normal text-(--db-text-primary) truncate">{ENGINE_STATUS_STYLES[engineStatus].label}</p>
                     </div>
                     <button className="shrink-0 flex items-center gap-1.5 text-[11px] xl:text-[13px] font-normal text-[#5E9F62] bg-[#5E9F6226] rounded-[5px] py-1.25 px-2.75 whitespace-nowrap transition-colors">
                         2,841 Records Indexed
@@ -374,7 +443,15 @@ export default function AIChatPage() {
                         {messages.map((msg) =>
                             msg.role === "user"
                                 ? <UserBubble key={msg.id} msg={msg} />
-                                : <AIBubble key={msg.id} msg={msg} activeTab={activeTab} roiForm={roiForm} setRoiForm={setRoiForm} />
+                                : <AIBubble key={msg.id} msg={msg} activeTab={activeTab} roiForm={roiForm} setRoiForm={setRoiForm} onSuggestionClick={(s) => send(s)} />
+                        )}
+                        {sending && (
+                            <div className="flex items-center gap-2">
+                                <div className="w-5.75 h-5.75 rounded-full bg-[#D28A44] flex items-center justify-center shrink-0">
+                                    <img src="/favicon.ico" alt="" className="max-w-2.5 invert brightness-0 object-cover" />
+                                </div>
+                                <span className="text-sm text-(--db-text-muted) animate-pulse">Thinking...</span>
+                            </div>
                         )}
                         <div ref={bottomRef} />
                     </div>
@@ -387,7 +464,8 @@ export default function AIChatPage() {
                                 onKeyDown={onKey}
                                 placeholder={chatPlaceholder}
                                 rows={1}
-                                className="flex-1 resize-none bg-transparent text-sm text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none leading-relaxed"
+                                disabled={sending}
+                                className="flex-1 resize-none bg-transparent text-sm text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none leading-relaxed disabled:opacity-60"
                             />
                             <div className="flex gap-2 items-center">
                                 <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
@@ -396,7 +474,12 @@ export default function AIChatPage() {
                                 <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
                                     <AIChatAudioIcon />
                                 </button>
-                                <button className="w-7.25 h-7.25 rounded-sm bg-[#D28A44] text-white flex items-center justify-center shrink-0 disabled:opacity-40 hover:bg-[#BF7A38] transition-colors">
+                                <button
+                                    type="button"
+                                    onClick={() => send()}
+                                    disabled={sending || !input.trim()}
+                                    className="w-7.25 h-7.25 rounded-sm bg-[#D28A44] text-white flex items-center justify-center shrink-0 disabled:opacity-40 hover:bg-[#BF7A38] transition-colors"
+                                >
                                     <AIChatSendIcon />
                                 </button>
                             </div>
@@ -409,12 +492,15 @@ export default function AIChatPage() {
                                 { id: 4, text: "Under AED 2M opportunities" },
                                 { id: 5, text: "Luxury investment zones" },
                             ].map((tag) => (
-                                <span
+                                <button
                                     key={tag.id}
-                                    className="border min-w-fit border-[#D28A4480] text-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm text-[10px] px-[7.5px] py-[4.5px] cursor-pointer"
+                                    type="button"
+                                    disabled={sending}
+                                    onClick={() => send(tag.text)}
+                                    className="border min-w-fit border-[#D28A4480] text-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm text-[10px] px-[7.5px] py-[4.5px] cursor-pointer disabled:opacity-40"
                                 >
                                     {tag.text}
-                                </span>
+                                </button>
                             ))}
                         </div>
                     </div>

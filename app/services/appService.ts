@@ -3,6 +3,28 @@ import instance, { getCookie } from "./interceptor";
 import ApiConfig from "../config/ApiConfig";
 
 class AppService {
+
+  // AI Chat Engine
+  async getChatEngineHealth() {
+    try {
+      return await axios.get(ApiConfig.chatHealth);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async sendChatQuery(query: string, sessionId?: string) {
+    try {
+      return await axios.post(
+        ApiConfig.chatQuery,
+        { query },
+        { headers: sessionId ? { "x-session-id": sessionId } : undefined }
+      );
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // auth 
   async refreshToken() {
     try {
@@ -234,7 +256,7 @@ class AppService {
     }
   }
 
-     async liveMarket(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
+  async liveMarket(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
     try {
       return await instance.get(ApiConfig.listingProperties, {
         params: { page, limit, ...filters },

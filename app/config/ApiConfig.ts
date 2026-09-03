@@ -1,6 +1,11 @@
 const apiURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const chatApiURL = process.env.NEXT_PUBLIC_CHAT_BASE_URL;
 
 const ApiConfig = {
+  // AI Chat Engine
+  chatHealth: `${chatApiURL}/health`,
+  chatQuery: `${chatApiURL}/api/chat`,
+
   // Auth
   refreshToken:    `${apiURL}/auth/refresh`,
   signup:          `${apiURL}/auth/signup`,
