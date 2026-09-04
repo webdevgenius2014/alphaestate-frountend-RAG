@@ -1057,8 +1057,6 @@ export type AIChatMessage = {
   content: string;
   insights?: AIChatInsight;
   recommendations?: string[];
-  suggestions?: string[];
-  isError?: boolean;
 };
 
 export type AIChatConvGroup = { label: string; items: string[] };
