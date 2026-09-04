@@ -3,6 +3,7 @@ import instance, { getCookie } from "./interceptor";
 import ApiConfig from "../config/ApiConfig";
 
 class AppService {
+
   // auth 
   async refreshToken() {
     try {
@@ -234,7 +235,7 @@ class AppService {
     }
   }
 
-     async liveMarket(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
+  async liveMarket(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
     try {
       return await instance.get(ApiConfig.listingProperties, {
         params: { page, limit, ...filters },
