@@ -26,8 +26,6 @@ import {
     NOTIF_DISTRICTS,
     NOTIF_ACCOUNT_TOGGLES,
     AI_PREF_INVESTMENT_FOCUS,
-    AI_PREF_INSIGHT_LEVELS,
-    AI_PREF_DISTRICTS,
 } from "@/app/(user dashboard)/constants";
 import Button from "@/app/components/ui/button";
 import { toast } from "react-hot-toast";
@@ -970,13 +968,91 @@ function NotificationsTab() {
     );
 }
 
-function AIPreferencesTab() {
-    const [investmentFocus, setInvestmentFocus] = useState<Set<string>>(() => new Set());
-    const [insightLevel, setInsightLevel]       = useState<Set<string>>(() => new Set(["Basic Insights"]));
-    const [aiDistricts, setAiDistricts]         = useState<Set<string>>(() => new Set());
+type InvestmentFocusValue = "rental_income" | "capital_growth" | "both";
 
-    const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) =>
-        setter((prev) => { const next = new Set(prev); next.has(key) ? next.delete(key) : next.add(key); return next; });
+const FOCUS_LABEL_TO_VALUE: Record<string, InvestmentFocusValue> = {
+    "Rental Income": "rental_income",
+    "Capital Growth": "capital_growth",
+    "Both": "both",
+};
+
+function sameDistrictSet(a: string[], b: string[]) {
+    if (a.length !== b.length) return false;
+    const sortedA = [...a].sort();
+    const sortedB = [...b].sort();
+    return sortedA.every((v, i) => v === sortedB[i]);
+}
+
+function AIPreferencesTab() {
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [districts, setDistricts] = useState<string[]>([]);
+    const [investmentFocus, setInvestmentFocus] = useState<InvestmentFocusValue>("both");
+    const [preferredDistricts, setPreferredDistricts] = useState<Set<string>>(() => new Set());
+    const initialRef = useRef<{ investmentFocus: InvestmentFocusValue; preferredDistricts: string[] }>({
+        investmentFocus: "both",
+        preferredDistricts: [],
+    });
+
+    useEffect(() => {
+        appService.getAllDistricts().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const items = res.data?.data ?? [];
+                setDistricts(
+                    items.map((item: any) => typeof item === "string" ? item : item.name ?? item.district ?? "").filter(Boolean)
+                );
+            }
+        });
+
+        appService.getAiPreferences().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const data = res.data?.data ?? res.data;
+                const focus: InvestmentFocusValue = data?.investmentFocus ?? "both";
+                const districtsList: string[] = Array.isArray(data?.preferredDistricts) ? data.preferredDistricts : [];
+                setInvestmentFocus(focus);
+                setPreferredDistricts(new Set(districtsList));
+                initialRef.current = { investmentFocus: focus, preferredDistricts: districtsList };
+            }
+            setLoading(false);
+        });
+    }, []);
+
+    const toggleDistrict = (d: string) =>
+        setPreferredDistricts((prev) => { const next = new Set(prev); next.has(d) ? next.delete(d) : next.add(d); return next; });
+
+    const isDirty =
+        investmentFocus !== initialRef.current.investmentFocus ||
+        !sameDistrictSet(Array.from(preferredDistricts), initialRef.current.preferredDistricts);
+
+    const handleCancel = () => {
+        setInvestmentFocus(initialRef.current.investmentFocus);
+        setPreferredDistricts(new Set(initialRef.current.preferredDistricts));
+    };
+
+    const handleSave = async () => {
+        const currentDistricts = Array.from(preferredDistricts);
+        const payload: { investmentFocus?: InvestmentFocusValue; preferredDistricts?: string[] } = {};
+        if (investmentFocus !== initialRef.current.investmentFocus) payload.investmentFocus = investmentFocus;
+        if (!sameDistrictSet(currentDistricts, initialRef.current.preferredDistricts)) payload.preferredDistricts = currentDistricts;
+        if (Object.keys(payload).length === 0) return;
+
+        setSaving(true);
+        const res = await appService.updateAiPreferences(payload);
+        setSaving(false);
+
+        if (res?.status === 200 || res?.status === 201) {
+            const data = res.data?.data ?? res.data;
+            const focus: InvestmentFocusValue = data?.investmentFocus ?? investmentFocus;
+            const districtsList: string[] = Array.isArray(data?.preferredDistricts) ? data.preferredDistricts : currentDistricts;
+            setInvestmentFocus(focus);
+            setPreferredDistricts(new Set(districtsList));
+            initialRef.current = { investmentFocus: focus, preferredDistricts: districtsList };
+            toast.success("AI preferences updated successfully.");
+        } else {
+            const message = res?.data?.message;
+            toast.error(Array.isArray(message) ? message[0] : message || "Failed to update AI preferences.");
+        }
+    };
 
     return (
         <div>
@@ -987,21 +1063,16 @@ function AIPreferencesTab() {
 
             <div className="bg-(--db-main-bg) p-6.25">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                    <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
+                    <div className="bg-(--db-sidebar-bg) rounded-sm p-5 md:col-span-2">
                         <p className="text-[15px] font-semibold text-[#D28A44] mb-3">Preferred Investment Focus</p>
                         <div className="space-y-2.5">
-                            {AI_PREF_INVESTMENT_FOCUS.map((item) => (
-                                <Checkbox key={item} label={item} checked={investmentFocus.has(item)} onChange={() => toggleSet(setInvestmentFocus, item)} />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
-                        <p className="text-[15px] font-semibold text-[#D28A44] mb-2">AI Insight Level</p>
-                        <p className="text-[13px] text-(--db-text-primary) mb-3">Choose how detailed AI-generated analysis should be across the platform.</p>
-                        <div className="flex flex-wrap gap-x-6 gap-y-2.5">
-                            {AI_PREF_INSIGHT_LEVELS.map((item) => (
-                                <Checkbox key={item} label={item} checked={insightLevel.has(item)} onChange={() => toggleSet(setInsightLevel, item)} />
+                            {AI_PREF_INVESTMENT_FOCUS.map((label) => (
+                                <Checkbox
+                                    key={label}
+                                    label={label}
+                                    checked={investmentFocus === FOCUS_LABEL_TO_VALUE[label]}
+                                    onChange={() => setInvestmentFocus(FOCUS_LABEL_TO_VALUE[label])}
+                                />
                             ))}
                         </div>
                     </div>
@@ -1009,12 +1080,20 @@ function AIPreferencesTab() {
 
                 <div className="bg-(--db-sidebar-bg) rounded-sm p-5 mb-5">
                     <p className="text-[15px] font-semibold text-[#D28A44] mb-3">Preferred Districts</p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2.5">
-                        {AI_PREF_DISTRICTS.map((d) => (
-                            <Checkbox key={d} label={d} checked={aiDistricts.has(d)} onChange={() => toggleSet(setAiDistricts, d)} />
-                        ))}
-                    </div>
+                    {loading ? (
+                        <p className="text-[13px] text-(--db-text-primary)">Loading districts…</p>
+                    ) : districts.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2.5">
+                            {districts.map((d) => (
+                                <Checkbox key={d} label={d} checked={preferredDistricts.has(d)} onChange={() => toggleDistrict(d)} />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-[13px] text-(--db-text-primary)">No districts available.</p>
+                    )}
                 </div>
+
+                {isDirty && <SaveBar onCancel={handleCancel} onSave={handleSave} saving={saving} />}
             </div>
         </div>
     );

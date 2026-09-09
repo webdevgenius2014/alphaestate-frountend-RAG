@@ -646,6 +646,7 @@ export type InvestmentSignal = {
   badge: string;
   badgeColor: string;
   title: string;
+  subtitle?: string;
   action: string;
   icon: React.ReactNode;
 };
@@ -1057,6 +1058,7 @@ export type AIChatMessage = {
   content: string;
   insights?: AIChatInsight;
   recommendations?: string[];
+  suggestions?: string[];
 };
 
 export type AIChatConvGroup = { label: string; items: string[] };
@@ -3827,17 +3829,6 @@ export const AI_PREF_INVESTMENT_FOCUS = [
   "Rental Income",
   "Capital Growth",
   "Both",
-];
-
-export const AI_PREF_INSIGHT_LEVELS = ["Basic Insights", "Advanced Analytics"];
-
-export const AI_PREF_DISTRICTS = [
-  "Yas Island",
-  "Saadiyat Island",
-  "Al Reem Island",
-  "Corniche District",
-  "Masdar City",
-  "Al Kahli",
 ];
 
 // ── Reports data ─────────────────────────────────────────────────────────

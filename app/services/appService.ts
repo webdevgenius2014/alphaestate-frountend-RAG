@@ -106,6 +106,86 @@ class AppService {
     }
   }
 
+  // AI Chat (RAG)
+  async sendChatMessage(payload: {
+    query: string;
+    conversationId?: string;
+    contextFilters?: Record<string, any>;
+  }) {
+    try {
+      return await instance.post(ApiConfig.aiChat, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // AI Structured Analytics Query (no AI prose — for charts/tables)
+  async queryAiAnalytics(payload: {
+    intent:
+      | "price_analysis"
+      | "volume_analysis"
+      | "trend_analysis"
+      | "comparison"
+      | "filtered_search"
+      | "statistical"
+      | "developer_lookup"
+      | "project_search";
+    metric?: string;
+    filters?: {
+      district?: string;
+      property_type?: string;
+      bedrooms?: number;
+      sale_year?: number;
+      start_year?: number;
+      end_year?: number;
+      min_price?: number;
+      max_price?: number;
+      sale_type?: string;
+    };
+    group_by?: "district" | "sale_year" | "property_type" | "bedrooms" | "sale_type" | "none";
+    sort_order?: "asc" | "desc";
+    limit?: number;
+  }) {
+    try {
+      return await instance.post(ApiConfig.aiQuery, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiConversations() {
+    try {
+      return await instance.get(ApiConfig.aiConversations);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiConversationById(conversationId: string) {
+    try {
+      const url = ApiConfig.aiConversationById.replace("{conversationId}", conversationId);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiEngineStatus() {
+    try {
+      return await instance.get(ApiConfig.aiEngineStatus);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiStats() {
+    try {
+      return await instance.get(ApiConfig.aiStats);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // User Profile
   async getUserProfile() {
     try {
@@ -160,6 +240,22 @@ class AppService {
   async updateNotificationPreferences(payload: any) {
     try {
       return await instance.patch(ApiConfig.notificationPrefrences, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiPreferences() {
+    try {
+      return await instance.get(ApiConfig.aiPreferences);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAiPreferences(payload: { investmentFocus?: "rental_income" | "capital_growth" | "both"; preferredDistricts?: string[] }) {
+    try {
+      return await instance.patch(ApiConfig.aiPreferences, payload);
     } catch (error: any) {
       return error.response;
     }
@@ -397,6 +493,14 @@ class AppService {
     }
   }
 
+  async getMarketInsights() {
+    try {
+      return await instance.get(ApiConfig.marketInsights);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // User Analytics
   async getUserAnalytics(period?: string, district?: string, propertyType?: string) {
     try {
@@ -603,6 +707,14 @@ class AppService {
       return await instance.get(ApiConfig.savedPropertiesExport, {
         responseType: "blob",
       });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getSavedRecommendations() {
+    try {
+      return await instance.get(ApiConfig.savedPropertiesRecommendations);
     } catch (error: any) {
       return error.response;
     }

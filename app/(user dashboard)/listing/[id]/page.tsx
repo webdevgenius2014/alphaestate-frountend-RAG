@@ -24,6 +24,13 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
     );
 }
 
+function parseBedrooms(layout?: string): number | undefined {
+    if (!layout) return undefined;
+    if (/studio/i.test(layout)) return 0;
+    const match = layout.match(/\d+/);
+    return match ? Number(match[0]) : undefined;
+}
+
 const overviewLabelCls = "px-5 py-3.5 font-medium text-(--db-text-primary) whitespace-nowrap";
 const overviewValueCls = "px-5 py-3.5 font-medium text-(--db-text-primary)";
 
@@ -264,6 +271,16 @@ export default function PropertyDetailPage() {
         ? `AED ${(property.displayPrice / 1_000_000).toFixed(1)}M`
         : `AED ${property.displayPrice.toLocaleString()}`;
 
+    const askAi = () => {
+        const params = new URLSearchParams();
+        params.set("q", `Tell me more about the investment potential of ${saved.name} in ${saved.district}.`);
+        if (saved.district) params.set("district", saved.district);
+        if (saved.type) params.set("propertyType", saved.type);
+        const bedrooms = parseBedrooms(saved.beds);
+        if (bedrooms != null) params.set("bedrooms", String(bedrooms));
+        router.push(`/ai-chat?${params.toString()}`);
+    };
+
     return (
         <div className="flex flex-col min-h-full space-y-6">
 
@@ -352,7 +369,7 @@ export default function PropertyDetailPage() {
 
                     <div className="flex flex-col gap-2.5 mt-auto">
                         <ModalButton className="py-3! rounded-sm! uppercase"> Analyze Deal</ModalButton>
-                        <ModalButton className="py-3! rounded-sm! uppercase"> ASK AI A QUESTION</ModalButton>
+                        <ModalButton className="py-3! rounded-sm! uppercase" onClick={askAi}> ASK AI A QUESTION</ModalButton>
                     </div>
                 </Card>
             </div>

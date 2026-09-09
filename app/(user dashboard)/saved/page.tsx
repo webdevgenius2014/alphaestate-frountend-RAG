@@ -11,6 +11,7 @@ import {
     SavedTypeIcon, SavedBedIcon, SavedSqftIcon,
     SelectChevron,
     type SavedProperty,
+    type SavedRecommendation,
     SortIcon,
     SavedLocIcon,
 } from "@/app/(user dashboard)/constants";
@@ -156,6 +157,16 @@ function mapCompareRow(item: any, index: number): CompareRow {
     };
 }
 
+function toRecommendation(item: any): SavedRecommendation {
+    const fallback = SAVED_RECOMMENDATIONS.find((r) => r.tag === item.category) ?? SAVED_RECOMMENDATIONS[0];
+    return {
+        icon: fallback.icon,
+        tag: item.category ?? fallback.tag,
+        property: item.projectName ?? "-",
+        description: item.description ?? "",
+    };
+}
+
 export default function SavedPage() {
     const [properties, setProperties] = useState<SavedProperty[]>([]);
     const [loading, setLoading] = useState(true);
@@ -171,6 +182,18 @@ export default function SavedPage() {
         investmentSignal: "",
         marketType: "",
     });
+    const [recommendations, setRecommendations] = useState<SavedRecommendation[]>([]);
+    const [loadingRecommendations, setLoadingRecommendations] = useState(true);
+
+    useEffect(() => {
+        appService.getSavedRecommendations().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                const items = res.data?.data ?? [];
+                setRecommendations(Array.isArray(items) ? items.map(toRecommendation) : []);
+            }
+            setLoadingRecommendations(false);
+        });
+    }, []);
 
     useEffect(() => {
         appService.getAllDistricts().then((res) => {
@@ -447,16 +470,36 @@ export default function SavedPage() {
                     <p className="text-[13px] text-(--db-text-primary) mb-5">
                         AI-powered insights comparing your saved properties for the best investment outcome.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4.75">
-                        {SAVED_RECOMMENDATIONS.map((rec) => (
-                            <Card key={rec.property} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col">
-                                <div className="w-12.5 h-12.5 rounded-md bg-[#D28A441F] flex items-center justify-center mb-4.75">{rec.icon}</div>
-                                <span className={`text-sm font-normal text-(--db-text-primary)`}>{rec.tag}</span>
-                                <p className="text-sm md:text-lg font-medium text-(--db-text-primary) leading-snug mb-2 mt-1.75">{rec.property}</p>
-                                <p className="text-sm font-normal text-(--db-text-primary)">{rec.description}</p>
-                            </Card>
-                        ))}
-                    </div>
+                    {loadingRecommendations ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4.75">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <Card key={i} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col animate-pulse">
+                                    <div className="w-12.5 h-12.5 rounded-md bg-(--db-border) mb-4.75" />
+                                    <div className="h-3.5 bg-(--db-border) rounded mb-3 w-2/5" />
+                                    <div className="h-4 bg-(--db-border) rounded mb-2.5 w-3/4" />
+                                    <div className="h-3 bg-(--db-border) rounded w-full" />
+                                </Card>
+                            ))}
+                        </div>
+                    ) : recommendations.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4.75">
+                            {recommendations.map((rec, i) => (
+                                <Card key={i} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col">
+                                    <div className="w-12.5 h-12.5 rounded-md bg-[#D28A441F] flex items-center justify-center mb-4.75">{rec.icon}</div>
+                                    <span className={`text-sm font-normal text-(--db-text-primary)`}>{rec.tag}</span>
+                                    <p className="text-sm md:text-lg font-medium text-(--db-text-primary) leading-snug mb-2 mt-1.75">{rec.property}</p>
+                                    <p className="text-sm font-normal text-(--db-text-primary)">{rec.description}</p>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 rounded-lg border border-dashed border-[#D28A4440] bg-[#D28A440A] text-center gap-4">
+                            <div>
+                                <p className="text-[15px] font-semibold text-(--db-text-primary) mb-1">No Recommendations Yet</p>
+                                <p className="text-[12.5px] text-(--db-text-muted) max-w-70 leading-relaxed mx-auto">Save properties to your shortlist to get AI-powered investment recommendations here.</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
             </div>

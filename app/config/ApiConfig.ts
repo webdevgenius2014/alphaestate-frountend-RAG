@@ -1,6 +1,14 @@
 const apiURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const ApiConfig = {
+  // AI Chat (RAG)
+  aiChat: `${apiURL}/ai/chat`,
+  aiQuery: `${apiURL}/ai/query`,
+  aiConversations: `${apiURL}/ai/conversations`,
+  aiConversationById: `${apiURL}/ai/conversations/{conversationId}`,
+  aiEngineStatus: `${apiURL}/ai/engine-status`,
+  aiStats: `${apiURL}/ai/stats`,
+
   // Auth
   refreshToken:    `${apiURL}/auth/refresh`,
   signup:          `${apiURL}/auth/signup`,
@@ -44,6 +52,7 @@ const ApiConfig = {
   savedPropertyById: `${apiURL}/properties/{id}/save`,
   savedPropertiesCompare: `${apiURL}/users/me/saved/compare`,
   savedPropertiesExport: `${apiURL}/users/me/saved/export`,
+  savedPropertiesRecommendations: `${apiURL}/users/me/saved/recommendations`,
 
   //districts
   allDistricts: `${apiURL}/districts`,
@@ -69,6 +78,7 @@ const ApiConfig = {
   capRateMap: `${apiURL}/analytics/market/cap-rate-map`,
   exportReport: `${apiURL}/analytics/export/excel`,
   marketSnapshots: `${apiURL}/analytics/market/snapshots`,
+  marketInsights: `${apiURL}/analytics/market/insights`,
 
   // Reports
   reportsHistory: `${apiURL}/reports/history`,
@@ -147,6 +157,9 @@ const ApiConfig = {
 
   //user profile notification
   notificationPrefrences: `${apiURL}/users/me/notification-preferences`,
+
+  //AI preferences
+  aiPreferences: `${apiURL}/users/me/ai-preferences`,
 
 
 
