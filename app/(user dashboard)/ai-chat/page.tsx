@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
     AI_CHAT_CONV_GROUPS,
     AI_SEED_MESSAGES,
@@ -13,7 +14,44 @@ import {
 } from "@/app/(user dashboard)/constants";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import Button from "@/app/components/ui/button";
+import appService from "@/app/services/appService";
 
+
+type ConversationSummary = {
+    id: string;
+    title: string;
+    updatedAt?: string;
+};
+
+function normalizeConversationSummary(raw: any): ConversationSummary {
+    const id = raw?.conversationId ?? raw?.id ?? raw?._id ?? "";
+    const updatedAt = raw?.updatedAt ?? raw?.lastMessageAt ?? raw?.createdAt;
+    const title =
+        raw?.title ??
+        raw?.summary ??
+        raw?.lastMessage ??
+        raw?.lastQuery ??
+        raw?.query ??
+        (updatedAt ? new Date(updatedAt).toLocaleString() : "Conversation");
+    return { id, title: String(title).slice(0, 60), updatedAt };
+}
+
+type ChatContextFilters = {
+    district?: string;
+    property_type?: string;
+    bedrooms?: number;
+};
+
+function normalizeHistoryMessage(raw: any): AIChatMessage {
+    const role: "user" | "assistant" = raw?.role === "assistant" || raw?.role === "ai" ? "assistant" : "user";
+    const content = raw?.content ?? (role === "assistant" ? raw?.answer : raw?.query) ?? "";
+    return {
+        id: raw?.messageId ?? raw?.id ?? `${role}-${raw?.createdAt ?? Math.random().toString(36).slice(2)}`,
+        role,
+        content: String(content),
+        suggestions: Array.isArray(raw?.suggestions) ? raw.suggestions : undefined,
+    };
+}
 
 function UserBubble({ msg }: { msg: AIChatMessage }) {
     return (
@@ -40,11 +78,12 @@ type RoiForm = {
     vacancyRate: string;
 };
 
-function AIBubble({ msg, activeTab, roiForm, setRoiForm }: {
+function AIBubble({ msg, activeTab, roiForm, setRoiForm, onSuggestionClick }: {
     msg: AIChatMessage;
     activeTab: "chat" | "roi";
     roiForm: RoiForm;
     setRoiForm: React.Dispatch<React.SetStateAction<RoiForm>>;
+    onSuggestionClick?: (text: string) => void;
 }) {
     return (
         <div className="flex flex-col gap-2 max-w-full xl:max-w-164">
@@ -168,6 +207,20 @@ function AIBubble({ msg, activeTab, roiForm, setRoiForm }: {
                             </div>
                         </>
                     )}
+
+                    {activeTab === "chat" && msg.suggestions && msg.suggestions.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {msg.suggestions.map((s, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => onSuggestionClick?.(s)}
+                                    className="border border-[#D28A4480] text-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm text-[10px] px-[7.5px] py-[4.5px] text-left transition-colors"
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
             <span className="text-(--db-text-primary) text-[9px]">12.00 PM</span>
@@ -176,11 +229,24 @@ function AIBubble({ msg, activeTab, roiForm, setRoiForm }: {
 }
 
 
-function ConvSidebar({ activeConv, setActiveConv, setActiveTab, onClose }: {
+function ConvSidebar({
+    activeConv,
+    setActiveConv,
+    setActiveTab,
+    onClose,
+    conversations,
+    activeConversationId,
+    onSelectConversation,
+    onNewConversation,
+}: {
     activeConv: string;
     setActiveConv: (v: string) => void;
     setActiveTab: (v: "chat" | "roi") => void;
     onClose?: () => void;
+    conversations: ConversationSummary[];
+    activeConversationId?: string;
+    onSelectConversation: (id: string) => void;
+    onNewConversation: () => void;
 }) {
     return (
         <>
@@ -206,7 +272,13 @@ function ConvSidebar({ activeConv, setActiveConv, setActiveTab, onClose }: {
             </div>
 
             <div className="px-3 pt-3 mb-5 shrink-0">
-                <button className="w-full flex items-center justify-center gap-2 text-[15px] font-semibold text-[#D28A44] border border-[#D28A44] bg-[#D28A441F] hover:bg-[#D28A44] hover:text-white rounded-sm px-7.75 py-2.5 transition-colors">
+                <button
+                    onClick={() => {
+                        onNewConversation();
+                        onClose?.();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 text-[15px] font-semibold text-[#D28A44] border border-[#D28A44] bg-[#D28A441F] hover:bg-[#D28A44] hover:text-white rounded-sm px-7.75 py-2.5 transition-colors"
+                >
                     <AIChatPlusIcon />
                     New Conversation
                 </button>
@@ -214,6 +286,29 @@ function ConvSidebar({ activeConv, setActiveConv, setActiveTab, onClose }: {
             <hr className="border-[#D28A444D] shrink-0" />
 
             <div className="flex-1 mt-5 overflow-y-auto px-3 pb-3 flex flex-col gap-5 hide-scroll">
+                {conversations.length > 0 && (
+                    <div>
+                        <p className="text-sm font-medium text-(--db-text-primary) uppercase mb-1.5">Conversations</p>
+                        <div className="flex flex-col gap-1.75">
+                            {conversations.map((conv) => (
+                                <button
+                                    key={conv.id}
+                                    onClick={() => {
+                                        onSelectConversation(conv.id);
+                                        onClose?.();
+                                    }}
+                                    className={`flex items-center gap-2 text-[12px] font-normal text-left w-full transition-colors ${
+                                        activeConversationId === conv.id
+                                            ? "text-[#D28A44]"
+                                            : "text-(--db-text-primary) hover:text-[#D28A44]"
+                                    }`}
+                                >
+                                    <span className="truncate">{conv.title}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 {AI_CHAT_CONV_GROUPS.map((group) => (
                     <div key={group.label}>
                         <p className="text-sm font-medium text-(--db-text-primary) uppercase mb-1.5">{group.label}</p>
@@ -247,6 +342,7 @@ function ConvSidebar({ activeConv, setActiveConv, setActiveTab, onClose }: {
 const CHAT_PHRASE = "Ask | about districts, ROI, investment opportunities, or market trends....";
 
 export default function AIChatPage() {
+    const router = useRouter();
     const [messages, setMessages] = useState<AIChatMessage[]>(AI_SEED_MESSAGES);
     const [input, setInput] = useState("");
     const [activeConv, setActiveConv] = useState("Market Analysis");
@@ -254,7 +350,68 @@ export default function AIChatPage() {
     const [activeTab, setActiveTab] = useState<"chat" | "roi">("chat");
     const [roiForm, setRoiForm] = useState<RoiForm>({ purchasePrice: "", rentalIncome: "", district: "", propertyType: "Apartment", vacancyRate: "" });
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+    const [isSending, setIsSending] = useState(false);
+    const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+    const [contextFilters, setContextFilters] = useState<ChatContextFilters | undefined>(undefined);
     const bottomRef = useRef<HTMLDivElement>(null);
+
+    // Consume a property-scoped question passed via ?q=&district=&propertyType=&bedrooms= (from "Ask AI a question")
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get("q");
+        if (!q) return;
+
+        const filters: ChatContextFilters = {};
+        if (params.get("district")) filters.district = params.get("district")!;
+        if (params.get("propertyType")) filters.property_type = params.get("propertyType")!;
+        const bedroomsParam = params.get("bedrooms");
+        if (bedroomsParam && !Number.isNaN(Number(bedroomsParam))) filters.bedrooms = Number(bedroomsParam);
+
+        setMessages([]);
+        setConversationId(undefined);
+        setActiveTab("chat");
+        setInput(q);
+        setContextFilters(Object.keys(filters).length > 0 ? filters : undefined);
+
+        router.replace("/ai-chat", { scroll: false });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const loadConversations = () => {
+        appService.getAiConversations().then((res) => {
+            const items = res?.data?.data ?? [];
+            if (!Array.isArray(items)) return;
+            const normalized = items.map(normalizeConversationSummary).filter((c) => c.id);
+            normalized.sort((a, b) => (b.updatedAt ? Date.parse(b.updatedAt) : 0) - (a.updatedAt ? Date.parse(a.updatedAt) : 0));
+            setConversations(normalized);
+        });
+    };
+
+    useEffect(() => {
+        loadConversations();
+    }, []);
+
+    const openConversation = async (id: string) => {
+        if (id === conversationId) return;
+        setConversationId(id);
+        setActiveTab("chat");
+        setContextFilters(undefined);
+        setLoadingHistory(true);
+        const res = await appService.getAiConversationById(id);
+        const payload = res?.data?.data;
+        const rawMessages = payload?.messages ?? (Array.isArray(payload) ? payload : []);
+        setMessages(Array.isArray(rawMessages) ? rawMessages.map(normalizeHistoryMessage) : []);
+        setLoadingHistory(false);
+    };
+
+    const startNewConversation = () => {
+        setConversationId(undefined);
+        setMessages([]);
+        setActiveTab("chat");
+        setContextFilters(undefined);
+    };
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -288,11 +445,31 @@ export default function AIChatPage() {
         return () => clearTimeout(timeout);
     }, []);
 
-    const send = () => {
-        const text = input.trim();
-        if (!text) return;
+    const send = async (overrideText?: string) => {
+        const text = (overrideText ?? input).trim();
+        if (!text || isSending || loadingHistory) return;
+
         setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user" as const, content: text }]);
         setInput("");
+        setIsSending(true);
+
+        const res = await appService.sendChatMessage({ query: text, conversationId, contextFilters });
+        const data = res?.data?.data;
+
+        setMessages((prev) => [
+            ...prev,
+            {
+                id: data?.messageId ?? `a-${Date.now()}`,
+                role: "assistant" as const,
+                content: data?.answer ?? "Sorry, something went wrong while reaching the AI assistant. Please try again.",
+                suggestions: data?.suggestions,
+            },
+        ]);
+        if (data?.conversationId && data.conversationId !== conversationId) {
+            setConversationId(data.conversationId);
+            loadConversations();
+        }
+        setIsSending(false);
     };
 
     const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -304,7 +481,15 @@ export default function AIChatPage() {
 
             {/* Desktop sidebar — visible at xl (1280px+) */}
             <div className="hidden xl:flex w-full max-w-66 shrink-0 bg-(--db-main-bg) border border-[#D28A444D] rounded-lg flex-col">
-                <ConvSidebar activeConv={activeConv} setActiveConv={setActiveConv} setActiveTab={setActiveTab} />
+                <ConvSidebar
+                    activeConv={activeConv}
+                    setActiveConv={setActiveConv}
+                    setActiveTab={setActiveTab}
+                    conversations={conversations}
+                    activeConversationId={conversationId}
+                    onSelectConversation={openConversation}
+                    onNewConversation={startNewConversation}
+                />
             </div>
 
             {/* Mobile / tablet sidebar drawer — below xl */}
@@ -334,6 +519,10 @@ export default function AIChatPage() {
                         setActiveConv={setActiveConv}
                         setActiveTab={setActiveTab}
                         onClose={() => setSidebarOpen(false)}
+                        conversations={conversations}
+                        activeConversationId={conversationId}
+                        onSelectConversation={openConversation}
+                        onNewConversation={startNewConversation}
                     />
                 </aside>
             </div>
@@ -371,14 +560,43 @@ export default function AIChatPage() {
                         }}
                     />
                     <div className="relative z-10 flex flex-col gap-5">
-                        {messages.map((msg) =>
+                        {loadingHistory && (
+                            <p className="text-sm text-(--db-text-primary) animate-pulse">Loading conversation…</p>
+                        )}
+                        {!loadingHistory && messages.map((msg) =>
                             msg.role === "user"
                                 ? <UserBubble key={msg.id} msg={msg} />
-                                : <AIBubble key={msg.id} msg={msg} activeTab={activeTab} roiForm={roiForm} setRoiForm={setRoiForm} />
+                                : <AIBubble key={msg.id} msg={msg} activeTab={activeTab} roiForm={roiForm} setRoiForm={setRoiForm} onSuggestionClick={(text) => send(text)} />
+                        )}
+                        {isSending && (
+                            <div className="flex gap-2 items-center">
+                                <div className="w-5.75 h-5.75 rounded-full bg-[#D28A44] flex items-center justify-center shrink-0">
+                                    <img src="/favicon.ico" alt="" className="max-w-2.5 invert brightness-0 object-cover" />
+                                </div>
+                                <span className="text-sm text-(--db-text-primary) animate-pulse">Thinking…</span>
+                            </div>
                         )}
                         <div ref={bottomRef} />
                     </div>
                     <div className="shrink-0 relative z-10 p-2.5 bg-(--db-main-bg) rounded-lg">
+                        {contextFilters && (
+                            <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                                <span className="text-[10px] text-(--db-text-muted) uppercase">Scoped to:</span>
+                                {[contextFilters.district, contextFilters.property_type, contextFilters.bedrooms != null ? `${contextFilters.bedrooms} Bed` : undefined]
+                                    .filter(Boolean)
+                                    .map((label) => (
+                                        <span key={label} className="text-[10px] border border-[#D28A4480] text-[#D28A44] rounded-sm px-[7.5px] py-[3px]">
+                                            {label}
+                                        </span>
+                                    ))}
+                                <button
+                                    onClick={() => setContextFilters(undefined)}
+                                    className="text-[10px] text-(--db-text-muted) hover:text-(--db-text-primary) underline"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        )}
                         <div className="flex items-center gap-3 text-(--db-text-primary) mb-14.5 bg-none border-none rounded-md focus-within:border-[#D28A4470] transition-colors">
                             <SparkelIcon />
                             <textarea
@@ -387,7 +605,8 @@ export default function AIChatPage() {
                                 onKeyDown={onKey}
                                 placeholder={chatPlaceholder}
                                 rows={1}
-                                className="flex-1 resize-none bg-transparent text-sm text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none leading-relaxed"
+                                disabled={isSending || loadingHistory}
+                                className="flex-1 resize-none bg-transparent text-sm text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none leading-relaxed disabled:opacity-60"
                             />
                             <div className="flex gap-2 items-center">
                                 <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
@@ -396,7 +615,11 @@ export default function AIChatPage() {
                                 <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
                                     <AIChatAudioIcon />
                                 </button>
-                                <button className="w-7.25 h-7.25 rounded-sm bg-[#D28A44] text-white flex items-center justify-center shrink-0 disabled:opacity-40 hover:bg-[#BF7A38] transition-colors">
+                                <button
+                                    onClick={() => send()}
+                                    disabled={isSending || loadingHistory || !input.trim()}
+                                    className="w-7.25 h-7.25 rounded-sm bg-[#D28A44] text-white flex items-center justify-center shrink-0 disabled:opacity-40 hover:bg-[#BF7A38] transition-colors"
+                                >
                                     <AIChatSendIcon />
                                 </button>
                             </div>
@@ -411,6 +634,7 @@ export default function AIChatPage() {
                             ].map((tag) => (
                                 <span
                                     key={tag.id}
+                                    onClick={() => send(tag.text)}
                                     className="border min-w-fit border-[#D28A4480] text-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm text-[10px] px-[7.5px] py-[4.5px] cursor-pointer"
                                 >
                                     {tag.text}

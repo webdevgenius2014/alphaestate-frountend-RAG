@@ -16,6 +16,7 @@ import {
     SortIcon,
     SecurityEyeIcon,
     type InvestmentProperty,
+    type InvestmentSignal,
 } from "@/app/(user dashboard)/constants";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import appService from "@/app/services/appService";
@@ -87,6 +88,24 @@ function toInvestmentProperty(p: any): InvestmentProperty {
     };
 }
 
+const SIGNAL_TYPE_MAP: Record<string, InvestmentSignal> = {
+    investment_signal: INVESTMENT_SIGNALS[0],
+    market_trend: INVESTMENT_SIGNALS[1],
+    risk_alert: INVESTMENT_SIGNALS[2],
+};
+
+function toMarketInsight(item: any): InvestmentSignal {
+    const meta = SIGNAL_TYPE_MAP[item.type] ?? INVESTMENT_SIGNALS[0];
+    return {
+        badge: meta.badge,
+        badgeColor: meta.badgeColor,
+        icon: meta.icon,
+        title: item.title ?? meta.title,
+        subtitle: item.subtitle ?? undefined,
+        action: item.action ?? meta.action,
+    };
+}
+
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
         <div className={`bg-(--db-sidebar-bg) rounded-md p-5 ${className}`}>
@@ -109,6 +128,7 @@ export default function DashboardPage() {
     const [rentalYieldPeriod, setRentalYieldPeriod] = useState<"last_year" | "last_6months" | "last_2_years" | "all_time">("last_year");
     const [districtCapRate, setDistrictCapRate] = useState<any>(null);
     const [topProperties, setTopProperties] = useState<InvestmentProperty[]>(TOP_PROPERTIES);
+    const [investmentSignals, setInvestmentSignals] = useState<InvestmentSignal[]>(INVESTMENT_SIGNALS);
     const [marketOverview, setMarketOverview] = useState<any>(null);
     const [exporting, setExporting] = useState(false);
 
@@ -138,7 +158,7 @@ export default function DashboardPage() {
                     roi: p.roi,
                     status: p.status,
                 })),
-                investmentSignals: INVESTMENT_SIGNALS.map((s) => ({ badge: s.badge, title: s.title })),
+                investmentSignals: investmentSignals.map((s) => ({ badge: s.badge, title: s.title })),
             });
 
             const url = URL.createObjectURL(blob);
@@ -199,18 +219,29 @@ export default function DashboardPage() {
         });
     }, []);
 
+    useEffect(() => {
+        appService.getMarketInsights().then((res) => {
+            const items = res?.data?.data ?? [];
+            if (Array.isArray(items) && items.length) {
+                setInvestmentSignals(items.map(toMarketInsight));
+            }
+        });
+    }, []);
+
+    const dashboardCards = marketOverview?.dashboardCards;
+
     const dashboardStats = DASHBOARD_STATS.map((s) => {
-        if (s.label === "Verified Listings" && marketOverview?.activePropertiesCount != null) {
-            return { ...s, value: Number(marketOverview.activePropertiesCount).toLocaleString() };
+        if (s.label === "Verified Listings") {
+            return { ...s, value: dashboardCards?.verifiedListings?.value != null ? Number(dashboardCards.verifiedListings.value).toLocaleString() : "00" };
         }
-        if (s.label === "AI Market Intelligence" && marketOverview?.totalProperties != null) {
-            return { ...s, value: Number(marketOverview.totalProperties).toLocaleString() };
+        if (s.label === "AI Market Intelligence") {
+            return { ...s, value: dashboardCards?.aiMarketIntelligence?.value != null ? Number(dashboardCards.aiMarketIntelligence.value).toLocaleString() : "00" };
         }
-        if (s.label === "Investment Score" && marketOverview?.bullishDistrictsPct != null) {
-            return { ...s, value: `${Number(marketOverview.bullishDistrictsPct).toFixed(0)}%` };
+        if (s.label === "Investment Score") {
+            return { ...s, value: dashboardCards?.investmentScore?.value != null ? `${Number(dashboardCards.investmentScore.value).toFixed(0)}%` : "00" };
         }
-        if (s.label === "Revenue Analytics" && marketOverview?.totalTransactionVolume != null) {
-            return { ...s, value: formatDashboardVolume(Number(marketOverview.totalTransactionVolume)) };
+        if (s.label === "Revenue Analytics") {
+            return { ...s, value: dashboardCards?.revenueAnalytics?.value != null ? formatDashboardVolume(Number(dashboardCards.revenueAnalytics.value)) : "00" };
         }
         return s;
     });
@@ -267,7 +298,11 @@ export default function DashboardPage() {
                                 <p className="text-[13px] text-white mt-2.75 md:max-w-48">
                                     Real-time market intelligence powered by advanced AI analysis.
                                 </p>
-                                <Button variant="primary" className="w-auto! p-[8px_24px]! rounded-md! text-sm! font-bold! mt-6 leading-6 tracking-wide">
+                                <Button
+                                    variant="primary"
+                                    className="w-auto! p-[8px_24px]! rounded-md! text-sm! font-bold! mt-6 leading-6 tracking-wide"
+                                    onClick={() => router.push("/ai-chat")}
+                                >
                                     LAUNCH AI ANALYST
                                 </Button>
                             </div>
@@ -409,12 +444,15 @@ export default function DashboardPage() {
                 </Card>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4.75">
-                    {INVESTMENT_SIGNALS.map((s) => (
-                        <Card key={s.badge} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col">
+                    {investmentSignals.map((s, i) => (
+                        <Card key={i} className="bg-(--db-sidebar-bg) rounded-md p-5 flex flex-col">
                             <div className="w-12.5 h-12.5 rounded-md bg-[#D28A441F] flex items-center justify-center mb-7.5">{s.icon}</div>
                             <span className={`text-sm font-normal text-(--db-text-primary)`}>{s.badge}</span>
-                            <p className="text-sm md:text-lg font-medium text-(--db-text-primary) leading-snug mb-3 mt-2.25">{s.title}</p>
-                            <button className="group relative overflow-hidden h-6 text-sm max-w-fit font-semibold">
+                            <p className="text-sm md:text-lg font-medium text-(--db-text-primary) leading-snug mt-2.25">{s.title}</p>
+                            {s.subtitle && (
+                                <p className="text-xs text-(--db-text-primary) opacity-70 mb-3">{s.subtitle}</p>
+                            )}
+                            <button className="group relative overflow-hidden h-6 text-sm max-w-fit font-semibold mt-auto">
                                 <div className="transition-transform duration-200 will-change-transform ease-[cubic-bezier(0.34,1.15,0.64,1)] group-hover:-translate-y-6 translate-y-0">
                                     <div className="h-6 flex tems-center border-b-2 text-[#D28A44]">
                                         {s.action}
