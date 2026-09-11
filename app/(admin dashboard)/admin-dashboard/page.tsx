@@ -14,7 +14,6 @@ import {
     RECENT_ACTIVITY,
     LIVE_ACTIVITY,
     SYSTEM_SERVICES,
-    SERVICE_STATUS_STYLES,
 } from "@/app/(admin dashboard)/constants";
 import ModalButton from "@/app/components/ui/modal-button";
 import { SortIcon } from "@/app/(user dashboard)/constants";
@@ -68,6 +67,7 @@ export default function AdminDashboardPage() {
             const key = s.label === "Total Registered Users" ? "totalUsers"
                 : s.label === "Active Subscriptions" ? "activeSubscriptions"
                 : s.label === "AI Queries Processed" ? "aiQueriesProcessed"
+                : s.label === "Reports Generated" ? "reportsGenerated"
                 : null;
             const stat = key ? topStats[key] : null;
             if (!stat) return s;
@@ -87,6 +87,7 @@ export default function AdminDashboardPage() {
             if (item.label === "Active Smart Alerts") return { ...item, value: String(operationalIntelligence.activeSmartAlerts) };
             if (item.label === "Deal Analyses Completed") return { ...item, value: String(operationalIntelligence.dealAnalysesCompleted) };
             if (item.label === "Districts Tracked") return { ...item, value: String(operationalIntelligence.districtsTracked) };
+            if (item.label === "System Health") return { ...item, value: `${operationalIntelligence.systemHealth?.healthPercent ?? 0}%` };
             return item;
           })
         : OPERATIONAL_ITEMS;
@@ -99,19 +100,36 @@ export default function AdminDashboardPage() {
           }))
         : undefined;
 
-    const aiMetrics = AI_METRICS.map((m) =>
-        m.label === "AI Requests Today" && dashboard?.aiIntelligence?.requestsToday != null
-            ? { ...m, value: String(dashboard.aiIntelligence.requestsToday) }
-            : m
-    );
+    const aiIntelligence = dashboard?.aiIntelligence;
+    const aiMetrics = aiIntelligence
+        ? AI_METRICS.map((m) => {
+            if (m.label === "AI Requests Today") return { ...m, value: String(aiIntelligence.requestsToday) };
+            if (m.label === "Avg Response Time") return { ...m, value: `${aiIntelligence.avgResponseTimeSec} sec` };
+            if (m.label === "Success Rate") return { ...m, value: `${aiIntelligence.successRate}%` };
+            // Could be used further
+            // if (m.label === "AI Confidence Score") return { ...m, value: `${aiIntelligence.aiConfidenceScore}%` };
+            return m;
+          })
+        : AI_METRICS;
 
     const recentActivity = dashboard?.recentActivity?.length ? dashboard.recentActivity : RECENT_ACTIVITY;
+
+    const systemHealth = operationalIntelligence?.systemHealth;
+    const systemServiceItems = systemHealth
+        ? [
+            { name: "Database", sub: "Platform data store", healthy: !!systemHealth.services?.database },
+            { name: "Storage", sub: "File & media storage", healthy: !!systemHealth.services?.storage },
+            { name: "RAG Engine", sub: "AI query & retrieval engine", healthy: !!systemHealth.services?.ragEngine },
+          ]
+        : SYSTEM_SERVICES.map((svc) => ({ name: svc.name, sub: svc.sub, healthy: svc.type !== "error" }));
 
     const liveActivity = dashboard?.todaysActivity
         ? LIVE_ACTIVITY.map((item) => {
             if (item.label === "New Users") return { ...item, value: String(dashboard.todaysActivity.newUsers ?? item.value) };
+            if (item.label === "Reports Generated") return { ...item, value: String(dashboard.todaysActivity.reportsGenerated ?? item.value) };
             if (item.label === "AI Queries") return { ...item, value: String(dashboard.todaysActivity.aiQueries ?? item.value) };
             if (item.label === "Alerts Triggered") return { ...item, value: String(dashboard.todaysActivity.alertsTriggered ?? item.value) };
+           
             return item;
           })
         : LIVE_ACTIVITY;
@@ -135,7 +153,7 @@ export default function AdminDashboardPage() {
                     time: formatDate(row.createdAt),
                 })),
                 liveActivity: liveActivity.map((i: any) => ({ label: i.label, value: i.value })),
-                systemServices: SYSTEM_SERVICES.map((svc) => ({ name: svc.name, status: svc.status, sub: svc.sub })),
+                systemServices: systemServiceItems.map((svc) => ({ name: svc.name, status: svc.healthy ? "Operational" : "Down", sub: svc.sub })),
             });
 
             const url = URL.createObjectURL(blob);
@@ -270,7 +288,7 @@ export default function AdminDashboardPage() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {aiMetrics.map((m) => (
-                                <div key={m.label}>
+                                <div key={m.label} className={m.label === "Success Rate" ? "md:col-span-2" : undefined}>
                                     <div className="flex flex-col bg-(--db-main-bg) gap-5 justify-between p-5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-sm bg-[#D28A441F] flex items-center justify-center shrink-0">
@@ -348,26 +366,47 @@ export default function AdminDashboardPage() {
                     </Card>
                 </Card>
 
+                {/* Could be used further */}
                 {/* ── System Monitoring ── */}
-                <Card className="rounded-none!">
-                    <div className="mb-5">
-                        <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">System Monitoring</h2>
-                        <p className="text-[13px] text-(--db-text-primary)">Monitor platform services, integrations, and system health.</p>
+
+                {/* <Card className="rounded-none!">
+                    <div className="mb-5 flex items-start justify-between flex-wrap gap-3">
+                        <div>
+                            <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">System Monitoring</h2>
+                            <p className="text-[13px] text-(--db-text-primary)">Monitor platform services, integrations, and system health.</p>
+                        </div>
+                        {systemHealth && (
+                            <span
+                                className="text-xs font-semibold px-2.5 py-1.5 rounded-sm shrink-0"
+                                style={{
+                                    backgroundColor: systemHealth.status === "healthy" ? "#5E9F621C" : "#CF2D481C",
+                                    color: systemHealth.status === "healthy" ? "#5E9F62" : "#CF2D48",
+                                }}
+                            >
+                                {systemHealth.healthPercent}% {systemHealth.status === "healthy" ? "Healthy" : "Degraded"}
+                            </span>
+                        )}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {SYSTEM_SERVICES.map((svc) => (
+                        {systemServiceItems.map((svc) => (
                             <div key={svc.name} className="flex bg-(--db-main-bg) p-5 rounded-sm flex-col gap-3">
                                 <p className="text-[15px] font-medium text-(--db-text-primary)">{svc.name}</p>
 
-                                <span className={`flex w-full items-center gap-1.5 px-3.75 py-4.5 rounded-sm text-[15px] font-semibold ${SERVICE_STATUS_STYLES[svc.type]}`}>
+                                <span
+                                    className="flex w-full items-center gap-1.5 px-3.75 py-4.5 rounded-sm text-[15px] font-semibold"
+                                    style={{
+                                        backgroundColor: svc.healthy ? "#5E9F621C" : "#CF2D481C",
+                                        color: svc.healthy ? "#5E9F62" : "#CF2D48",
+                                    }}
+                                >
                                     <span className="w-3.25 h-3.25 rounded-full block bg-current" />
-                                    {svc.status}
+                                    {svc.healthy ? "Operational" : "Down"}
                                 </span>
                                 <p className="text-[12px] text-(--db-text-primary) mt-0.5">{svc.sub}</p>
                             </div>
                         ))}
                     </div>
-                </Card>
+                </Card> */}
 
             </div>
 
