@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import {
-    AI_CHAT_CONV_GROUPS,
     AI_SEED_MESSAGES,
     AIChatPlusIcon,
     AIChatSendIcon,
@@ -11,9 +12,11 @@ import {
     SparkelIcon,
     AIChatAudioIcon,
     AIChatLinkIcon,
+    ReportTrashIcon,
 } from "@/app/(user dashboard)/constants";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
 import Button from "@/app/components/ui/button";
+import ModalButton from "@/app/components/ui/modal-button";
 import appService from "@/app/services/appService";
 
 
@@ -49,8 +52,16 @@ function normalizeHistoryMessage(raw: any): AIChatMessage {
         id: raw?.messageId ?? raw?.id ?? `${role}-${raw?.createdAt ?? Math.random().toString(36).slice(2)}`,
         role,
         content: String(content),
+        createdAt: raw?.createdAt,
         suggestions: Array.isArray(raw?.suggestions) ? raw.suggestions : undefined,
     };
+}
+
+function formatMessageTime(createdAt?: string): string {
+    if (!createdAt) return "";
+    const date = new Date(createdAt);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function UserBubble({ msg }: { msg: AIChatMessage }) {
@@ -65,7 +76,7 @@ function UserBubble({ msg }: { msg: AIChatMessage }) {
             <div className="max-w-[85%] xl:max-w-92 bg-(--db-main-bg) border border-(--db-border) rounded-md px-4 py-3">
                 <p className="text-sm text-(--db-text-primary) leading-relaxed">{msg.content}</p>
             </div>
-            <span className="text-(--db-text-primary) text-[9px]">12.00 PM</span>
+            <span className="text-(--db-text-primary) text-[9px]">{formatMessageTime(msg.createdAt)}</span>
         </div>
     );
 }
@@ -223,30 +234,32 @@ function AIBubble({ msg, activeTab, roiForm, setRoiForm, onSuggestionClick }: {
                     )}
                 </div>
             </div>
-            <span className="text-(--db-text-primary) text-[9px]">12.00 PM</span>
+            <span className="text-(--db-text-primary) text-[9px]">{formatMessageTime(msg.createdAt)}</span>
         </div>
     );
 }
 
 
 function ConvSidebar({
-    activeConv,
-    setActiveConv,
-    setActiveTab,
     onClose,
     conversations,
     activeConversationId,
     onSelectConversation,
     onNewConversation,
+    onDeleteConversation,
+    hasMoreConversations,
+    onLoadMoreConversations,
+    loadingMoreConversations,
 }: {
-    activeConv: string;
-    setActiveConv: (v: string) => void;
-    setActiveTab: (v: "chat" | "roi") => void;
     onClose?: () => void;
     conversations: ConversationSummary[];
     activeConversationId?: string;
     onSelectConversation: (id: string) => void;
     onNewConversation: () => void;
+    onDeleteConversation: (conv: ConversationSummary) => void;
+    hasMoreConversations?: boolean;
+    onLoadMoreConversations?: () => void;
+    loadingMoreConversations?: boolean;
 }) {
     return (
         <>
@@ -291,50 +304,114 @@ function ConvSidebar({
                         <p className="text-sm font-medium text-(--db-text-primary) uppercase mb-1.5">Conversations</p>
                         <div className="flex flex-col gap-1.75">
                             {conversations.map((conv) => (
-                                <button
-                                    key={conv.id}
-                                    onClick={() => {
-                                        onSelectConversation(conv.id);
-                                        onClose?.();
-                                    }}
-                                    className={`flex items-center gap-2 text-[12px] font-normal text-left w-full transition-colors ${
-                                        activeConversationId === conv.id
-                                            ? "text-[#D28A44]"
-                                            : "text-(--db-text-primary) hover:text-[#D28A44]"
-                                    }`}
-                                >
-                                    <span className="truncate">{conv.title}</span>
-                                </button>
+                                <div key={conv.id} className="group flex items-center gap-1">
+                                    <button
+                                        onClick={() => {
+                                            onSelectConversation(conv.id);
+                                            onClose?.();
+                                        }}
+                                        className={`flex items-center gap-2 text-[12px] font-normal text-left flex-1 min-w-0 transition-colors ${
+                                            activeConversationId === conv.id
+                                                ? "text-[#D28A44]"
+                                                : "text-(--db-text-primary) hover:text-[#D28A44]"
+                                        }`}
+                                    >
+                                        <span className="truncate">{conv.title}</span>
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDeleteConversation(conv);
+                                        }}
+                                        aria-label="Delete conversation"
+                                        className="shrink-0 w-5 h-5 flex items-center justify-center text-(--db-text-primary) opacity-0 group-hover:opacity-100 hover:text-red-500 transition-colors"
+                                    >
+                                        <ReportTrashIcon />
+                                    </button>
+                                </div>
                             ))}
                         </div>
+                        {hasMoreConversations && (
+                            <button
+                                onClick={onLoadMoreConversations}
+                                disabled={loadingMoreConversations}
+                                className="mt-2.5 w-full text-[11px] font-medium text-[#D28A44] hover:text-[#BF7A38] disabled:opacity-50 transition-colors"
+                            >
+                                {loadingMoreConversations ? "Loading…" : "Load more"}
+                            </button>
+                        )}
                     </div>
                 )}
-                {AI_CHAT_CONV_GROUPS.map((group) => (
-                    <div key={group.label}>
-                        <p className="text-sm font-medium text-(--db-text-primary) uppercase mb-1.5">{group.label}</p>
-                        <div className="flex flex-col gap-1.75">
-                            {group.items.map((item) => (
-                                <button
-                                    key={item}
-                                    onClick={() => {
-                                        setActiveConv(item);
-                                        setActiveTab(item === "ROI Calculator" ? "roi" : "chat");
-                                        onClose?.();
-                                    }}
-                                    className={`flex items-center gap-2 text-[12px] font-normal text-left w-full transition-colors ${
-                                        activeConv === item
-                                            ? "text-[#D28A44]"
-                                            : "text-(--db-text-primary) hover:text-[#D28A44]"
-                                    }`}
-                                >
-                                    <span className="truncate">{item}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                ))}
             </div>
         </>
+    );
+}
+
+function useModalEsc(onClose: () => void) {
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+        document.addEventListener("keydown", onKey);
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            document.body.style.overflow = "";
+        };
+    }, [onClose]);
+}
+
+function DeleteConversationModal({
+    conversation,
+    onClose,
+    onConfirm,
+}: {
+    conversation: ConversationSummary;
+    onClose: () => void;
+    onConfirm: () => Promise<boolean>;
+}) {
+    useModalEsc(onClose);
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        const ok = await onConfirm();
+        setDeleting(false);
+        if (ok) onClose();
+    };
+
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+            <div
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 px-7 shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button onClick={onClose} className="absolute top-4 right-4 z-20" aria-label="Close">
+                    <img src="/close.svg" alt="" />
+                </button>
+
+                <div className="pt-8 pb-8 md:py-15.5 text-center max-w-97.5 mx-auto">
+                    <div className="w-21.75 h-21.75 rounded-[7px] bg-[#D28A441F] flex items-center justify-center mx-auto mb-4">
+                        <span className="text-[#D28A44] scale-[3]">
+                            <ReportTrashIcon />
+                        </span>
+                    </div>
+                    <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-3">Delete Conversation?</h2>
+                    <p className="text-sm text-(--db-text-primary) font-normal mb-2">
+                        "{conversation.title}" will be permanently deleted along with its full message history. This cannot be undone.
+                    </p>
+                    <div className="px-7 mt-7 flex gap-3">
+                        <button
+                            onClick={handleDelete}
+                            disabled={deleting}
+                            className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3.5 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors disabled:opacity-60"
+                        >
+                            {deleting ? "DELETING..." : "DELETE"}
+                        </button>
+                        <ModalButton onClick={onClose} className="py-3!" disabled={deleting}>CANCEL</ModalButton>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
     );
 }
 
@@ -345,7 +422,6 @@ export default function AIChatPage() {
     const router = useRouter();
     const [messages, setMessages] = useState<AIChatMessage[]>(AI_SEED_MESSAGES);
     const [input, setInput] = useState("");
-    const [activeConv, setActiveConv] = useState("Market Analysis");
     const [chatPlaceholder, setChatPlaceholder] = useState("");
     const [activeTab, setActiveTab] = useState<"chat" | "roi">("chat");
     const [roiForm, setRoiForm] = useState<RoiForm>({ purchasePrice: "", rentalIncome: "", district: "", propertyType: "Apartment", vacancyRate: "" });
@@ -353,6 +429,10 @@ export default function AIChatPage() {
     const [conversationId, setConversationId] = useState<string | undefined>(undefined);
     const [isSending, setIsSending] = useState(false);
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+    const [conversationsPage, setConversationsPage] = useState(1);
+    const [conversationsTotal, setConversationsTotal] = useState(0);
+    const [loadingMoreConversations, setLoadingMoreConversations] = useState(false);
+    const [pendingDeleteConversation, setPendingDeleteConversation] = useState<ConversationSummary | undefined>(undefined);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [contextFilters, setContextFilters] = useState<ChatContextFilters | undefined>(undefined);
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -379,18 +459,35 @@ export default function AIChatPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const loadConversations = () => {
-        appService.getAiConversations().then((res) => {
-            const items = res?.data?.data ?? [];
-            if (!Array.isArray(items)) return;
+    const CONVERSATIONS_PAGE_SIZE = 20;
+
+    const loadConversations = (page = 1) => {
+        const isLoadMore = page > 1;
+        if (isLoadMore) setLoadingMoreConversations(true);
+        return appService.getAiConversations({ page, limit: CONVERSATIONS_PAGE_SIZE }).then((res) => {
+            const d = res?.data?.data;
+            const items = Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : [];
+            if (!Array.isArray(items)) {
+                if (isLoadMore) setLoadingMoreConversations(false);
+                return;
+            }
             const normalized = items.map(normalizeConversationSummary).filter((c) => c.id);
-            normalized.sort((a, b) => (b.updatedAt ? Date.parse(b.updatedAt) : 0) - (a.updatedAt ? Date.parse(a.updatedAt) : 0));
-            setConversations(normalized);
+            setConversations((prev) => {
+                const combined = isLoadMore ? [...prev, ...normalized] : normalized;
+                combined.sort((a, b) => (b.updatedAt ? Date.parse(b.updatedAt) : 0) - (a.updatedAt ? Date.parse(a.updatedAt) : 0));
+                return combined;
+            });
+            setConversationsPage(page);
+            if (typeof d?.total === "number") setConversationsTotal(d.total);
+            if (isLoadMore) setLoadingMoreConversations(false);
         });
     };
 
+    const loadMoreConversations = () => loadConversations(conversationsPage + 1);
+
     useEffect(() => {
-        loadConversations();
+        loadConversations(1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const openConversation = async (id: string) => {
@@ -411,6 +508,22 @@ export default function AIChatPage() {
         setMessages([]);
         setActiveTab("chat");
         setContextFilters(undefined);
+    };
+
+    const confirmDeleteConversation = async (): Promise<boolean> => {
+        const conv = pendingDeleteConversation;
+        if (!conv) return false;
+        const res = await appService.deleteAiConversation(conv.id);
+        if (res?.status !== 200 && res?.status !== 204) {
+            toast.error(res?.data?.message ?? "Failed to delete conversation. Please try again.");
+            return false;
+        }
+        setConversations((prev) => prev.filter((c) => c.id !== conv.id));
+        setConversationsTotal((prev) => Math.max(0, prev - 1));
+        if (conv.id === conversationId) {
+            startNewConversation();
+        }
+        return true;
     };
 
     useEffect(() => {
@@ -449,7 +562,7 @@ export default function AIChatPage() {
         const text = (overrideText ?? input).trim();
         if (!text || isSending || loadingHistory) return;
 
-        setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user" as const, content: text }]);
+        setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user" as const, content: text, createdAt: new Date().toISOString() }]);
         setInput("");
         setIsSending(true);
 
@@ -462,12 +575,13 @@ export default function AIChatPage() {
                 id: data?.messageId ?? `a-${Date.now()}`,
                 role: "assistant" as const,
                 content: data?.answer ?? "Sorry, something went wrong while reaching the AI assistant. Please try again.",
+                createdAt: data?.createdAt ?? new Date().toISOString(),
                 suggestions: data?.suggestions,
             },
         ]);
         if (data?.conversationId && data.conversationId !== conversationId) {
             setConversationId(data.conversationId);
-            loadConversations();
+            loadConversations(1);
         }
         setIsSending(false);
     };
@@ -482,13 +596,14 @@ export default function AIChatPage() {
             {/* Desktop sidebar — visible at xl (1280px+) */}
             <div className="hidden xl:flex w-full max-w-66 shrink-0 bg-(--db-main-bg) border border-[#D28A444D] rounded-lg flex-col">
                 <ConvSidebar
-                    activeConv={activeConv}
-                    setActiveConv={setActiveConv}
-                    setActiveTab={setActiveTab}
                     conversations={conversations}
                     activeConversationId={conversationId}
                     onSelectConversation={openConversation}
                     onNewConversation={startNewConversation}
+                    onDeleteConversation={setPendingDeleteConversation}
+                    hasMoreConversations={conversations.length < conversationsTotal}
+                    onLoadMoreConversations={loadMoreConversations}
+                    loadingMoreConversations={loadingMoreConversations}
                 />
             </div>
 
@@ -515,14 +630,15 @@ export default function AIChatPage() {
                     }}
                 >
                     <ConvSidebar
-                        activeConv={activeConv}
-                        setActiveConv={setActiveConv}
-                        setActiveTab={setActiveTab}
                         onClose={() => setSidebarOpen(false)}
                         conversations={conversations}
                         activeConversationId={conversationId}
                         onSelectConversation={openConversation}
                         onNewConversation={startNewConversation}
+                        onDeleteConversation={setPendingDeleteConversation}
+                        hasMoreConversations={conversations.length < conversationsTotal}
+                        onLoadMoreConversations={loadMoreConversations}
+                        loadingMoreConversations={loadingMoreConversations}
                     />
                 </aside>
             </div>
@@ -609,12 +725,13 @@ export default function AIChatPage() {
                                 className="flex-1 resize-none bg-transparent text-sm text-(--db-text-primary) placeholder:text-(--db-text-muted) outline-none leading-relaxed disabled:opacity-60"
                             />
                             <div className="flex gap-2 items-center">
-                                <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
+                                {/* Could be used further */}
+                                {/* <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
                                     <AIChatLinkIcon />
                                 </button>
                                 <button className="w-7.25 h-7.25 rounded-sm bg-(--db-chat-icon-btn-bg) text-(--db-text-primary) flex items-center justify-center shrink-0 disabled:opacity-40 transition-colors">
                                     <AIChatAudioIcon />
-                                </button>
+                                </button> */}
                                 <button
                                     onClick={() => send()}
                                     disabled={isSending || loadingHistory || !input.trim()}
@@ -645,6 +762,14 @@ export default function AIChatPage() {
                 </div>
 
             </div>
+
+            {pendingDeleteConversation && (
+                <DeleteConversationModal
+                    conversation={pendingDeleteConversation}
+                    onClose={() => setPendingDeleteConversation(undefined)}
+                    onConfirm={confirmDeleteConversation}
+                />
+            )}
         </div>
     );
 }

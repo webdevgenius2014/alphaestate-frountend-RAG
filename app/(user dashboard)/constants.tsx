@@ -1056,52 +1056,53 @@ export type AIChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  createdAt?: string;
   insights?: AIChatInsight;
   recommendations?: string[];
   suggestions?: string[];
 };
 
 export type AIChatConvGroup = { label: string; items: string[] };
-
-export const AI_CHAT_CONV_GROUPS: AIChatConvGroup[] = [
-  {
-    label: "Districts",
-    items: [
-      "Yas Island Analysis",
-      "Al Reem Insights",
-      "Saadiyat Trends",
-      "Corniche Market",
-      "Best Districts Overall",
-    ],
-  },
-  {
-    label: "Investment Tools",
-    items: [
-      "ROI Calculator",
-      "Cap Rate Finder",
-      "Rental Yield Analysis",
-      "Off-Plan vs Ready Analysis",
-    ],
-  },
-  {
-    label: "Market Trends",
-    items: [
-      "Price Growth",
-      "Smart Alerts",
-      "Off-plan Opportunities",
-      "Compare Districts",
-    ],
-  },
-  {
-    label: "Reports",
-    items: [
-      "Generate PDF",
-      "Investor Summary",
-      "Golden Visa Rules",
-      "Market Snapshot",
-    ],
-  },
-];
+// could be used further
+// export const AI_CHAT_CONV_GROUPS: AIChatConvGroup[] = [
+//   {
+//     label: "Districts",
+//     items: [
+//       "Yas Island Analysis",
+//       "Al Reem Insights",
+//       "Saadiyat Trends",
+//       "Corniche Market",
+//       "Best Districts Overall",
+//     ],
+//   },
+//   {
+//     label: "Investment Tools",
+//     items: [
+//       "ROI Calculator",
+//       "Cap Rate Finder",
+//       "Rental Yield Analysis",
+//       "Off-Plan vs Ready Analysis",
+//     ],
+//   },
+//   {
+//     label: "Market Trends",
+//     items: [
+//       "Price Growth",
+//       "Smart Alerts",
+//       "Off-plan Opportunities",
+//       "Compare Districts",
+//     ],
+//   },
+//   {
+//     label: "Reports",
+//     items: [
+//       "Generate PDF",
+//       "Investor Summary",
+//       "Golden Visa Rules",
+//       "Market Snapshot",
+//     ],
+//   },
+// ];
 
 export const AI_SEED_MESSAGES: AIChatMessage[] = [
   {
