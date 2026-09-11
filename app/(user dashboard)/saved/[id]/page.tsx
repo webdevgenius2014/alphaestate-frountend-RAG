@@ -15,6 +15,8 @@ import {
     SortIcon,
 } from "@/app/(user dashboard)/constants";
 import appService from "@/app/services/appService";
+import { toast } from "react-hot-toast";
+import { DealAnalysisResultModal, type DealAnalysisResult } from "@/app/components/dashboard/deal-analysis-result-modal";
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
     return (
@@ -31,6 +33,13 @@ function parseBedrooms(layout?: string): number | undefined {
     return match ? Number(match[0]) : undefined;
 }
 
+function slugify(value: string) {
+    return value
+        .toLowerCase()
+        .replace(/\s*\/\s*/g, "-")
+        .replace(/\s+/g, "-");
+}
+
 const overviewLabelCls = "px-5 py-3.5 font-medium text-(--db-text-primary) whitespace-nowrap";
 const overviewValueCls = "px-5 py-3.5 font-medium text-(--db-text-primary)";
 
@@ -42,6 +51,8 @@ export default function PropertyDetailPage() {
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [similarProps, setSimilarProps] = useState<SavedProperty[]>([]);
+    const [analyzingDeal, setAnalyzingDeal] = useState(false);
+    const [dealResult, setDealResult] = useState<DealAnalysisResult | null>(null);
 
     useEffect(() => {
         appService.getPropertyById(id).then((res) => {
@@ -282,6 +293,37 @@ export default function PropertyDetailPage() {
         router.push(`/ai-chat?${params.toString()}`);
     };
 
+    const handleAnalyzeDeal = async () => {
+        if (analyzingDeal) return;
+        setAnalyzingDeal(true);
+        try {
+            const areaSqm = parseFloat(property.landAreaSqm ?? "0");
+            const rentalYieldFrac = parseFloat(property.rentalYield ?? "0");
+            const payload: Record<string, any> = {
+                propertyType: slugify(saved.type ?? ""),
+                district: saved.district,
+                areaSqm,
+                askingPriceAed: property.displayPrice,
+                saleType: slugify(detail.saleType ?? "ready"),
+            };
+            if (rentalYieldFrac > 0 && property.displayPrice) {
+                payload.expectedAnnualRentAed = Math.round(rentalYieldFrac * property.displayPrice);
+            }
+
+            const res = await appService.analyzeDeal(payload as any);
+            if ((res?.status === 200 || res?.status === 201) && res?.data?.data) {
+                setDealResult(res.data.data);
+                toast.success("Deal analyzed successfully.");
+            } else {
+                toast.error(res?.data?.message || res?.data?.error || "Failed to analyze deal.");
+            }
+        } catch (err) {
+            toast.error("Failed to analyze deal.");
+        } finally {
+            setAnalyzingDeal(false);
+        }
+    };
+
     return (
         <div className="flex flex-col min-h-full space-y-6">
 
@@ -370,7 +412,9 @@ export default function PropertyDetailPage() {
                     </span>
 
                     <div className="flex flex-col gap-2.5 mt-auto">
-                        <ModalButton className="py-3! rounded-sm! uppercase"> Analyze Deal</ModalButton>
+                        <ModalButton className="py-3! rounded-sm! uppercase" onClick={handleAnalyzeDeal} disabled={analyzingDeal}>
+                            {analyzingDeal ? "Analyzing..." : "Analyze Deal"}
+                        </ModalButton>
                         <ModalButton className="py-3! rounded-sm! uppercase" onClick={askAi}> ASK AI A QUESTION</ModalButton>
                     </div>
                 </Card>
@@ -554,6 +598,14 @@ export default function PropertyDetailPage() {
                     ))}
                 </div>
             </Card>
+
+            {dealResult && (
+                <DealAnalysisResultModal
+                    result={dealResult}
+                    propertyName={property.projectName}
+                    onClose={() => setDealResult(null)}
+                />
+            )}
 
         </div>
     );

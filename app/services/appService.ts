@@ -153,9 +153,9 @@ class AppService {
     }
   }
 
-  async getAiConversations() {
+  async getAiConversations(params?: { page?: number; limit?: number }) {
     try {
-      return await instance.get(ApiConfig.aiConversations);
+      return await instance.get(ApiConfig.aiConversations, { params });
     } catch (error: any) {
       return error.response;
     }
@@ -165,6 +165,15 @@ class AppService {
     try {
       const url = ApiConfig.aiConversationById.replace("{conversationId}", conversationId);
       return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteAiConversation(conversationId: string) {
+    try {
+      const url = ApiConfig.aiConversationById.replace("{conversationId}", conversationId);
+      return await instance.delete(url);
     } catch (error: any) {
       return error.response;
     }
