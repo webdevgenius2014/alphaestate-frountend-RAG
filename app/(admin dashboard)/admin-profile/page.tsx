@@ -55,6 +55,11 @@ export default function AdminProfilePage() {
         systemHealthAlerts: false,
         activitySummary: false,
     });
+    const [prefsLoading, setPrefsLoading] = useState<Record<keyof typeof prefs, boolean>>({
+        emailNotifications: false,
+        systemHealthAlerts: false,
+        activitySummary: false,
+    });
 
     const loadProfile = () => {
         appService.getAdminProfile().then((res) => {
@@ -83,6 +88,15 @@ export default function AdminProfilePage() {
         loadProfile();
     }, []);
 
+    useEffect(() => {
+        appService.getNotificationPreferences().then((res) => {
+            const d = res?.data?.data ?? res?.data;
+            if (d?.systemHealthAlertsEnabled != null) {
+                setPrefs((p) => ({ ...p, systemHealthAlerts: !!d.systemHealthAlertsEnabled }));
+            }
+        });
+    }, []);
+
     const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setForm((p) => ({ ...p, [key]: e.target.value }));
 
@@ -101,7 +115,28 @@ export default function AdminProfilePage() {
         setForm((p) => ({ ...p, phone: value }));
     };
 
-    const togglePref = (key: keyof typeof prefs) => setPrefs((p) => ({ ...p, [key]: !p[key] }));
+    const togglePref = async (key: keyof typeof prefs) => {
+        if (prefsLoading[key]) return;
+
+        const prevPrefs = prefs;
+        const nextPrefs = { ...prefs, [key]: !prefs[key] };
+        setPrefs(nextPrefs);
+
+        if (key !== "systemHealthAlerts") return;
+
+        setPrefsLoading((p) => ({ ...p, [key]: true }));
+        const res = await appService.updateNotificationPreferences({
+            systemHealthAlertsEnabled: nextPrefs.systemHealthAlerts,
+        });
+        setPrefsLoading((p) => ({ ...p, [key]: false }));
+
+        if (res?.data?.success || res?.status === 200 || res?.status === 201) {
+            toast.success("Notification preference updated.");
+        } else {
+            setPrefs(prevPrefs);
+            toast.error(res?.data?.message || "Failed to update notification preference.");
+        }
+    };
 
     const handleSaveProfile = async () => {
         setSaving(true);

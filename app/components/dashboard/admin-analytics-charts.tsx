@@ -370,7 +370,20 @@ export function AdminSubscriberGrowthChart({ data: apiData }: { data?: { months:
 
 // ── Appreciation Potential Donut ──────────────────────────────────────────────
 
-export function AdminRevenueBreakdownChart({ data: apiData }: { data?: { avgSqft: number; districts: { district: string; yoyGrowth: number; percentage: number }[] } }) {
+export function AdminRevenueBreakdownChart({ data: apiData }: {
+    data?: {
+        summary?: { avgPriceSqm?: number; highCount?: number; mediumCount?: number; lowCount?: number } | null;
+        districts?: {
+            name: string;
+            avgRoi: number;
+            totalTransactions: number;
+            appreciationPotential?: string;
+            marketSignal?: string;
+            trendDirection?: string;
+            avgPriceSqm?: number;
+        }[];
+    }
+}) {
     const [hidden, setHidden] = useState<Set<number>>(new Set());
 
     const toggle = (idx: number) =>
@@ -380,23 +393,23 @@ export function AdminRevenueBreakdownChart({ data: apiData }: { data?: { avgSqft
             return next;
         });
 
-    const baseRows = apiData
+    const baseRows = apiData?.districts?.length
         ? apiData.districts.map((d, i) => {
-            const match = ADMIN_REVENUE_BREAKDOWN.find(r => r.name.toLowerCase() === d.district.toLowerCase());
+            const match = ADMIN_REVENUE_BREAKDOWN.find(r => r.name.toLowerCase() === d.name.toLowerCase());
             return {
-                name: d.district,
-                value: d.percentage,
-                displayValue: d.yoyGrowth,
+                name: d.name,
+                value: d.totalTransactions,
+                displayValue: d.avgRoi,
                 color: match?.color ?? ADMIN_REVENUE_BREAKDOWN[i]?.color ?? "#D28A44",
             };
           })
         : ADMIN_REVENUE_BREAKDOWN.map(r => ({ ...r, displayValue: r.value }));
 
-    const centerPct = apiData
-        ? (apiData.districts.reduce((sum, d) => sum + d.yoyGrowth, 0) / apiData.districts.length).toFixed(1)
+    const centerPct = apiData?.districts?.length
+        ? (apiData.districts.reduce((sum, d) => sum + d.avgRoi, 0) / apiData.districts.length).toFixed(1)
         : "8.1";
-    const centerSqft = apiData
-        ? `${apiData.avgSqft.toLocaleString()} sqft avg`
+    const centerSqft = apiData?.summary?.avgPriceSqm != null
+        ? `${apiData.summary.avgPriceSqm.toLocaleString()} AED/sqm avg`
         : "1,342 sqft avg";
 
     const chartData = baseRows.map((d, i) => ({

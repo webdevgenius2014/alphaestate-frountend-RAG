@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Button from "@/app/components/ui/button";
 import appService from "@/app/services/appService";
 import { AnimatedNumber } from "@/app/components/dashboard/animated-number";
@@ -18,6 +19,7 @@ import {
    EditIcon,
    TrashIcon,
    type PropertyStatus,
+   type PropertyDetail,
    type PropertyViewRecord,
 } from "../constants";
 import { SelectChevron, SortIcon, SearchIcon } from "@/app/(user dashboard)/constants";
@@ -83,12 +85,20 @@ function toDisplayRow(item: any): DisplayRow {
    };
 }
 
-function toViewRecord(item: any): PropertyViewRecord {
+function toNumber(v: unknown): number | null {
+   if (v == null || v === "") return null;
+   const n = Number(v);
+   return Number.isNaN(n) ? null : n;
+}
+
+function toViewRecord(item: any): PropertyDetail {
    const saleType = item.saleType ?? item.recentTransactions?.[0]?.saleType ?? "";
+   const districtRefRaw = item.districtRef;
+
    return {
       name: item.projectName ?? item.name ?? "",
       district: item.district ?? item.districtName ?? "",
-      type: item.propertyType ?? item.type ?? "",
+      type: titleCase(item.propertyType ?? item.type ?? ""),
       price: formatPrice(item.displayPrice ?? item.askingPriceAed ?? item.price),
       status: mapStatus(item.status),
       developer: item.developerName ?? item.developer ?? "-",
@@ -97,9 +107,69 @@ function toViewRecord(item: any): PropertyViewRecord {
       saleType: saleType ? titleCase(saleType) : "-",
       roi: formatPercent(item.roiOverride, item.roi),
       rentalYield: formatPercent(item.rentalYieldOverride, item.rentalYield),
-      description: item.description ?? "No description provided.",
+      description: item.description || "No description provided.",
       amenities: item.features ?? item.amenities ?? [],
       images: [item.coverImageUrl, ...(item.galleryImageUrls ?? item.images ?? [])].filter(Boolean),
+      assetClass: item.assetClass ?? "-",
+      community: item.community ?? "",
+      layout: item.layout ?? "-",
+      landAreaSqm: toNumber(item.landAreaSqm),
+      bathrooms: item.bathrooms ?? 0,
+      bedrooms: item.bedrooms ?? 0,
+      askingPriceAed: toNumber(item.askingPriceAed),
+      latestTransactionPrice: toNumber(item.latestTransactionPrice),
+      transactionCount: toNumber(item.transactionCount) ?? 0,
+      capRate: toNumber(item.capRate),
+      yoyGrowth: toNumber(item.yoyGrowth),
+      aiScore: toNumber(item.aiScore),
+      isFeatured: Boolean(item.isFeatured),
+      brochurePdfUrl: item.brochurePdfUrl ?? null,
+      recentTransactions: Array.isArray(item.recentTransactions)
+         ? item.recentTransactions.map((t: any) => ({
+            id: t.id,
+            saleDate: t.saleDate ?? null,
+            areaSqm: toNumber(t.areaSqm),
+            salePriceAed: toNumber(t.salePriceAed),
+            ratePerSqm: toNumber(t.ratePerSqm),
+            saleType: t.saleType ? titleCase(t.saleType) : "-",
+            saleSequence: t.saleSequence ? titleCase(t.saleSequence) : "-",
+         }))
+         : [],
+      districtRef: districtRefRaw
+         ? {
+            name: districtRefRaw.name ?? item.districtName ?? "-",
+            status: districtRefRaw.status ?? "-",
+            avgPriceSqm: toNumber(districtRefRaw.avgPriceSqmOverride ?? districtRefRaw.avgPriceSqm),
+            avgRentalYield: toNumber(districtRefRaw.avgRentalYieldOverride ?? districtRefRaw.avgRentalYield),
+            avgRoi: toNumber(districtRefRaw.avgRoiOverride ?? districtRefRaw.avgRoi),
+            trendDirection: districtRefRaw.trendDirectionOverride ?? districtRefRaw.trendDirection ?? item.districtTrendDirection ?? "-",
+            marketSignal: districtRefRaw.marketSignalOverride ?? districtRefRaw.marketSignal ?? item.districtMarketSignal ?? "-",
+            appreciationPotential: districtRefRaw.appreciationPotential ?? "-",
+            totalTransactions: toNumber(districtRefRaw.totalTransactions) ?? 0,
+         }
+         : null,
+   };
+}
+
+function staticToViewRecord(v: PropertyViewRecord): PropertyDetail {
+   return {
+      ...v,
+      assetClass: "-",
+      community: "",
+      layout: "-",
+      landAreaSqm: null,
+      bathrooms: 0,
+      bedrooms: v.beds,
+      askingPriceAed: null,
+      latestTransactionPrice: null,
+      transactionCount: 0,
+      capRate: null,
+      yoyGrowth: null,
+      aiScore: null,
+      isFeatured: v.status === "Featured",
+      brochurePdfUrl: null,
+      recentTransactions: [],
+      districtRef: null,
    };
 }
 
@@ -122,7 +192,7 @@ export default function PropertiesManagementPage() {
    const [period, setPeriod] = useState("last_year");
 
    const [deleteTarget, setDeleteTarget] = useState<DisplayRow | null>(null);
-   const [drawerRecord, setDrawerRecord] = useState<PropertyViewRecord | null>(null);
+   const [drawerRecord, setDrawerRecord] = useState<PropertyDetail | null>(null);
    const [csvModalOpen, setCsvModalOpen] = useState(false);
 
    useEffect(() => {
@@ -175,14 +245,19 @@ export default function PropertiesManagementPage() {
          return;
       }
       const record = ALL_PROPERTY_VIEWS.find((v) => v.name === row.name);
-      if (record) setDrawerRecord(record);
+      if (record) setDrawerRecord(staticToViewRecord(record));
    };
 
    const handleConfirmDelete = () => {
       if (deleteTarget?.id) {
-         appService.deleteAdminPropertyById(deleteTarget.id).then(() => {
+         appService.deleteAdminPropertyById(deleteTarget.id).then((res) => {
             setDeleteTarget(null);
-            refresh();
+            if (res?.data?.success || res?.status === 200 || res?.status === 204) {
+               toast.success("Property deleted, status updated to draft.");
+               refresh();
+            } else {
+               toast.error(res?.data?.message || "Failed to delete property.");
+            }
          });
       } else {
          setDeleteTarget(null);

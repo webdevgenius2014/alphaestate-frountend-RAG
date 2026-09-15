@@ -73,10 +73,17 @@ export default function UsersManagementPage() {
                 setTotalPages(Math.ceil((d.total ?? 1) / (d.limit ?? 10)));
                 setApiStats(d.stats ?? null);
                 setRecentRegistrations(Array.isArray(d.recentRegistrations) ? d.recentRegistrations : []);
-                setActivitySnapshot(d.activitySnapshot ?? null);
             }
         });
     }, [activePage, refreshKey, activeSearch, planFilter, statusFilter, periodFilter]);
+
+    useEffect(() => {
+        appService.getUserActivitySnapshot().then((res) => {
+            if (res?.data?.data) {
+                setActivitySnapshot(res.data.data);
+            }
+        });
+    }, [refreshKey]);
 
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
     const [selectedUserDetail, setSelectedUserDetail] = useState<any>(null);
@@ -360,7 +367,7 @@ export default function UsersManagementPage() {
                             {UM_ACTIVITY.map((item, i) => {
                                 const activityValues = [
                                     String(activitySnapshot?.dailyActiveUsers ?? item.value),
-                                    item.value,
+                                    String(activitySnapshot?.aiQueriesToday ?? item.value),
                                 ];
                                 return (
                                     <div key={item.label} className="flex items-center justify-between gap-4 bg-(--db-main-bg) p-5">

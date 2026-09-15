@@ -359,6 +359,63 @@ class AppService {
     }
   }
 
+  // Admin Districts
+  async getAdminDistricts(page: number = 1, limit: number = 20, status?: string) {
+    try {
+      const params: Record<string, any> = { page, limit };
+      if (status) params.status = status;
+      return await instance.get(ApiConfig.adminDistricts, { params });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminDistrictById(id: string) {
+    try {
+      const url = ApiConfig.adminDistrictsById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async createAdminDistrict(payload: any) {
+    try {
+      return await instance.post(ApiConfig.adminDistricts, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAdminDistrictById(id: string, payload: any) {
+    try {
+      const url = ApiConfig.adminDistrictsById.replace("{id}", id);
+      return await instance.patch(url, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteAdminDistrictById(id: string) {
+    try {
+      const url = ApiConfig.adminDistrictsById.replace("{id}", id);
+      return await instance.delete(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async uploadAdminDistrictCoverImage(id: string, payload: FormData) {
+    try {
+      const url = ApiConfig.adminDistrictsCoverImage.replace("{id}", id);
+      return await instance.post(url, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Notifications
   async getNotifications(page: number = 1, limit: number = 20) {
     try {
@@ -590,6 +647,14 @@ class AppService {
       return await instance.post(ApiConfig.exportReport, body, {
         responseType: "blob",
       });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getMarketAppreciationPotential() {
+    try {
+      return await instance.get(ApiConfig.marketAppreciationPotential);
     } catch (error: any) {
       return error.response;
     }
@@ -1006,6 +1071,14 @@ class AppService {
     }
   }
 
+  async getPlatformConnections() {
+    try {
+      return await instance.get(ApiConfig.platformConnections);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async updateAdminNotificationSettings(payload: any) {
     try {
       return await instance.patch(ApiConfig.adminNotification, payload);
@@ -1132,6 +1205,14 @@ class AppService {
   }
 
   // Admin Analytics
+  async getUserActivitySnapshot() {
+    try {
+      return await instance.get(ApiConfig.userActivitySnapshot);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async getAnalyticsOverview(period?: string, district?: string, propertyType?: string) {
     try {
       const params: Record<string, any> = {};
@@ -1211,9 +1292,67 @@ class AppService {
     }
   }
 
+  async getAnalyticsAiIntelligence() {
+    try {
+      return await instance.get(ApiConfig.aiIntelligence);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async getAnalyticsUsage(period?: string) {
     try {
       return await instance.get(ApiConfig.usage, { params: period ? { period } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiMonitoring(limit?: number) {
+    try {
+      return await instance.get(ApiConfig.aiMonitoring, { params: limit ? { limit } : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAiIntelligenceEngine() {
+    try {
+      return await instance.get(ApiConfig.aiIntelligenceEngine);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getMarketAnalyticsData() {
+    try {
+      return await instance.get(ApiConfig.marketAnalyticsData);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminDealAnalyzerRecords() {
+    try {
+      return await instance.get(ApiConfig.dealAnalyzerRecordsAdmin);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAdminDealAnalyzerRecordById(id: string) {
+    try {
+      const url = ApiConfig.dealAnalyzerRecordsAdminById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteAdminDealAnalyzerRecordById(id: string) {
+    try {
+      const url = ApiConfig.dealAnalyzerRecordsAdminById.replace("{id}", id);
+      return await instance.delete(url);
     } catch (error: any) {
       return error.response;
     }
@@ -1228,9 +1367,11 @@ class AppService {
     }
   }
 
-  async getActiveSubscriptions(page: number = 1, limit: number = 10) {
+  async getActiveSubscriptions(page: number = 1, limit: number = 10, period?: string) {
     try {
-      return await instance.get(ApiConfig.activeSubscription, { params: { page, limit } });
+      const params: Record<string, any> = { page, limit };
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.activeSubscription, { params });
     } catch (error: any) {
       return error.response;
     }

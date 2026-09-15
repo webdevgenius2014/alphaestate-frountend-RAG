@@ -107,6 +107,7 @@ export default function SubscriptionsBillingPage() {
     const [activeSubs, setActiveSubs] = useState<any[]>([]);
     const [activeSubsPage, setActiveSubsPage] = useState(1);
     const [activeSubsTotalPages, setActiveSubsTotalPages] = useState(1);
+    const [activeSubsPeriod, setActiveSubsPeriod] = useState<string>("last_year");
     const [billingHistory, setBillingHistory] = useState<any[]>([]);
     const [billingPeriod, setBillingPeriod] = useState<string>("");
     const [billingPage, setBillingPage] = useState(1);
@@ -156,7 +157,7 @@ export default function SubscriptionsBillingPage() {
     }, []);
 
     useEffect(() => {
-        appService.getActiveSubscriptions(activeSubsPage, PAGE_LIMIT).then((res) => {
+        appService.getActiveSubscriptions(activeSubsPage, PAGE_LIMIT, activeSubsPeriod || undefined).then((res) => {
             if (res?.data?.data) {
                 const d = res.data.data;
                 setActiveSubs(Array.isArray(d) ? d : Array.isArray(d.items) ? d.items : []);
@@ -169,7 +170,7 @@ export default function SubscriptionsBillingPage() {
                 }
             }
         });
-    }, [activeSubsPage]);
+    }, [activeSubsPage, activeSubsPeriod]);
 
     useEffect(() => {
         appService.getBillingHistory(billingPeriod || undefined, billingPage, PAGE_LIMIT).then((res) => {
@@ -366,10 +367,14 @@ export default function SubscriptionsBillingPage() {
                 sub="Currently active user subscription records"
                 controls={
                     <>
-                        <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                            <option>Last Year</option>
-                            <option>6 Months</option>
-                            <option>30 Days</option>
+                        <select
+                            value={activeSubsPeriod}
+                            onChange={(e) => { setActiveSubsPeriod(e.target.value); setActiveSubsPage(1); }}
+                            className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                        >
+                            <option value="last_year">Last Year</option>
+                            <option value="last_6months">6 Months</option>
+                            <option value="last_month">30 Days</option>
                         </select>
                         <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                             <SortIcon />

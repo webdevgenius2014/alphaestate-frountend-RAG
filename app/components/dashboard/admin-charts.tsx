@@ -58,9 +58,9 @@ export function UserActivityChart({ data: apiData }: { data?: { month: string; a
                         axisLine={false} tickLine={false}
                     />
                     <YAxis
-                        domain={[0, 35000]}
-                        ticks={[0, 5000, 10000, 15000, 20000, 25000, 30000, 35000]}
-                        tickFormatter={(v) => v === 0 ? "0" : `${v / 1000}k`}
+                        domain={[0, "auto"]}
+                        allowDecimals={false}
+                        tickFormatter={(v) => v >= 1000 ? `${v / 1000}k` : `${v}`}
                         tick={{ fontSize: 11, fill: "var(--db-text-primary)" }}
                         axisLine={false} tickLine={false}
                     />
@@ -77,7 +77,8 @@ export function UserActivityChart({ data: apiData }: { data?: { month: string; a
                             stroke={s.color}
                             strokeWidth={animActive ? 2 : 0}
                             fill={`url(#${s.grad})`}
-                            dot={false}
+                            dot={animActive ? { r: 3, fill: s.color, strokeWidth: 0 } : false}
+                            activeDot={{ r: 4, fill: s.color, strokeWidth: 0 }}
                             hide={hidden.has(s.key)}
                             style={{ transition: "stroke-width 600ms ease" }}
                         />

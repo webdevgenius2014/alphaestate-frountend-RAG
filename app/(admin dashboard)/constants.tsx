@@ -948,6 +948,23 @@ export type DistrictRow = {
     trend: "Rising" | "Stable" | "Growing"; status: "active";
     detail: DrawerRecord;
 };
+
+export type DistrictDetail = {
+    name: string;
+    status: string;
+    description: string | null;
+    coverImageUrl: string | null;
+    avgPriceSqm: number | null;
+    avgRentalYield: number | null;
+    avgRoi: number | null;
+    apartmentsPct: number | null;
+    villasPct: number | null;
+    townhousesPct: number | null;
+    totalTransactions: number;
+    trendDirection: string | null;
+    marketSignal: string | null;
+    appreciationPotential: string | null;
+};
 export const DISTRICT_TREND_CONFIG: Record<DistrictRow["trend"], { icon: string; color: string }> = {
     Rising: { icon: "📈", color: "text-[#5E9F62]" },
     Growing: { icon: "📈", color: "text-[#D28A44]" },
@@ -1288,6 +1305,34 @@ export const DEAL_ANALYZER_STATS: DealAnalyzerStat[] = [
 export type DealVerdict = "🟢 Good Deal" | "🟡 Fair Deal" | "🔴 Overpriced";
 export type DealRecord = DrawerRecord & {
     dealScore: number; verdict: DealVerdict; date: string;
+};
+
+export type DealAnalysisDetail = {
+    imageUrl: string | null;
+    propertyType: string;
+    district: string;
+    areaSqm: number | null;
+    askingPriceAed: number | null;
+    saleType: string;
+    bedrooms: string;
+    expectedAnnualRentAed: number | null;
+    dealScore: number;
+    dealVerdict: string;
+    dealVerdictLabel: string;
+    estimatedMarketPriceAed: number | null;
+    pricePositionPct: number | null;
+    pricePositionLabel: string;
+    marketVerdict: string;
+    avgPricePerSqm: number | null;
+    comparableTransactions: number;
+    districtTrend: string;
+    demandActivity: string;
+    roi: number | null;
+    rentalYield: number | null;
+    userName: string | null;
+    userEmail: string | null;
+    createdAt: string | null;
+    timeAgo: string | null;
 };
 export const DEAL_ANALYZER_RECORDS: DealRecord[] = [
     {
@@ -1665,6 +1710,61 @@ export type PropertyViewRecord = {
     name: string; district: string; type: string; price: string; status: PropertyStatus;
     developer: string; beds: number; sqft: string; saleType: string; roi: string;
     rentalYield: string; description: string; amenities: string[]; images: string[];
+};
+
+export type PropertyTransaction = {
+    id: string;
+    saleDate: string | null;
+    areaSqm: number | null;
+    salePriceAed: number | null;
+    ratePerSqm: number | null;
+    saleType: string;
+    saleSequence: string;
+};
+
+export type PropertyDistrictRef = {
+    name: string;
+    status: string;
+    avgPriceSqm: number | null;
+    avgRentalYield: number | null;
+    avgRoi: number | null;
+    trendDirection: string;
+    marketSignal: string;
+    appreciationPotential: string;
+    totalTransactions: number;
+};
+
+export type PropertyDetail = {
+    name: string;
+    district: string;
+    type: string;
+    price: string;
+    status: PropertyStatus;
+    developer: string;
+    beds: number;
+    sqft: string;
+    saleType: string;
+    roi: string;
+    rentalYield: string;
+    description: string;
+    amenities: string[];
+    images: string[];
+    assetClass: string;
+    community: string;
+    layout: string;
+    landAreaSqm: number | null;
+    bathrooms: number;
+    bedrooms: number;
+    askingPriceAed: number | null;
+    latestTransactionPrice: number | null;
+    transactionCount: number;
+    capRate: number | null;
+    yoyGrowth: number | null;
+    aiScore: number | null;
+    isFeatured: boolean;
+    brochurePdfUrl: string | null;
+    recentTransactions: PropertyTransaction[];
+    districtRef: PropertyDistrictRef | null;
 };
 
 export const ALL_PROPERTY_VIEWS: PropertyViewRecord[] = [

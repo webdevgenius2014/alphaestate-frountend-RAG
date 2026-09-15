@@ -35,7 +35,10 @@ export type AdminAnalyticsPdfData = {
     districtPerformance: Array<{ district: string; avgRoi: number }>;
     subscriptionPerformance: Array<{ planName: string; count: number; percentage: number }>;
     investmentMovement: { months: string[]; series: Array<{ district: string; data: number[] }> } | null;
-    appreciationPotential: { avgSqft: number; districts: Array<{ district: string; yoyGrowth: number; percentage: number }> } | null;
+    appreciationPotential: {
+        summary?: { avgPriceSqm?: number } | null;
+        districts: Array<{ name: string; avgRoi: number; totalTransactions: number }>;
+    } | null;
     aiMetrics: Array<{ label: string; value: string }>;
     usage: Array<{ tool: string; count: number }>;
 };
@@ -148,20 +151,22 @@ function AdminAnalyticsPdfDocument({ data }: { data: AdminAnalyticsPdfData }) {
                 {data.appreciationPotential && data.appreciationPotential.districts.length > 0 && (
                     <>
                         <Text style={styles.sectionTitle}>Appreciation Potential</Text>
-                        <Text style={{ fontSize: 8, color: "#6B7280", marginBottom: 6 }}>
-                            Avg SQFT: {data.appreciationPotential.avgSqft.toLocaleString()}
-                        </Text>
+                        {data.appreciationPotential.summary?.avgPriceSqm != null && (
+                            <Text style={{ fontSize: 8, color: "#6B7280", marginBottom: 6 }}>
+                                Avg Price/sqm: {data.appreciationPotential.summary.avgPriceSqm.toLocaleString()}
+                            </Text>
+                        )}
                         <View style={styles.table}>
                             <View style={styles.tr}>
                                 <Text style={styles.th}>District</Text>
-                                <Text style={styles.th}>YoY Growth</Text>
-                                <Text style={styles.th}>Share</Text>
+                                <Text style={styles.th}>Avg ROI</Text>
+                                <Text style={styles.th}>Transactions</Text>
                             </View>
                             {data.appreciationPotential.districts.map((row, i) => (
                                 <View key={i} style={styles.tr}>
-                                    <Text style={styles.td}>{row.district}</Text>
-                                    <Text style={styles.td}>{row.yoyGrowth}%</Text>
-                                    <Text style={styles.td}>{row.percentage}%</Text>
+                                    <Text style={styles.td}>{row.name}</Text>
+                                    <Text style={styles.td}>{row.avgRoi}%</Text>
+                                    <Text style={styles.td}>{row.totalTransactions.toLocaleString()}</Text>
                                 </View>
                             ))}
                         </View>

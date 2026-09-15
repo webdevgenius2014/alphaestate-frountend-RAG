@@ -57,6 +57,11 @@ const ApiConfig = {
   //districts
   allDistricts: `${apiURL}/districts`,
 
+  // admin districts
+  adminDistricts: `${apiURL}/admin/districts`,
+  adminDistrictsById: `${apiURL}/admin/districts/{id}`,
+  adminDistrictsCoverImage: `${apiURL}/admin/districts/{id}/cover-image`,
+
   // Notifications
   notifications: `${apiURL}/notifications`,
   notificationsUnreadCount: `${apiURL}/notifications/unread-count`,
@@ -79,6 +84,7 @@ const ApiConfig = {
   exportReport: `${apiURL}/analytics/export/excel`,
   marketSnapshots: `${apiURL}/analytics/market/snapshots`,
   marketInsights: `${apiURL}/analytics/market/insights`,
+  marketAppreciationPotential: `${apiURL}/analytics/market/appreciation-potential`,
 
   // Reports
   reportsHistory: `${apiURL}/reports/history`,
@@ -98,14 +104,21 @@ const ApiConfig = {
   exportUsers: `${apiURL}/admin/users/export`, 
 
   //admin-analytics
+  userActivitySnapshot: `${apiURL}/admin/analytics/user-activity`,
   overview: `${apiURL}/admin/analytics/overview`,
   platformGrowth: `${apiURL}/admin/analytics/platform-growth`,
   districtPerformance: `${apiURL}/admin/analytics/district-performance`,  
   subscriptionPerformance: `${apiURL}/admin/analytics/subscription-performance`,
   investmentMovement: `${apiURL}/admin/analytics/investment-movement`,
   appreciationPotential: `${apiURL}/admin/analytics/appreciation-potential`,
-  marketIntelligence: `${apiURL}/admin/analytics/market-intelligence`,  
+  marketIntelligence: `${apiURL}/admin/analytics/market-intelligence`,
+  aiIntelligence: `${apiURL}/admin/analytics/ai-intelligence`,
   usage: `${apiURL}/admin/analytics/usage`,
+  aiMonitoring: `${apiURL}/admin/ai/monitoring`,
+  aiIntelligenceEngine: `${apiURL}/admin/ai/intelligence-engine`,
+  marketAnalyticsData: `${apiURL}/admin/analytics/market-analytics-data`,
+  dealAnalyzerRecordsAdmin: `${apiURL}/admin/analytics/deal-analyzer-records`,
+  dealAnalyzerRecordsAdminById: `${apiURL}/admin/analytics/deal-analyzer-records/{id}`,
   triggerAnalysis: `${apiURL}/admin/analytics/compute`,
   computeAiScore: `${apiURL}/admin/analytics/compute-ai-scores`,
 
@@ -154,6 +167,7 @@ const ApiConfig = {
   adminNotification: `${apiURL}/admin/platform/settings/notifications`,
   platformGenralInfo: `${apiURL}/admin/platform/settings/general`,
   platformSecurityInfo: `${apiURL}/admin/platform/settings/security`,
+  platformConnections: `${apiURL}/admin/platform/connections`,
 
   //user profile notification
   notificationPrefrences: `${apiURL}/users/me/notification-preferences`,
