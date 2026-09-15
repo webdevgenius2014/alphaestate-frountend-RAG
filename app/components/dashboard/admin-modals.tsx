@@ -130,8 +130,6 @@ export function DeletePropertyModal({ isOpen, onClose, onConfirm }: { isOpen: bo
     );
 }
 
-// ── Delete District Modal ─────────────────────────────────────────────────────
-
 export function DeleteDistrictModal({ isOpen, onClose, onConfirm }: { isOpen: boolean; onClose: () => void; onConfirm?: () => void }) {
     useModalEsc(onClose);
     if (!isOpen) return null;
@@ -176,8 +174,6 @@ export function DeleteDistrictModal({ isOpen, onClose, onConfirm }: { isOpen: bo
         document.body
     );
 }
-
-// ── Delete Deal Analyzer Record Modal ─────────────────────────────────────────
 
 export function DeleteDealRecordModal({ isOpen, onClose, onConfirm }: { isOpen: boolean; onClose: () => void; onConfirm?: () => void }) {
     useModalEsc(onClose);
