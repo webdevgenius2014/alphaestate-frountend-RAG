@@ -7,14 +7,14 @@ import { DistrictDataManagement } from "@/app/components/dashboard/district-data
 import { MarketAnalyticsData } from "@/app/components/dashboard/market-analytics-data";
 import { DealAnalyzerRecords } from "@/app/components/dashboard/deal-analyzer-records";
 import { RentalIngestionManagement } from "@/app/components/dashboard/rental-ingestion-management";
-import { PropertyDetailDrawer } from "@/app/components/dashboard/property-detail-drawer";
-import { TABS, type DrawerRecord } from "../constants";
+import { DistrictDetailDrawer } from "@/app/components/dashboard/district-detail-drawer";
+import { TABS, type DistrictDetail } from "../constants";
 
 type TabId = typeof TABS[number]["id"];
 
 export default function AIDataPage() {
     const [activeTab, setActiveTab] = useState<TabId>("chat-monitoring");
-    const [drawerRecord, setDrawerRecord] = useState<DrawerRecord | null>(null);
+    const [drawerRecord, setDrawerRecord] = useState<DistrictDetail | null>(null);
 
     return (
         <div className="flex flex-col gap-6">
@@ -55,7 +55,7 @@ export default function AIDataPage() {
             {activeTab === "deal-analyzer" && <DealAnalyzerRecords />}
             {activeTab === "rental-ingestion" && <RentalIngestionManagement />}
 
-            {drawerRecord && <PropertyDetailDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
+            {drawerRecord && <DistrictDetailDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
         </div>
     );
 }

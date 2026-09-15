@@ -130,6 +130,100 @@ export function DeletePropertyModal({ isOpen, onClose, onConfirm }: { isOpen: bo
     );
 }
 
+// ── Delete District Modal ─────────────────────────────────────────────────────
+
+export function DeleteDistrictModal({ isOpen, onClose, onConfirm }: { isOpen: boolean; onClose: () => void; onConfirm?: () => void }) {
+    useModalEsc(onClose);
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+            <div
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button onClick={onClose} className="absolute top-4 right-4 z-20">
+                    <img src="/close.svg" alt="" />
+                </button>
+
+                <div className="px-7 pt-10 pb-10 flex flex-col items-center text-center">
+                    <div className="w-21.75 h-21.75 rounded-[10px] bg-[#D28A441F] flex items-center justify-center mb-5">
+                        <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="26" cy="26" r="22" stroke="#D28A44" strokeWidth="2.5" />
+                            <circle cx="18.5" cy="21" r="2.5" fill="#D28A44" />
+                            <circle cx="33.5" cy="21" r="2.5" fill="#D28A44" />
+                            <path d="M17 34c2.5-5 15.5-5 18 0" stroke="#D28A44" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                    </div>
+
+                    <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-3">Delete District?</h2>
+                    <p className="text-[17px] text-(--db-text-primary) font-normal leading-normal mb-7 max-w-106.25">
+                        This district and its market intelligence data will be permanently removed and will no longer appear in analytics or user dashboards. This action cannot be undone.
+                    </p>
+
+                    <div className="flex gap-3 w-full max-w-79.75">
+                        <button
+                            onClick={onConfirm ?? onClose}
+                            className="flex-1 bg-[#CF2D48] text-white text-sm font-semibold py-3 rounded-sm tracking-widest hover:bg-[#b8253e] transition-colors uppercase"
+                        >
+                            DELETE
+                        </button>
+                        <ModalButton onClick={onClose} className="flex-1 py-3! rounded-sm!">CANCEL</ModalButton>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+}
+
+// ── Delete Deal Analyzer Record Modal ─────────────────────────────────────────
+
+export function DeleteDealRecordModal({ isOpen, onClose, onConfirm }: { isOpen: boolean; onClose: () => void; onConfirm?: () => void }) {
+    useModalEsc(onClose);
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+            <div
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button onClick={onClose} className="absolute top-4 right-4 z-20">
+                    <img src="/close.svg" alt="" />
+                </button>
+
+                <div className="px-7 pt-10 pb-10 flex flex-col items-center text-center">
+                    <div className="w-21.75 h-21.75 rounded-[10px] bg-[#D28A441F] flex items-center justify-center mb-5">
+                        <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="26" cy="26" r="22" stroke="#D28A44" strokeWidth="2.5" />
+                            <circle cx="18.5" cy="21" r="2.5" fill="#D28A44" />
+                            <circle cx="33.5" cy="21" r="2.5" fill="#D28A44" />
+                            <path d="M17 34c2.5-5 15.5-5 18 0" stroke="#D28A44" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                    </div>
+
+                    <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-3">Delete Deal Record?</h2>
+                    <p className="text-[17px] text-(--db-text-primary) font-normal leading-normal mb-7 max-w-106.25">
+                        This deal analysis record will be permanently removed and will no longer appear in deal analyzer history. This action cannot be undone.
+                    </p>
+
+                    <div className="flex gap-3 w-full max-w-79.75">
+                        <button
+                            onClick={onConfirm ?? onClose}
+                            className="flex-1 bg-[#CF2D48] text-white text-sm font-semibold py-3 rounded-sm tracking-widest hover:bg-[#b8253e] transition-colors uppercase"
+                        >
+                            DELETE
+                        </button>
+                        <ModalButton onClick={onClose} className="flex-1 py-3! rounded-sm!">CANCEL</ModalButton>
+                    </div>
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
+}
+
 // ── Change Password Modal ─────────────────────────────────────────────────────
 
 export function ChangePasswordModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {

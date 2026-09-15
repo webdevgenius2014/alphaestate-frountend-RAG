@@ -51,7 +51,7 @@ export default function AnalyticsPage() {
     const [subscriptionPerformance, setSubscriptionPerformance] = useState<any>(null);
     const [investmentMovement, setInvestmentMovement]           = useState<any>(null);
     const [appreciationPotential, setAppreciationPotential]     = useState<any>(null);
-    const [marketIntelligence, setMarketIntelligence]           = useState<any>(null);
+    const [aiIntelligence, setAiIntelligence]                   = useState<any>(null);
     const [usage, setUsage]                                     = useState<any>(null);
     const [usagePeriod, setUsagePeriod]                         = useState("last_year");
     const [triggeringAnalysis, setTriggeringAnalysis]           = useState(false);
@@ -80,11 +80,14 @@ export default function AnalyticsPage() {
         appService.getAnalyticsInvestmentMovement().then((res) => {
             if (res?.data?.data) setInvestmentMovement(res.data.data);
         });
-        appService.getAnalyticsAppreciationPotential().then((res) => {
-            if (res?.data?.data) setAppreciationPotential(res.data.data);
+        appService.getMarketAppreciationPotential().then((res) => {
+            const payload = res?.data?.data;
+            if (payload?.data) {
+                setAppreciationPotential({ districts: payload.data, summary: payload.summary ?? null });
+            }
         });
-        appService.getAnalyticsMarketIntelligence().then((res) => {
-            if (res?.data?.data) setMarketIntelligence(res.data.data);
+        appService.getAnalyticsAiIntelligence().then((res) => {
+            if (res?.data?.data) setAiIntelligence(res.data.data);
         });
     }, []);
 
@@ -137,10 +140,10 @@ export default function AnalyticsPage() {
             }));
 
             const intelligenceApiVals = [
-                marketIntelligence?.strongestInvestmentDistrict,
-                marketIntelligence?.highestAppreciationDistrict,
-                marketIntelligence?.mostActiveMarket,
-                marketIntelligence?.marketSignal,
+                aiIntelligence?.strongestInvestmentDistrict?.name,
+                aiIntelligence?.highestAppreciationPotential?.name,
+                aiIntelligence?.mostActiveMarket?.name,
+                aiIntelligence?.aiMarketSignal,
             ];
             const aiMetrics = AI_METRICSANALAYTCS.map((m, i) => ({
                 label: m.label,
@@ -384,10 +387,10 @@ export default function AnalyticsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {AI_METRICSANALAYTCS.map((m, i) => {
                                 const apiValues = [
-                                    marketIntelligence?.strongestInvestmentDistrict,
-                                    marketIntelligence?.highestAppreciationDistrict,
-                                    marketIntelligence?.mostActiveMarket,
-                                    marketIntelligence?.marketSignal,
+                                    aiIntelligence?.strongestInvestmentDistrict?.name,
+                                    aiIntelligence?.highestAppreciationPotential?.name,
+                                    aiIntelligence?.mostActiveMarket?.name,
+                                    aiIntelligence?.aiMarketSignal,
                                 ];
                                 const displayValue = apiValues[i] ?? m.value;
                                 return (
