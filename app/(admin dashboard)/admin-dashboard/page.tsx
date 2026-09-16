@@ -319,9 +319,10 @@ export default function AdminDashboardPage() {
                                 <h2 className="text-base md:text-[21px] font-medium text-(--db-text-primary) mb-1">Recent Platform Activity</h2>
                                 <p className="text-[13px] text-(--db-text-primary)">Track the latest actions across the platform.</p>
                             </div>
-                            <button className="w-full max-w-fit flex items-center justify-center gap-2 text-[14px] font-semibold text-[#D28A44] border border-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm px-4.75 py-2 transition-colors">
+                            {/* could be used further */}
+                            {/* <button className="w-full max-w-fit flex items-center justify-center gap-2 text-[14px] font-semibold text-[#D28A44] border border-[#D28A44] hover:bg-[#D28A44] hover:text-white rounded-sm px-4.75 py-2 transition-colors">
                                 VIEW ALL
-                            </button>
+                            </button> */}
                         </div>
                         <div className="overflow-x-auto border border-(--db-border) rounded-md">
                             <table className="w-full text-sm">
