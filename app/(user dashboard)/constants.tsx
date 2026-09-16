@@ -1105,25 +1105,27 @@ export type AIChatConvGroup = { label: string; items: string[] };
 // ];
 
 export const AI_SEED_MESSAGES: AIChatMessage[] = [
-  {
-    id: "u1",
-    role: "user",
-    content:
-      "Which district currently offers the best ROI for long-term investment in Abu Dhabi?",
-  },
-  {
-    id: "a1",
-    role: "assistant",
-    content:
-      "Based on current ADEC transaction data and rental demand trends, Yas Island is currently showing the strongest long-term investment potential.",
-    insights: { confidence: "91%", signal: "Bullish", district: "Yas Island" },
-    recommendations: [
-      "Yas Island performs best for:",
-      "Luxury short-term rentals",
-      "High-occupancy investments",
-      "Capital appreciation opportunities",
-    ],
-  },
+  // could be used  further
+
+  // {
+  //   id: "u1",
+  //   role: "user",
+  //   content:
+  //     "Which district currently offers the best ROI for long-term investment in Abu Dhabi?",
+  // },
+  // {
+  //   id: "a1",
+  //   role: "assistant",
+  //   content:
+  //     "Based on current ADEC transaction data and rental demand trends, Yas Island is currently showing the strongest long-term investment potential.",
+  //   insights: { confidence: "91%", signal: "Bullish", district: "Yas Island" },
+  //   recommendations: [
+  //     "Yas Island performs best for:",
+  //     "Luxury short-term rentals",
+  //     "High-occupancy investments",
+  //     "Capital appreciation opportunities",
+  //   ],
+  // },
 ];
 
 // ── AI Chat icons ─────────────────────────────────────────────────────────
