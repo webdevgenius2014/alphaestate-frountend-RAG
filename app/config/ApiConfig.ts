@@ -62,6 +62,12 @@ const ApiConfig = {
   adminDistrictsById: `${apiURL}/admin/districts/{id}`,
   adminDistrictsCoverImage: `${apiURL}/admin/districts/{id}/cover-image`,
 
+  // Contact (landing page)
+  contact: `${apiURL}/contact`,
+
+  //admin contact
+  adminContact: `${apiURL}/contact/admin`,
+
   // Notifications
   notifications: `${apiURL}/notifications`,
   notificationsUnreadCount: `${apiURL}/notifications/unread-count`,
