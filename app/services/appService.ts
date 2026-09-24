@@ -106,6 +106,36 @@ class AppService {
     }
   }
 
+  // contact form (landing page)
+  async submitContact(payload: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    message: string;
+  }) {
+    try {
+      return await instance.post(ApiConfig.contact, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  // admin contact queries
+  async getAdminContacts(page: number = 1, limit: number = 10, search?: string) {
+    try {
+      const params: Record<string, any> = { page, limit };
+      if (search) params.search = search;
+      const res = await instance.get(ApiConfig.adminContact, { params });
+      const d = res?.data?.data;
+      const items: any[] = Array.isArray(d) ? d : Array.isArray(d?.items) ? d.items : [];
+      const total: number = d?.total ?? items.length;
+      const totalPages = Math.max(1, Math.ceil(total / (d?.limit ?? limit)));
+      return { items, total, totalPages };
+    } catch (error: any) {
+      return { items: [], total: 0, totalPages: 1 };
+    }
+  }
   // AI Chat (RAG)
   async sendChatMessage(payload: {
     query: string;
