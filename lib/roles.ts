@@ -6,6 +6,7 @@ export const ADMIN_ROUTES = [
     "/ai-data",
     "/properties-management",
     "/platform-management",
+    "/queries",
 ];
 
 export const USER_ROUTES = [
