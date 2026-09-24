@@ -579,6 +579,14 @@ export function PlatformManagementIcon({ className }: IconProps) {
   );
 }
 
+export function QueriesIcon({ className }: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22" fill="none" className={className}>
+      <path d="M18.3333 2.75H3.66667C2.65833 2.75 1.83333 3.575 1.83333 4.58333V15.5833C1.83333 16.5917 2.65833 17.4167 3.66667 17.4167H6.41667V20.1667L10.0833 17.4167H18.3333C19.3417 17.4167 20.1667 16.5917 20.1667 15.5833V4.58333C20.1667 3.575 19.3417 2.75 18.3333 2.75ZM6.41667 11.4583C5.7575 11.4583 5.225 10.9258 5.225 10.2667C5.225 9.6075 5.7575 9.075 6.41667 9.075C7.07583 9.075 7.60833 9.6075 7.60833 10.2667C7.60833 10.9258 7.07583 11.4583 6.41667 11.4583ZM11 11.4583C10.3408 11.4583 9.80833 10.9258 9.80833 10.2667C9.80833 9.6075 10.3408 9.075 11 9.075C11.6592 9.075 12.1917 9.6075 12.1917 10.2667C12.1917 10.9258 11.6592 11.4583 11 11.4583ZM15.5833 11.4583C14.9242 11.4583 14.3917 10.9258 14.3917 10.2667C14.3917 9.6075 14.9242 9.075 15.5833 9.075C16.2425 9.075 16.775 9.6075 16.775 10.2667C16.775 10.9258 16.2425 11.4583 15.5833 11.4583Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export type NavItem = {
   label: string;
   href: string;
@@ -613,6 +621,7 @@ export const ADMIN_MENU_ITEMS: NavItem[] = [
   { label: "AI & Data", href: "/ai-data", icon: AIDataIcon },
   { label: "Properties Management", href: "/properties-management", icon: PropertiesManagementIcon },
   { label: "Platform Management", href: "/platform-management", icon: PlatformManagementIcon },
+  { label: "Queries", href: "/queries", icon: QueriesIcon },
 ];
 
 export const SETTINGS_ITEMS: SettingsItem[] = [
