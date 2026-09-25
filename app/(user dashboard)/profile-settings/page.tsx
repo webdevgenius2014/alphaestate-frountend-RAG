@@ -185,7 +185,11 @@ function MyProfileTab() {
                         city:      data.cityState     ?? "",
                         bio:       data.bio           ?? "",
                     });
-                    if (data.avatarUrl) updateUser({ avatarUrl: data.avatarUrl });
+                    updateUser({
+                        ...(data.fullName ? { fullName: data.fullName } : {}),
+                        ...(data.email ? { email: data.email } : {}),
+                        ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
+                    });
                 }
             })
             .finally(() => setLoading(false));
@@ -228,8 +232,9 @@ function MyProfileTab() {
 
     const handleSaveProfile = async () => {
         setSaving(true);
+        const fullName = `${form.firstName} ${form.lastName}`.trim();
         const res = await appService.updateUserProfile({
-            fullName: `${form.firstName} ${form.lastName}`.trim(),
+            fullName,
             email: form.email,
             phoneCode: form.phoneCode,
             phoneNumber: form.phone,
@@ -242,6 +247,12 @@ function MyProfileTab() {
         if (res?.status === 200 || res?.status === 201) {
             const data = res.data?.data ?? res.data;
             setProfile(data);
+            // Push the saved name/email into the shared user state so the header updates without a reload.
+            updateUser({
+                fullName: data?.fullName ?? fullName,
+                email: data?.email ?? form.email,
+                ...(data?.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
+            });
             toast.success("Profile updated successfully.");
             setFormOpen(false);
         } else {

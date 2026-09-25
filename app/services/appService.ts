@@ -111,7 +111,7 @@ class AppService {
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber?: string;
+    phoneNumber: string;
     message: string;
   }) {
     try {
