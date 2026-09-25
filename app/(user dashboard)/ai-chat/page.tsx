@@ -743,11 +743,11 @@ export default function AIChatPage() {
                         </div>
                         <div className="flex gap-2 overflow-x-auto">
                             {[
-                                { id: 1, text: "Best districts for ROI" },
+                                { id: 1, text: "What was the YoY change from 2022 to 2023?" },
                                 { id: 2, text: "Compare Yas vs Al Reem" },
-                                { id: 3, text: "Best rental yield areas" },
+                                { id: 3, text: "How many off-plan transactions happened in 2024" },
                                 { id: 4, text: "Under AED 2M opportunities" },
-                                { id: 5, text: "Luxury investment zones" },
+                                { id: 5, text: "What's the average price per sqm in Saadiyat Island" },
                             ].map((tag) => (
                                 <span
                                     key={tag.id}
