@@ -6,7 +6,7 @@ import { notFound, useParams, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DealScoreGauge } from "@/app/components/dashboard/deal-analyzer-charts";
-import { PropertyPerformanceChart } from "@/app/components/dashboard/property-detail-chart";
+import { PropertyPerformanceChart, mapPriceHistory, type PerfPoint } from "@/app/components/dashboard/property-detail-chart";
 import PropertyMap from "@/app/components/dashboard/property-map";
 import {
     type SavedProperty,
@@ -53,6 +53,27 @@ export default function PropertyDetailPage() {
     const [similarProps, setSimilarProps] = useState<SavedProperty[]>([]);
     const [analyzingDeal, setAnalyzingDeal] = useState(false);
     const [dealResult, setDealResult] = useState<DealAnalysisResult | null>(null);
+    const [perfData, setPerfData] = useState<PerfPoint[]>([]);
+    const [perfLoading, setPerfLoading] = useState(true);
+    const [perfPeriod, setPerfPeriod] = useState<"last_year" | "last_6months" | "all_time">("last_year");
+
+    useEffect(() => {
+        if (!id) return;
+        let cancelled = false;
+        setPerfLoading(true);
+        appService.getPropertyPriceHistory(id, perfPeriod).then((res) => {
+            if (cancelled) return;
+            if (res?.status === 200 || res?.status === 201) {
+                const body = res.data?.data;
+                const items = Array.isArray(body) ? body : body?.items ?? body?.history ?? [];
+                setPerfData(mapPriceHistory(items));
+            } else {
+                setPerfData([]);
+            }
+            setPerfLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, [id, perfPeriod]);
 
     useEffect(() => {
         appService.getPropertyById(id).then((res) => {
@@ -258,7 +279,6 @@ export default function PropertyDetailPage() {
         saleType: property.recentTransactions?.[0]?.saleType ?? "Ready",
         developer: property.developerName ?? "N/A",
         furnishing: "N/A",
-        perfData: [] as any[],
         marketStats: [
             { label: "Market Signal", value: property.districtRef?.marketSignal ?? property.districtMarketSignal },
             { label: "Trend Direction", value: property.districtRef?.trendDirection ?? property.districtTrendDirection },
@@ -428,17 +448,21 @@ export default function PropertyDetailPage() {
                         <p className="text-[13px] text-(--db-text-primary) mb-5">12-month price trend for this property and district.</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <select className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none">
-                            <option>Last Year</option>
-                            <option>6 months</option>
-                            <option>All time</option>
+                        <select
+                            value={perfPeriod}
+                            onChange={(e) => setPerfPeriod(e.target.value as "last_year" | "last_6months" | "all_time")}
+                            className="text-xs border border-(--db-border) rounded-sm px-2.5 py-1.5 bg-(--db-main-bg) text-(--db-text-primary) outline-none"
+                        >
+                            <option value="last_year">Last Year</option>
+                            <option value="last_6months">6 months</option>
+                            <option value="all_time">All time</option>
                         </select>
                         <button className="flex items-center justify-center w-8 h-8 border border-(--db-border) rounded-md bg-(--db-main-bg) text-(--db-text-primary) shrink-0">
                             <SortIcon />
                         </button>
                     </div>
                 </div>
-                <PropertyPerformanceChart data={detail.perfData} />
+                <PropertyPerformanceChart data={perfData} loading={perfLoading} />
             </Card>
 
             {/* ── District Market Intelligence ── */}
@@ -460,8 +484,8 @@ export default function PropertyDetailPage() {
                 <p className="text-[13px] text-(--db-text-primary) mb-4 max-w-225.25">Yas Golf Collection demonstrates stronger-than-average rental demand and stable appreciation momentum compared to nearby comparable developments.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {detail.features.map((feat) => (
-                        <Card key={feat.title}>
+                    {detail.features.map((feat, i) => (
+                        <Card key={`${feat.title ?? "feature"}-${i}`}>
                             <div className="w-12 h-12 rounded-sm bg-[#D28A441F] flex items-center justify-center mb-3.5">
                                 {feat.icon}
                             </div>

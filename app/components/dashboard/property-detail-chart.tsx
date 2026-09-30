@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import type { PropertyDetailData } from "@/app/(user dashboard)/constants";
 
 const tooltipStyle = {
     contentStyle: {
@@ -16,26 +15,58 @@ const tooltipStyle = {
 };
 
 function fmtAED(v: number) {
-    const m = v / 1000;
-    return `AED ${Number.isInteger(m) ? m : m.toFixed(1)}M`;
+    if (Math.abs(v) >= 1_000_000) return `AED ${+(v / 1_000_000).toFixed(2)}M`;
+    if (Math.abs(v) >= 1_000) return `AED ${+(v / 1_000).toFixed(1)}K`;
+    return `AED ${Math.round(v).toLocaleString()}`;
+}
+
+export type PerfPoint = { month: string; value: number; transactionCount?: number };
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// "2025-09" → "Sep 2025"
+export function formatMonth(month: string) {
+    const [year, m] = (month ?? "").split("-");
+    const name = MONTHS[Number(m) - 1];
+    return name && year ? `${name} ${year}` : month;
+}
+
+export function mapPriceHistory(items: any[]): PerfPoint[] {
+    return (items ?? [])
+        .filter((d) => d?.month && d?.avgPriceAed != null)
+        .sort((a, b) => String(a.month).localeCompare(String(b.month)))
+        .map((d) => ({
+            month: formatMonth(d.month),
+            value: Number(d.avgPriceAed),
+            transactionCount: d.transactionCount != null ? Number(d.transactionCount) : undefined,
+        }));
 }
 
 const SERIES_KEY = "value";
 const SERIES_LABEL = "Average Property Value";
 const SERIES_COLOR = "#D28A44";
 
-export function PropertyPerformanceChart({ data }: { data: PropertyDetailData["perfData"] }) {
+export function PropertyPerformanceChart({ data, loading = false }: { data: PerfPoint[]; loading?: boolean }) {
     const [hidden, setHidden] = useState(false);
 
     const toggle = () => setHidden((prev) => !prev);
 
+    if (loading || data.length === 0) {
+        return (
+            <div className="bg-(--db-main-bg) p-5 h-100 flex items-center justify-center">
+                <p className="text-[13px] text-(--db-text-primary)">
+                    {loading ? "Loading price history..." : "No price history available for this property."}
+                </p>
+            </div>
+        );
+    }
+
     const values = data.map((d) => d.value);
     const dataMin = Math.min(...values);
     const dataMax = Math.max(...values);
-    const range = dataMax - dataMin;
-    const step = range <= 600 ? 200 : range <= 1200 ? 400 : 600;
-    const min = Math.floor((dataMin - step * 0.3) / step) * step;
-    const max = Math.ceil((dataMax + step * 0.2) / step) * step;
+    const pad = (dataMax - dataMin) * 0.15 || dataMax * 0.05 || 1;
+    const min = Math.max(0, dataMin - pad);
+    const max = dataMax + pad;
 
     return (
         <div className="bg-(--db-main-bg) p-5">
@@ -55,10 +86,15 @@ export function PropertyPerformanceChart({ data }: { data: PropertyDetailData["p
                         tickLine={false}
                         tickFormatter={fmtAED}
                         domain={[min, max]}
+                        allowDecimals={false}
                         width={72}
                     />
                     <Tooltip
-                        formatter={(v) => [fmtAED(v as number), SERIES_LABEL]}
+                        formatter={(v, _name, item) => {
+                            const count = (item?.payload as PerfPoint | undefined)?.transactionCount;
+                            const label = count != null ? `${SERIES_LABEL} (${count} transactions)` : SERIES_LABEL;
+                            return [fmtAED(v as number), label];
+                        }}
                         contentStyle={tooltipStyle.contentStyle}
                         labelStyle={tooltipStyle.labelStyle}
                         cursor={{ stroke: "var(--db-border)", strokeWidth: 1 }}

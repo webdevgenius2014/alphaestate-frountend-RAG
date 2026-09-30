@@ -6,6 +6,7 @@ import Button from "@/app/components/ui/button";
 import ModalButton from "@/app/components/ui/modal-button";
 import { ChangePasswordModal } from "@/app/components/dashboard/admin-modals";
 import appService from "@/app/services/appService";
+import { formatLastLogin } from "@/app/constant";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import {
     PROFILE_COUNTRIES,
@@ -34,6 +35,7 @@ export default function AdminProfilePage() {
     const [formOpen, setFormOpen] = useState(true);
     const [pwModalOpen, setPwModalOpen] = useState(false);
     const [profile, setProfile] = useState<any>(null);
+    const [account, setAccount] = useState<any>(null);
     const [saving, setSaving] = useState(false);
     const [avatarUploading, setAvatarUploading] = useState(false);
     const [twoFaEnabled, setTwoFaEnabled] = useState(false);
@@ -77,15 +79,25 @@ export default function AdminProfilePage() {
                     bio: data.bio ?? "",
                 });
                 setTwoFaEnabled(!!(data.isTwoFactorEnabled ?? data.twoFactorEnabled ?? data.is2FAEnabled));
-                if (data.avatarUrl ?? data.avatar) {
-                    updateUser({ avatarUrl: data.avatarUrl ?? data.avatar });
-                }
+                updateUser({
+                    ...(data.fullName && { fullName: data.fullName }),
+                    ...(data.email && { email: data.email }),
+                    ...((data.avatarUrl ?? data.avatar) && { avatarUrl: data.avatarUrl ?? data.avatar }),
+                });
             }
         });
     };
 
     useEffect(() => {
         loadProfile();
+    }, []);
+
+    useEffect(() => {
+        appService.getUserProfile().then((res) => {
+            if (res?.status === 200 || res?.status === 201) {
+                setAccount(res.data?.data ?? res.data);
+            }
+        });
     }, []);
 
     useEffect(() => {
@@ -140,10 +152,11 @@ export default function AdminProfilePage() {
 
     const handleSaveProfile = async () => {
         setSaving(true);
+        const fullName = [form.firstName, form.lastName].filter(Boolean).join(" ");
         const res = await appService.updateAdminProfile({
             firstName: form.firstName,
             lastName: form.lastName,
-            fullName: [form.firstName, form.lastName].filter(Boolean).join(" "),
+            fullName,
             email: form.email,
             phoneNumber: form.phone,
             countryRegion: form.country,
@@ -153,6 +166,7 @@ export default function AdminProfilePage() {
         setSaving(false);
 
         if (res?.data?.success) {
+            updateUser({ fullName, email: form.email });
             toast.success("Profile updated successfully.");
             setFormOpen(false);
             loadProfile();
@@ -384,9 +398,9 @@ export default function AdminProfilePage() {
                     <h3 className="text-[18px] font-medium text-(--db-text-primary) mb-4">Account Information</h3>
                     <div className="flex flex-wrap border border-[#D28A441F] bg-(--db-section-bg) rounded-md p-4 gap-x-20 gap-y-4">
                         {[
-                            { label: "Member Since", value: profile?.memberSince ?? "January 2025" },
-                            { label: "Last Login", value: profile?.lastLogin ?? "January 2025" },
-                            { label: "Active Sessions", value: profile?.activeSessions ?? "January 2025" },
+                            { label: "Member Since", value: account?.memberSince ?? "—" },
+                            { label: "Last Login", value: formatLastLogin(account?.lastLogin) },
+                            { label: "Active Sessions", value: account?.activeSessions ?? "—" },
                         ].map((s) => (
                             <div key={s.label}>
                                 <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">{s.label}</p>
