@@ -50,6 +50,10 @@ function toReportRow(r: any): ReportRow {
         date: r.createdAt ? formatReportDate(r.createdAt) : (r.date ?? "-"),
         status: r.status ?? "Ready",
         fileUrl: r.fileUrl ?? undefined,
+        reportType: r.reportType ?? r.type ?? undefined,
+        rawDistrict: r.district ?? undefined,
+        propertyType: r.propertyType ?? undefined,
+        timePeriod: r.timePeriod ?? undefined,
     };
 }
 

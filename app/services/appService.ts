@@ -370,6 +370,15 @@ class AppService {
     }
   }
 
+  async getPropertyPriceHistory(propertyId: string, period: string = "last_year") {
+    try {
+      const url = ApiConfig.propertyPriceHistory.replace("{propertyId}", propertyId);
+      return await instance.get(url, { params: { period } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async liveMarket(page: number = 1, limit: number = 20, filters?: Record<string, any>) {
     try {
       return await instance.get(ApiConfig.listingProperties, {

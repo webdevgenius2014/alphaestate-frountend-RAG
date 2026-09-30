@@ -47,6 +47,7 @@ const ApiConfig = {
   listingProperties: `${apiURL}/properties`,
   propertyById: `${apiURL}/properties/{id}`,
   similarProperties: `${apiURL}/properties/{id}/similar`,
+  propertyPriceHistory: `${apiURL}/analytics/properties/{propertyId}/price-history`,
   // Saver Property
   listingSavedProperties: `${apiURL}/users/me/saved`,
   savedPropertyById: `${apiURL}/properties/{id}/save`,

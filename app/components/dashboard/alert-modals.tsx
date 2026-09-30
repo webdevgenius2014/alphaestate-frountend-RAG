@@ -276,23 +276,76 @@ const DELETE_ACCOUNT_LOSE_ITEMS = [
 
 // ── Download Report Modal ─────────────────────────────────────────────────
 
-export type ReportRow = { id: string; name: string; type: string; district: string; date: string; status: string; fileUrl?: string };
+export type ReportRow = {
+    id: string;
+    name: string;
+    type: string;
+    district: string;
+    date: string;
+    status: string;
+    fileUrl?: string;
+    reportType?: string;
+    rawDistrict?: string;
+    propertyType?: string;
+    timePeriod?: string;
+};
+
+const REPORT_PERIODS = ["last_year", "last_6months", "last_2_years", "all_time"] as const;
 
 export function DownloadReportModal({ report, onClose }: { report: ReportRow; onClose: () => void }) {
     useModalEsc(onClose);
     const [sharing, setSharing] = useState(false);
+    const [downloading, setDownloading] = useState(false);
 
-    function handleDownload() {
-        if (!report.fileUrl) {
-            toast.error("No file available for this report.");
+    async function handleDownload() {
+        if (downloading) return;
+        const fileName = `${report.name.replace(/\s+/g, "_")}.pdf`;
+
+        if (report.fileUrl && /^https?:\/\//i.test(report.fileUrl)) {
+            const a = document.createElement("a");
+            a.href = report.fileUrl;
+            a.download = fileName;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.click();
             return;
         }
-        const a = document.createElement("a");
-        a.href = report.fileUrl;
-        a.download = `${report.name.replace(/\s+/g, "_")}.pdf`;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.click();
+
+        const typeKey = Object.keys(REPORT_TYPE_LOG_LABEL).find((k) => REPORT_TYPE_LOG_LABEL[k] === report.reportType);
+        if (!typeKey) {
+            toast.error("This report type can't be regenerated.");
+            return;
+        }
+
+        const district = report.rawDistrict ?? "";
+        const period = (REPORT_PERIODS as readonly string[]).includes(report.timePeriod ?? "")
+            ? (report.timePeriod as GenerateReportConfig["period"])
+            : "last_year";
+
+        setDownloading(true);
+        try {
+            const isValidation = typeKey === "validation";
+            const { sections } = await fetchReportSections({
+                types: [isValidation ? "district" : typeKey],
+                district,
+                propertyType: report.propertyType ?? "",
+                period,
+            });
+            if (isValidation && sections[0]) sections[0].title = "Deal Validation — District Market Context";
+
+            const doc = await buildReportPdf({
+                reportName: report.name,
+                district: district || undefined,
+                propertyType: report.propertyType || undefined,
+                period,
+                sections,
+            });
+            doc.save(fileName);
+        } catch (err: any) {
+            toast.error(err?.message || "Failed to generate report.");
+        } finally {
+            setDownloading(false);
+        }
     }
 
     async function handleShare() {
@@ -354,8 +407,8 @@ export function DownloadReportModal({ report, onClose }: { report: ReportRow; on
                 </div>
 
                 <div className="px-7 pb-7 pt-3 flex gap-3 max-w-89.25 mx-auto">
-                    <Button onClick={handleDownload} variant="primary" className="py-3! max-w-fit px-3">
-                        DOWNLOAD PDF
+                    <Button onClick={handleDownload} disabled={downloading} variant="primary" className="py-3! max-w-fit px-3">
+                        {downloading ? "PREPARING..." : "DOWNLOAD PDF"}
                     </Button>
                     <ModalButton onClick={handleShare} disabled={sharing} className="py-3!">
                         {sharing ? "SHARING..." : "SHARE REPORT"}
@@ -396,6 +449,70 @@ const REPORT_TYPE_LOG_LABEL: Record<string, string> = {
     snapshot: "market_snapshot",
 };
 
+async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "district" | "districtId" | "propertyType" | "period" | "saleType" | "areaSqm" | "askingPriceAed">) {
+    const { types, district, districtId, propertyType, period, saleType, areaSqm, askingPriceAed } = opts;
+    const sections: ReportSection[] = [];
+    const bullets: string[] = [];
+
+    if (types.includes("district")) {
+        const [cmpRes, trendRes, snapRes] = await Promise.all([
+            appService.getDistrictRoi(districtId ? undefined : district, period, districtId ? [districtId] : undefined),
+            appService.getPriceTrend(period, district || undefined),
+            appService.getMarketSnapshots(district || undefined),
+        ]);
+        sections.push({
+            title: "District Analysis",
+            districtComparison: cmpRes?.data?.data ?? [],
+            priceTrend: trendRes?.data?.data ?? [],
+            snapshot: snapRes?.data?.data ?? null,
+        });
+        bullets.push(`District analysis for ${district || "selected district"}`);
+    }
+
+    if (types.includes("investment")) {
+        const cmpRes = await appService.getDistrictRoi("all", period);
+        sections.push({
+            title: "Investment Comparison",
+            districtComparison: cmpRes?.data?.data ?? [],
+        });
+        bullets.push("Investment comparison across districts");
+    }
+
+    if (types.includes("validation")) {
+        if (!district || !areaSqm || !askingPriceAed) {
+            throw new Error("Deal Validation Report requires district, area, and asking price.");
+        }
+        const res = await appService.analyzeDeal({
+            propertyType: slugifyReportValue(propertyType),
+            district,
+            areaSqm,
+            askingPriceAed,
+            saleType: slugifyReportValue(saleType || "ready"),
+        });
+        if (!(res?.status === 200 || res?.status === 201) || !res?.data?.data) {
+            throw new Error(res?.data?.message || "Deal analysis failed.");
+        }
+        sections.push({ title: "Deal Validation", dealResult: res.data.data });
+        bullets.push("Deal validation analysis");
+    }
+
+    if (types.includes("snapshot")) {
+        const [snapRes, overviewRes] = await Promise.all([
+            appService.getMarketSnapshots(district || undefined),
+            appService.getUserAnalytics(),
+        ]);
+        sections.push({
+            title: "Market Snapshot",
+            snapshot: snapRes?.data?.data ?? null,
+            overview: overviewRes?.data?.data ?? null,
+        });
+        bullets.push("Market snapshot overview");
+    }
+
+    if (!sections.length) throw new Error("Select at least one report type.");
+    return { sections, bullets };
+}
+
 export function GenerateReportModal({ config, onClose, onLogged }: { config: GenerateReportConfig; onClose: () => void; onLogged?: () => void }) {
     useModalEsc(onClose);
     const { reportName, format, types, district, districtId, propertyType, period, saleType, areaSqm, askingPriceAed } = config;
@@ -406,7 +523,7 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
     const docRef = useRef<any>(null);
     const blobRef = useRef<Blob | null>(null);
 
-    function logGeneration(fileUrl: string) {
+    function logGeneration() {
         const reportType = REPORT_TYPE_LOG_LABEL[types[0]] ?? types[0] ?? "report";
         appService
             .logReportGeneration({
@@ -415,7 +532,6 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
                 district: district || undefined,
                 timePeriod: period,
                 status: "completed",
-                fileUrl,
             })
             .then(() => onLogged?.())
             .catch(() => {});
@@ -446,7 +562,7 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
                             `Property Type: ${propertyType || "All types"}`,
                         ]);
                         setStatus("success");
-                        logGeneration(URL.createObjectURL(blobRef.current));
+                        logGeneration();
                     } else {
                         setErrorMsg(res?.data?.message || "Failed to generate Excel export.");
                         setStatus("error");
@@ -454,65 +570,16 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
                     return;
                 }
 
-                const sections: ReportSection[] = [];
-                const bullets: string[] = [];
-
-                if (types.includes("district")) {
-                    const [cmpRes, trendRes, snapRes] = await Promise.all([
-                        appService.getDistrictRoi(districtId ? undefined : district, period, districtId ? [districtId] : undefined),
-                        appService.getPriceTrend(period, district || undefined),
-                        appService.getMarketSnapshots(district || undefined),
-                    ]);
-                    sections.push({
-                        title: "District Analysis",
-                        districtComparison: cmpRes?.data?.data ?? [],
-                        priceTrend: trendRes?.data?.data ?? [],
-                        snapshot: snapRes?.data?.data ?? null,
-                    });
-                    bullets.push(`District analysis for ${district || "selected district"}`);
-                }
-
-                if (types.includes("investment")) {
-                    const cmpRes = await appService.getDistrictRoi("all", period);
-                    sections.push({
-                        title: "Investment Comparison",
-                        districtComparison: cmpRes?.data?.data ?? [],
-                    });
-                    bullets.push("Investment comparison across districts");
-                }
-
-                if (types.includes("validation")) {
-                    if (!district || !areaSqm || !askingPriceAed) {
-                        throw new Error("Deal Validation Report requires district, area, and asking price.");
-                    }
-                    const res = await appService.analyzeDeal({
-                        propertyType: slugifyReportValue(propertyType),
-                        district,
-                        areaSqm,
-                        askingPriceAed,
-                        saleType: slugifyReportValue(saleType || "ready"),
-                    });
-                    if (!(res?.status === 200 || res?.status === 201) || !res?.data?.data) {
-                        throw new Error(res?.data?.message || "Deal analysis failed.");
-                    }
-                    sections.push({ title: "Deal Validation", dealResult: res.data.data });
-                    bullets.push("Deal validation analysis");
-                }
-
-                if (types.includes("snapshot")) {
-                    const [snapRes, overviewRes] = await Promise.all([
-                        appService.getMarketSnapshots(district || undefined),
-                        appService.getUserAnalytics(),
-                    ]);
-                    sections.push({
-                        title: "Market Snapshot",
-                        snapshot: snapRes?.data?.data ?? null,
-                        overview: overviewRes?.data?.data ?? null,
-                    });
-                    bullets.push("Market snapshot overview");
-                }
-
-                if (!sections.length) throw new Error("Select at least one report type.");
+                const { sections, bullets } = await fetchReportSections({
+                    types,
+                    district,
+                    districtId,
+                    propertyType,
+                    period,
+                    saleType,
+                    areaSqm,
+                    askingPriceAed,
+                });
 
                 const doc = await buildReportPdf({
                     reportName,
@@ -525,7 +592,7 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
                 docRef.current = doc;
                 setSummary(bullets);
                 setStatus("success");
-                logGeneration(URL.createObjectURL(doc.output("blob")));
+                logGeneration();
             } catch (err: any) {
                 if (cancelled) return;
                 setErrorMsg(err?.message || "Failed to generate report.");

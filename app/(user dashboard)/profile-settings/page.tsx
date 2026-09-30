@@ -7,7 +7,7 @@ import appService from "@/app/services/appService";
 import { getCookie, clearAuthCookies } from "@/app/services/interceptor";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import { formatDevice, getLocation, formatRelativeTime } from "@/app/utils/session";
-import {PHONE_CODES} from "@/app/constant";
+import { PHONE_CODES, formatLastLogin } from "@/app/constant";
 import {
     SETTINGS_TABS,
     PROFILE_COUNTRIES,
@@ -393,7 +393,7 @@ function MyProfileTab() {
                         ) : (
                             [
                                 { label: "Member Since",    value: profile?.memberSince    ?? "—" },
-                                { label: "Last Login",      value: profile?.lastLogin      ?? "—" },
+                                { label: "Last Login",      value: formatLastLogin(profile?.lastLogin) },
                                 { label: "Active Sessions", value: profile?.activeSessions ?? "—" },
                             ].map((s) => (
                                 <div key={s.label}>

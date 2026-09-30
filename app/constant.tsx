@@ -5,6 +5,22 @@ export function formatDate(value: string) {
     return parsed.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+// Formats a UTC timestamp in the viewer's local timezone, e.g. "Today · 09:41 AM"
+export function formatLastLogin(value?: string | null) {
+    if (!value) return "—";
+    const parsed = new Date(value);
+    if (isNaN(parsed.getTime())) return String(value);
+    const time = parsed.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+    const dayKey = (d: Date) => d.toLocaleDateString("en-CA");
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const day = dayKey(parsed) === dayKey(today) ? "Today"
+        : dayKey(parsed) === dayKey(yesterday) ? "Yesterday"
+        : parsed.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return `${day} · ${time}`;
+}
+
 export const stats = [
     { value: "5K+", label: "Properties Analysed" },
     { value: "10+", label: "Districts Tracked" },
