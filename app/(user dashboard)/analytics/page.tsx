@@ -31,7 +31,8 @@ function transformRentalYieldByDistrict(rows: Array<{ district: string; district
     for (const row of rows) {
         const district = row.districtName ?? row.district;
         if (!district) continue;
-        const yieldValue = row.avgRentalYield ?? row.rentalYield ?? 0;
+        const yieldValue = Number(row.avgRentalYield ?? row.rentalYield);
+        if (!Number.isFinite(yieldValue) || yieldValue <= 0) continue;
         const entry = byDistrict.get(district) ?? { sum: 0, count: 0 };
         entry.sum += yieldValue;
         entry.count += 1;
@@ -53,6 +54,11 @@ function formatAedCompact(n: number) {
     if (n >= 1e6) return `AED ${(n / 1e6).toFixed(1)}M`;
     if (n >= 1e3) return `AED ${(n / 1e3).toFixed(1)}K`;
     return `AED ${n.toFixed(0)}`;
+}
+
+function formatMonthYearLabel(monthStr: string) {
+    const [year, month] = monthStr.split("-").map(Number);
+    return new Date(year, month - 1, 1).toLocaleString("en-US", { month: "short", year: "2-digit" });
 }
 
 function formatMonthLabel(monthStr: string) {
@@ -78,26 +84,31 @@ function transformCapRateMap(payload: { overallAvgCapRate?: number; overallAvgSq
     return {
         districts: (payload.districts ?? []).map((d) => ({
             name: d.district ?? d.districtName ?? d.name,
-            value: +((d.avgCapRate ?? d.capRate ?? d.value ?? 0) * 100).toFixed(1),
+            value: Number(d.avgCapRate ?? d.capRate ?? d.value ?? 0),
         })),
-        overallValue: payload.overallAvgCapRate != null ? +(payload.overallAvgCapRate * 100).toFixed(1) : undefined,
+        overallValue: payload.overallAvgCapRate != null ? Number(payload.overallAvgCapRate) : undefined,
         overallSqft: payload.overallAvgSqft,
     };
 }
 
 function transformInvestmentMovement(rows: Array<{ month: string; district: string; transactionCount: number }>) {
-    const byMonth = new Map<string, { yas: number; alReem: number; saadiyat: number }>();
+    type MovementPoint = { yas: number | null; alReem: number | null; saadiyat: number | null };
+    const byMonth = new Map<string, MovementPoint>();
     for (const row of rows) {
-        if (!byMonth.has(row.month)) byMonth.set(row.month, { yas: 0, alReem: 0, saadiyat: 0 });
+        if (!row.month) continue;
+        if (!byMonth.has(row.month)) byMonth.set(row.month, { yas: null, alReem: null, saadiyat: null });
         const entry = byMonth.get(row.month)!;
+        const value = Number(row.transactionCount);
+        if (!Number.isFinite(value)) continue;
         const district = String(row.district ?? "").toLowerCase();
-        if (district === "yas island") entry.yas = row.transactionCount;
-        else if (district === "al reem island") entry.alReem = row.transactionCount;
-        else if (district.includes("saadiyat")) entry.saadiyat = row.transactionCount;
+        if (district === "yas island") entry.yas = value;
+        else if (district === "al reem island") entry.alReem = value;
+        else if (district.includes("saadiyat")) entry.saadiyat = value;
     }
-    return Array.from(byMonth.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, vals]) => ({ month: formatMonthLabel(month), ...vals }));
+    const points = Array.from(byMonth.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const hasData = (v: MovementPoint) => [v.yas, v.alReem, v.saadiyat].some((n) => n != null && n > 0);
+    while (points.length && !hasData(points[points.length - 1][1])) points.pop();
+    return points.map(([month, vals]) => ({ month: formatMonthYearLabel(month), ...vals }));
 }
 
 export default function AnalyticsPage() {

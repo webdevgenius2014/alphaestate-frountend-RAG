@@ -147,3 +147,21 @@ input:-webkit-autofill:active {
 .thin-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ── Remove click focus ring ───────────────────────────── */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-sector,
+.recharts-rectangle,
+.recharts-layer {
+  outline: none !important;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}

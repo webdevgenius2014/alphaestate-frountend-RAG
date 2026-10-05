@@ -91,6 +91,7 @@ const ApiConfig = {
   capRateMap: `${apiURL}/analytics/market/cap-rate-map`,
   exportReport: `${apiURL}/analytics/export/excel`,
   marketSnapshots: `${apiURL}/analytics/market/snapshots`,
+  marketSnapshotReport: `${apiURL}/analytics/market/snapshot-report`,
   marketInsights: `${apiURL}/analytics/market/insights`,
   marketAppreciationPotential: `${apiURL}/analytics/market/appreciation-potential`,
 
