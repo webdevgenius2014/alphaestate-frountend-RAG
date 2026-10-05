@@ -145,7 +145,7 @@ function fmtM(v: number) {
     return `AED ${v}M`;
 }
 
-export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ month: string; yas: number; alReem: number; saadiyat: number }> }) {
+export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ month: string; yas: number | null; alReem: number | null; saadiyat: number | null }> }) {
     const animActive = useAnimSync();
     const [hidden, setHidden] = useState<Set<string>>(new Set());
     const chartData = apiData ?? INVESTMENT_MOVEMENT_DATA;
@@ -179,8 +179,7 @@ export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ mont
                             tickLine={false}
                             tickFormatter={fmtM}
                             width={76}
-                            domain={[200, 1200]}
-                            ticks={[200, 400, 600, 800, 1000, 1200]}
+                            domain={[0, "auto"]}
                         />
                         <Tooltip
                             formatter={(v, name) => [fmtM(Number(v)), name]}
@@ -197,6 +196,7 @@ export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ mont
                                 stroke={s.color}
                                 strokeWidth={2}
                                 dot={false}
+                                connectNulls
                                 activeDot={{ r: 4, fill: s.color, stroke: "var(--db-sidebar-bg)", strokeWidth: 2 }}
                                 hide={hidden.has(s.key)}
                                 isAnimationActive={animActive}
@@ -312,8 +312,12 @@ export function AIMarketIntelWidget({
         bullishDistrictsPct?: number;
         totalTransactionVolume?: number;
         totalTransactionVolumeChange?: number;
+        marketGrowthConfidence?: number;
     };
 }) {
+    const growthConfidence = data?.marketGrowthConfidence != null && Number.isFinite(Number(data.marketGrowthConfidence))
+        ? Number(data.marketGrowthConfidence)
+        : null;
     const bullishCount = data?.bullishDistrictsCount ?? 0;
     const bullishPct = data?.bullishDistrictsPct ?? 0;
     const volume = data?.totalTransactionVolume ?? 0;
@@ -350,7 +354,7 @@ export function AIMarketIntelWidget({
                 </ResponsiveContainer>
                 {/* Center label sits at bottom — the circle's midpoint */}
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none pb-1">
-                    <AnimatedNumber value="0%" className="text-3xl font-bold text-(--db-text-primary) leading-none" />
+                    <AnimatedNumber value={growthConfidence != null ? `${growthConfidence}%` : "–"} className="text-3xl font-bold text-(--db-text-primary) leading-none" />
                     <span className="text-[11px] text-(--db-text-primary) mt-1 leading-none">Market Growth</span>
                     <span className="text-[11px] text-(--db-text-primary) leading-none">Confidence</span>
                 </div>

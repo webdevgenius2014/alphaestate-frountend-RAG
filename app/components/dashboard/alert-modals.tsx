@@ -470,10 +470,24 @@ async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "d
     }
 
     if (types.includes("investment")) {
-        const cmpRes = await appService.getDistrictRoi("all", period);
+        const [cmpRes, selectedRes] = await Promise.all([
+            appService.getDistrictRoi("all", period),
+            district || districtId
+                ? appService.getDistrictRoi(districtId ? undefined : district, period, districtId ? [districtId] : undefined)
+                : Promise.resolve(null),
+        ]);
+        const allRows: Array<Record<string, any>> = cmpRes?.data?.data ?? [];
+        const rowName = (r: Record<string, any>) => String(r.districtName ?? r.district ?? "").trim().toLowerCase();
+        const target = (district || "").trim().toLowerCase();
+        const isSelected = (r: Record<string, any>) =>
+            (districtId && (r.districtId === districtId || r.id === districtId)) || (target && rowName(r) === target);
+        const selectedRow =
+            allRows.find(isSelected) ??
+            ((selectedRes?.data?.data ?? []) as Array<Record<string, any>>).find(isSelected) ??
+            (selectedRes?.data?.data ?? [])[0];
         sections.push({
             title: "Investment Comparison",
-            districtComparison: cmpRes?.data?.data ?? [],
+            districtComparison: selectedRow ? [selectedRow, ...allRows.filter((r) => !isSelected(r))] : allRows,
         });
         bullets.push("Investment comparison across districts");
     }
@@ -497,14 +511,14 @@ async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "d
     }
 
     if (types.includes("snapshot")) {
-        const [snapRes, overviewRes] = await Promise.all([
-            appService.getMarketSnapshots(district || undefined),
-            appService.getUserAnalytics(),
-        ]);
+        const snapRes = await appService.getMarketSnapshotReport(
+            district || undefined,
+            propertyType ? slugifyReportValue(propertyType) : undefined,
+            period,
+        );
         sections.push({
             title: "Market Snapshot",
             snapshot: snapRes?.data?.data ?? null,
-            overview: overviewRes?.data?.data ?? null,
         });
         bullets.push("Market snapshot overview");
     }

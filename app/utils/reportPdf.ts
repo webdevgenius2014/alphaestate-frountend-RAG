@@ -56,6 +56,46 @@ function addTable(doc: jsPDF, head: string[], body: (string | number)[][], y: nu
     return (doc as any).lastAutoTable.finalY + 8;
 }
 
+const fmtAed = (v: unknown) => (v != null && !isNaN(Number(v)) ? `AED ${Math.round(Number(v)).toLocaleString()}` : "-");
+const fmtCount = (v: unknown) => (v != null && !isNaN(Number(v)) ? Number(v).toLocaleString() : "-");
+
+// Each field lists the keys it may arrive under (snapshot-report uses camelCase, snapshots uses snake_case).
+const SNAPSHOT_FIELDS: { keys: string[]; label: string; format: (v: unknown) => string }[] = [
+    { keys: ["district"], label: "District", format: (v) => (v != null && v !== "" ? String(v) : "-") },
+    { keys: ["avgPrice", "avg_price"], label: "Avg Price", format: fmtAed },
+    { keys: ["medianPrice", "median_price"], label: "Median Price", format: fmtAed },
+    { keys: ["totalTransactions", "total_transactions"], label: "Total Transactions", format: fmtCount },
+    { keys: ["avgRateSqm", "avg_rate_sqm"], label: "Avg Rate / SQM", format: fmtAed },
+    { keys: ["offPlanCount", "off_plan_count"], label: "Off-Plan Count", format: fmtCount },
+    { keys: ["readyCount", "ready_count"], label: "Ready Count", format: fmtCount },
+];
+
+const fieldValue = (row: Record<string, unknown>, keys: string[]) => keys.map((k) => row[k]).find((v) => v != null);
+
+// Collects every object in the snapshot payload (at any depth) that carries snapshot metrics.
+function collectSnapshotRows(value: unknown, out: Record<string, unknown>[] = []): Record<string, unknown>[] {
+    if (Array.isArray(value)) {
+        value.forEach((v) => collectSnapshotRows(v, out));
+    } else if (value && typeof value === "object") {
+        const obj = value as Record<string, unknown>;
+        if (SNAPSHOT_FIELDS.slice(1).some((f) => fieldValue(obj, f.keys) != null)) out.push(obj);
+        else Object.values(obj).forEach((v) => collectSnapshotRows(v, out));
+    }
+    return out;
+}
+
+function addSnapshot(doc: jsPDF, snapshot: unknown, y: number, watermarkDataUrl: string): number {
+    const rows = collectSnapshotRows(snapshot);
+    if (!rows.length) return y;
+    // Skip fields the API didn't return at all (e.g. median price on snapshot-report).
+    const fields = SNAPSHOT_FIELDS.filter((f) => rows.some((r) => fieldValue(r, f.keys) != null));
+    y = ensureSpace(doc, y, watermarkDataUrl, 20);
+    if (rows.length === 1) {
+        return addKeyValueTable(doc, fields.map((f) => [f.label, f.format(fieldValue(rows[0], f.keys))]), y);
+    }
+    return addTable(doc, fields.map((f) => f.label), rows.map((r) => fields.map((f) => f.format(fieldValue(r, f.keys)))), y);
+}
+
 export type ReportSection = {
     title: string;
     districtComparison?: Array<Record<string, any>>;
@@ -127,11 +167,7 @@ export async function buildReportPdf(opts: {
         }
 
         if (section.snapshot) {
-            const entries = Object.entries(section.snapshot).filter(([, v]) => v != null && typeof v !== "object");
-            if (entries.length) {
-                y = ensureSpace(doc, y, watermarkDataUrl, 20);
-                y = addKeyValueTable(doc, entries.map(([k, v]) => [humanizeKey(k), String(v)]), y);
-            }
+            y = addSnapshot(doc, section.snapshot, y, watermarkDataUrl);
         }
 
         if (section.overview) {

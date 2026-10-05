@@ -124,11 +124,11 @@ export function PriceTrendChart({ data: apiData }: { data?: Array<{ month: strin
     );
 }
 
-function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload?: { buy?: number; extra?: number; color?: string } }>; label?: string }) {
+function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload?: { buy?: number; extra?: number; rental?: number; color?: string } }>; label?: string }) {
     if (!active || !payload?.length || !label) return null;
     const row = payload[0]?.payload;
     const color = row?.color ?? "#D28A44";
-    const rental = (row?.buy ?? 0) + (row?.extra ?? 0);
+    const rental = row?.rental ?? +((row?.buy ?? 0) + (row?.extra ?? 0)).toFixed(2);
     return (
         <div style={{
             background: "var(--db-sidebar-bg)",
@@ -137,7 +137,7 @@ function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Ar
             padding: "6px 12px",
             boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
         }}>
-            <p style={{ color, fontSize: 15, fontWeight: 700, lineHeight: 1.2 }}>{Math.round(rental)}%</p>
+            <p style={{ color, fontSize: 15, fontWeight: 700, lineHeight: 1.2 }}>{rental}%</p>
             <p style={{ color: "var(--db-text-primary)", fontSize: 10, marginTop: 2 }}>{label}</p>
         </div>
     );
@@ -155,10 +155,14 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
             return next;
         });
 
-    const baseRows = (apiData ?? RENTAL_YIELD_DATA).map((d, i) => {
-        const match = CAP_RATE_DATA.find(r => r.name.toLowerCase() === d.district.toLowerCase());
-        return { district: d.district, buy: d.buy, rental: d.rental, color: match?.color ?? CAP_RATE_DATA[i % CAP_RATE_DATA.length]?.color ?? "#D28A44" };
-    });
+    const baseRows = (apiData ?? RENTAL_YIELD_DATA)
+        .filter((d) => Number.isFinite(d.rental) && d.rental > 0)
+        .map((d, i) => {
+            const match = CAP_RATE_DATA.find(r => r.name.toLowerCase() === d.district.toLowerCase());
+            return { district: d.district, buy: d.buy, rental: d.rental, color: match?.color ?? CAP_RATE_DATA[i % CAP_RATE_DATA.length]?.color ?? "#D28A44" };
+        });
+    const maxRental = baseRows.reduce((m, d) => Math.max(m, d.rental), 0);
+    const yMax = Math.max(8, Math.ceil(maxRental));
 
     const chartData = baseRows.map((d, i) => {
         const isHidden = hidden.has(i);
@@ -166,6 +170,7 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
             district: d.district,
             buy: isHidden ? 0 : d.buy,
             extra: isHidden ? 0 : +(d.rental - d.buy).toFixed(2),
+            rental: d.rental,
             color: d.color,
         };
     });
@@ -192,13 +197,17 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
                             tick={{ fill: "var(--db-text-primary)", fontSize: 11 }}
                             axisLine={{ stroke: "var(--db-border)" }} tickLine={false}
                             tickMargin={8}
+                            interval={0}
+                            angle={baseRows.length > 6 ? -35 : 0}
+                            textAnchor={baseRows.length > 6 ? "end" : "middle"}
+                            height={baseRows.length > 6 ? 70 : 30}
                         />
                         <YAxis
                             tick={{ fill: "var(--db-text-primary)", fontSize: 11 }}
                             axisLine={{ stroke: "var(--db-border)" }} tickLine={false}
                             tickFormatter={(v) => `${v}%`}
-                            width={36} domain={[0, 8]}
-                            ticks={[0, 1, 2, 3, 4, 5, 6, 7, 8]}
+                            width={36} domain={[0, yMax]}
+                            ticks={Array.from({ length: yMax + 1 }, (_, i) => i)}
                         />
                         <Tooltip content={<BarTooltip />} cursor={false} />
                         <Bar dataKey="buy" stackId="yield" radius={[0, 0, 4, 4]} name="Buy Rate"
@@ -296,7 +305,7 @@ export function CapRateChart({
     }));
 
     const avgValue = overallValue ?? (
-        baseRows.length ? baseRows.reduce((sum, d) => sum + d.value, 0) / baseRows.length : 0
+        baseRows.length ? +(baseRows.reduce((sum, d) => sum + d.value, 0) / baseRows.length).toFixed(2) : 0
     );
 
     return (
@@ -323,7 +332,7 @@ export function CapRateChart({
                     </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <AnimatedNumber value={`${avgValue.toFixed(1)}%`} className="text-2xl font-bold text-(--db-text-primary) leading-none" />
+                    <AnimatedNumber value={`${avgValue}%`} className="text-2xl font-bold text-(--db-text-primary) leading-none" />
                     {overallSqft != null && (
                         <div className="inline-flex gap-1 items-center mt-2">
                             <AnimatedNumber value={Math.round(overallSqft).toLocaleString()} className="text-[10px] text-(--db-text-primary)" />

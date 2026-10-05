@@ -101,6 +101,28 @@ function periodLabelToEnum(label: string): "last_year" | "last_6months" | "last_
     }
 }
 
+const REPORT_FORM_STORAGE_KEY = "reports:lastSelections";
+
+type SavedReportForm = {
+    type?: string;
+    district?: string;
+    propType?: string;
+    timePeriod?: string;
+    format?: string;
+    saleType?: string;
+    areaSqm?: string;
+    askingPrice?: string;
+};
+
+function readSavedReportForm(): SavedReportForm {
+    try {
+        const raw = localStorage.getItem(REPORT_FORM_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch {
+        return {};
+    }
+}
+
 const actionBtnCls = "w-[23px] h-[23px] rounded-sm flex items-center justify-center text-(--db-text-primary) hover:text-white transition-colors bg-(--db-icon-btn-bg) hover:bg-[#D28A44] ease-linear";
 
 export default function ReportsPage() {
@@ -130,6 +152,37 @@ export default function ReportsPage() {
     const [sharingId, setSharingId] = useState<string | null>(null);
 
     const isValidationSelected = selectedTypes.has("validation");
+
+    const [formRestored, setFormRestored] = useState(false);
+    useEffect(() => {
+        const saved = readSavedReportForm();
+        if (saved.type && REPORT_TYPE_CARDS.some((r) => r.id === saved.type)) setSelectedTypes(new Set([saved.type]));
+        if (saved.district) setDistrict(saved.district);
+        if (saved.propType && REPORT_PROPERTY_TYPES.includes(saved.propType)) setPropType(saved.propType);
+        if (saved.timePeriod && REPORT_TIME_PERIODS.includes(saved.timePeriod)) setTimePeriod(saved.timePeriod);
+        if (saved.format && REPORT_FORMATS.includes(saved.format)) setFormat(saved.format);
+        if (saved.saleType && SALE_TYPE_OPTIONS.includes(saved.saleType)) setSaleType(saved.saleType);
+        if (saved.areaSqm) setAreaSqm(saved.areaSqm);
+        if (saved.askingPrice) setAskingPrice(saved.askingPrice);
+        setFormRestored(true);
+    }, []);
+
+    useEffect(() => {
+        if (!formRestored) return;
+        try {
+            const data: SavedReportForm = {
+                type: Array.from(selectedTypes)[0],
+                district,
+                propType,
+                timePeriod,
+                format,
+                saleType,
+                areaSqm,
+                askingPrice,
+            };
+            localStorage.setItem(REPORT_FORM_STORAGE_KEY, JSON.stringify(data));
+        } catch {}
+    }, [formRestored, selectedTypes, district, propType, timePeriod, format, saleType, areaSqm, askingPrice]);
 
     async function handleShareRow(row: ReportRow) {
         if (sharingId) return;
@@ -172,7 +225,7 @@ export default function ReportsPage() {
                     .map((item: any) => (typeof item === "string" ? { name: item } : { id: item.id ?? item._id, name: item.name ?? item.district ?? "" }))
                     .filter((d: any) => d.name);
                 setDistricts(names);
-                setDistrict((prev) => prev || names[0]?.name || "");
+                setDistrict((prev) => (prev && names.some((d: { name: string }) => d.name === prev) ? prev : names[0]?.name || ""));
             }
         });
     }, []);
@@ -203,8 +256,6 @@ export default function ReportsPage() {
             areaSqm: isValidationSelected ? Number(areaSqm) : undefined,
             askingPriceAed: isValidationSelected ? Number(askingPrice) : undefined,
         });
-
-        handleReset();
     }
 
     function handleReset() {

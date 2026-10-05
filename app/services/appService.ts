@@ -710,6 +710,18 @@ class AppService {
     }
   }
 
+  async getMarketSnapshotReport(district?: string, propertyType?: string, period?: string) {
+    try {
+      const params: Record<string, string> = {};
+      if (district) params.district = district;
+      if (propertyType) params.propertyType = propertyType;
+      if (period) params.period = period;
+      return await instance.get(ApiConfig.marketSnapshotReport, { params: Object.keys(params).length ? params : undefined });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Reports
   async getReportsHistory(page: number = 1, limit: number = 10) {
     try {
