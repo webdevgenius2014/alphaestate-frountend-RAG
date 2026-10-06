@@ -647,6 +647,7 @@ export type InvestmentProperty = {
   district: string;
   price: string;
   sqft: string;
+  sqm?: string;
   yield_: string;
   roi: string;
   status: string;

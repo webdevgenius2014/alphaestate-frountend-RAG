@@ -151,7 +151,7 @@ function mapCompareRow(item: any, index: number): CompareRow {
         price: item.priceFormatted ?? (item.priceAed != null ? `AED ${Number(item.priceAed).toLocaleString()}` : "-"),
         roi: item.roi != null ? `${Number(item.roi).toFixed(1)}%` : "-",
         rentalYield: item.rentalYield != null ? `${Number(item.rentalYield).toFixed(1)}%` : "-",
-        appreciation: item.appreciationLevel ?? "-",
+        appreciation: item.yoyGrowth != null ? `${+Number(item.yoyGrowth).toFixed(2)}%` : (item.appreciationLevel ?? "-"),
         aiScore: item.aiScore != null ? `${Number(item.aiScore).toFixed(1)}%` : "-",
         signal: item.investmentSignal ?? "-",
     };
@@ -165,6 +165,10 @@ function toRecommendation(item: any): SavedRecommendation {
         property: item.projectName ?? "-",
         description: item.description ?? "",
     };
+}
+
+function capitalizeWords(value?: string) {
+  return (value ?? "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export default function SavedPage() {
@@ -220,13 +224,13 @@ export default function SavedPage() {
                             name: p.projectName,
                             district: p.district,
                             image: p.coverImageUrl || "/property-1.png",
-                            type: p.propertyType,
+                            type: capitalizeWords(p.propertyType),
                             beds: p.layout,
-                            sqft: String(p.latestTransactionAreaSqm != null ? Math.round(p.latestTransactionAreaSqm * 10.764) : (p.areaSqft ?? 0)),
+                            sqft: String(p.latestTransactionAreaSqft != null ? Math.round(p.latestTransactionAreaSqft) : (p.areaSqft ?? 0)),
                             price: p.priceFormatted ?? `AED ${(p.priceAed ?? 0).toLocaleString()}`,
                             roi: `${(m.roi ?? 0).toFixed(1)}%`,
                             rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
-                            appreciation: m.appreciationLevel ?? "N/A",
+                            appreciation: p.yoyGrowth != null ? `${+Number(p.yoyGrowth).toFixed(2)}%` : (m.appreciationLevel ?? "N/A"),
                             appreciationCls: m.appreciationLevel === "High" ? "text-green-500" : "text-yellow-500",
                             aiScore: `${(m.aiScore ?? 0).toFixed(1)}%`,
                             signal: m.investmentSignal ?? "",

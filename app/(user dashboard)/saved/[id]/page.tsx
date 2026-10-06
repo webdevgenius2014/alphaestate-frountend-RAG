@@ -96,7 +96,7 @@ export default function PropertyDetailPage() {
                             image: p.coverImageUrl || "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
-                            sqft: String(p.latestTransactionAreaSqm != null ? Math.round(p.latestTransactionAreaSqm * 10.764) : (p.areaSqft ?? 0)),
+                            sqft: String(p.latestTransactionAreaSqft != null ? Math.round(p.latestTransactionAreaSqft) : (p.areaSqft ?? 0)),
                             price: p.priceFormatted ?? `AED ${(p.priceAed ?? p.displayPrice ?? 0).toLocaleString()}`,
                             roi: `${(m.roi ?? 0).toFixed(1)}%`,
                             rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
@@ -261,20 +261,22 @@ export default function PropertyDetailPage() {
         image: property.coverImageUrl || "/property-1.png",
         type: property.propertyType,
         beds: property.layout,
-        sqft: String(Math.round(parseFloat(property.latestTransactionAreaSqm ?? "0") * 10.764)),
+        sqft: String(Math.round(parseFloat(property.latestTransactionAreaSqft ?? "0"))),
         price: `AED ${(property.displayPrice ?? 0).toLocaleString()}`,
-        roi: `${(parseFloat(property.roi ?? "0") * 100).toFixed(1)}%`,
-        rentalYield: `${(parseFloat(property.rentalYield ?? "0") * 100).toFixed(1)}%`,
-        appreciation: `${(parseFloat(property.yoyGrowth ?? "0") * 100).toFixed(1)}%`,
-        appreciationCls: property.districtTrendDirection === "rising" ? "text-green-500" : "text-yellow-500",
-        aiScore: `${(parseFloat(property.capRate ?? "0") * 100).toFixed(1)}%`,
+        roi: `${+parseFloat(property.roi ?? "0").toFixed(2)}%`,
+        rentalYield: `${+parseFloat(property.rentalYield ?? "0").toFixed(2)}%`,
+        appreciation: property.districtRef?.appreciationPotential
+            ? property.districtRef.appreciationPotential.charAt(0).toUpperCase() + property.districtRef.appreciationPotential.slice(1)
+            : "N/A",
+        appreciationCls: property.districtRef?.appreciationPotential === "high" ? "text-green-500" : "text-yellow-500",
+        aiScore: `${+parseFloat(property.aiScore ?? "0").toFixed(2)}%`,
         signal: property.districtMarketSignal,
         signalCls: property.districtMarketSignal === "bullish" ? "text-green-500" : "text-yellow-500",
     };
 
     const detail = {
         images: images.length > 0 ? images : ["/property-1.png"],
-        dealScore: Math.round(parseFloat(property.roi ?? "0") * 1000),
+        dealScore: +parseFloat(property.yoyGrowth ?? "0").toFixed(2),
         aiDescription: property.description ?? "This property demonstrates strong rental demand and stable appreciation momentum compared to nearby comparable developments.",
         saleType: property.recentTransactions?.[0]?.saleType ?? "Ready",
         developer: property.developerName ?? "N/A",

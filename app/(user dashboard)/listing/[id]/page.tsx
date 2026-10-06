@@ -96,11 +96,11 @@ export default function PropertyDetailPage() {
                             image: p.coverImageUrl ?? "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
-                            sqft: String(p.latestTransactionAreaSqm != null ? Math.round(p.latestTransactionAreaSqm * 10.764) : (p.areaSqft ?? 0)),
+                            sqft: String(p.latestTransactionAreaSqft != null ? Math.round(p.latestTransactionAreaSqft) : (p.areaSqft ?? 0)),
                             price: p.priceFormatted ?? `AED ${(p.priceAed ?? p.displayPrice ?? 0).toLocaleString()}`,
                             roi: `${(p.roi ?? 0).toFixed(1)}%`,
                             rentalYield: `${(p.rentalYield ?? 0).toFixed(1)}%`,
-                            appreciation: `${(p.yoyGrowth ?? 0).toFixed(1)}%`,
+                            appreciation: `${+Number(p.yoyGrowth ?? 0).toFixed(2)}%`,
                             appreciationCls: m.appreciationLevel === "High" ? "text-green-500" : "text-yellow-500",
                             aiScore: `${(p.aiScore ?? 0).toFixed(1)}%`,
                             signal: m.investmentSignal ?? "",
@@ -260,20 +260,22 @@ export default function PropertyDetailPage() {
         image: property.coverImageUrl ?? "",
         type: property.propertyType,
         beds: property.layout,
-        sqft: String(Math.round(parseFloat(property.latestTransactionAreaSqm ?? "0") * 10.764)),
+        sqft: String(Math.round(parseFloat(property.latestTransactionAreaSqft ?? "0"))),
         price: `AED ${(property.displayPrice ?? 0).toLocaleString()}`,
-        roi: `${(parseFloat(property.roi ?? "0") * 100).toFixed(1)}%`,
-        rentalYield: `${(parseFloat(property.rentalYield ?? "0") * 100).toFixed(1)}%`,
-        appreciation: `${(parseFloat(property.yoyGrowth ?? "0") * 100).toFixed(1)}%`,
-        appreciationCls: property.districtTrendDirection === "rising" ? "text-green-500" : "text-yellow-500",
-        aiScore: `${parseFloat(property.aiScore ?? "0") .toFixed(1)}%`,
+        roi: `${+parseFloat(property.roi ?? "0").toFixed(2)}%`,
+        rentalYield: `${+parseFloat(property.rentalYield ?? "0").toFixed(2)}%`,
+        appreciation: property.districtRef?.appreciationPotential
+            ? property.districtRef.appreciationPotential.charAt(0).toUpperCase() + property.districtRef.appreciationPotential.slice(1)
+            : "N/A",
+        appreciationCls: property.districtRef?.appreciationPotential === "high" ? "text-green-500" : "text-yellow-500",
+        aiScore: `${+parseFloat(property.aiScore ?? "0").toFixed(2)}%`,
         signal: property.districtMarketSignal,
         signalCls: property.districtMarketSignal === "bullish" ? "text-green-500" : "text-yellow-500",
     };
 
     const detail = {
         images: images.length > 0 ? images : ["/property-1.png"],
-        dealScore: Math.round(parseFloat(property.roi ?? "0") * 1000),
+        dealScore: +parseFloat(property.yoyGrowth ?? "0").toFixed(2),
         aiDescription: property.description ?? "This property demonstrates strong rental demand and stable appreciation momentum compared to nearby comparable developments.",
         saleType: property.recentTransactions?.[0]?.saleType ?? "Ready",
         developer: property.developerName ?? "N/A",
@@ -284,7 +286,10 @@ export default function PropertyDetailPage() {
             { label: "Appreciation Potential", value: property.districtRef?.appreciationPotential ?? "N/A" },
             { label: "Total Transactions", value: String(property.transactionCount ?? 0) },
         ],
-        features: (property.features ?? []) as { icon: ReactNode; title: string; description: string }[],
+        // API sends features as plain strings (e.g. "Pool"); normalise to the card shape.
+        features: ((property.features ?? []) as Array<string | { icon?: ReactNode; title?: string; description?: string }>).map((f) =>
+            typeof f === "string" ? { icon: undefined, title: f, description: "" } : { icon: f.icon, title: f.title ?? "", description: f.description ?? "" }
+        ) as { icon: ReactNode; title: string; description: string }[],
     };
 
     const overviewRows = [
@@ -482,8 +487,8 @@ export default function PropertyDetailPage() {
                 <p className="text-[13px] text-(--db-text-primary) mb-4 max-w-225.25">Yas Golf Collection demonstrates stronger-than-average rental demand and stable appreciation momentum compared to nearby comparable developments.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {detail.features.map((feat) => (
-                        <Card key={feat.title}>
+                    {detail.features.map((feat, i) => (
+                        <Card key={`${feat.title || "feature"}-${i}`}>
                             <div className="w-12 h-12 rounded-sm bg-[#D28A441F] flex items-center justify-center mb-3.5">
                                 {feat.icon}
                             </div>
