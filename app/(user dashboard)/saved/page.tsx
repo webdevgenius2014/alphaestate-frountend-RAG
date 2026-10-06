@@ -222,7 +222,7 @@ export default function SavedPage() {
                             image: p.coverImageUrl || "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
-                            sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
+                            sqft: String(p.latestTransactionAreaSqm != null ? Math.round(p.latestTransactionAreaSqm * 10.764) : (p.areaSqft ?? 0)),
                             price: p.priceFormatted ?? `AED ${(p.priceAed ?? 0).toLocaleString()}`,
                             roi: `${(m.roi ?? 0).toFixed(1)}%`,
                             rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,

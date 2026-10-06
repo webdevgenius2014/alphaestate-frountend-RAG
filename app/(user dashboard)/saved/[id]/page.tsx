@@ -96,7 +96,7 @@ export default function PropertyDetailPage() {
                             image: p.coverImageUrl || "/property-1.png",
                             type: p.propertyType,
                             beds: p.layout,
-                            sqft: String(p.areaSqft ?? Math.round((p.landAreaSqm ?? 0) * 10.764)),
+                            sqft: String(p.latestTransactionAreaSqm != null ? Math.round(p.latestTransactionAreaSqm * 10.764) : (p.areaSqft ?? 0)),
                             price: p.priceFormatted ?? `AED ${(p.priceAed ?? p.displayPrice ?? 0).toLocaleString()}`,
                             roi: `${(m.roi ?? 0).toFixed(1)}%`,
                             rentalYield: `${(m.rentalYield ?? 0).toFixed(1)}%`,
@@ -261,7 +261,7 @@ export default function PropertyDetailPage() {
         image: property.coverImageUrl || "/property-1.png",
         type: property.propertyType,
         beds: property.layout,
-        sqft: String(Math.round(parseFloat(property.landAreaSqm ?? "0") * 10.764)),
+        sqft: String(Math.round(parseFloat(property.latestTransactionAreaSqm ?? "0") * 10.764)),
         price: `AED ${(property.displayPrice ?? 0).toLocaleString()}`,
         roi: `${(parseFloat(property.roi ?? "0") * 100).toFixed(1)}%`,
         rentalYield: `${(parseFloat(property.rentalYield ?? "0") * 100).toFixed(1)}%`,
@@ -317,7 +317,7 @@ export default function PropertyDetailPage() {
         if (analyzingDeal) return;
         setAnalyzingDeal(true);
         try {
-            const areaSqm = parseFloat(property.landAreaSqm ?? "0");
+            const areaSqm = parseFloat(property.latestTransactionAreaSqm ?? "0");
             const rentalYieldFrac = parseFloat(property.rentalYield ?? "0");
             const payload: Record<string, any> = {
                 propertyType: slugify(saved.type ?? ""),

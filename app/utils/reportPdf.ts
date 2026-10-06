@@ -59,9 +59,16 @@ function addTable(doc: jsPDF, head: string[], body: (string | number)[][], y: nu
 const fmtAed = (v: unknown) => (v != null && !isNaN(Number(v)) ? `AED ${Math.round(Number(v)).toLocaleString()}` : "-");
 const fmtCount = (v: unknown) => (v != null && !isNaN(Number(v)) ? Number(v).toLocaleString() : "-");
 
-// Each field lists the keys it may arrive under (snapshot-report uses camelCase, snapshots uses snake_case).
-const SNAPSHOT_FIELDS: { keys: string[]; label: string; format: (v: unknown) => string }[] = [
-    { keys: ["district"], label: "District", format: (v) => (v != null && v !== "" ? String(v) : "-") },
+const fmtText = (v: unknown) => (v != null && v !== "" ? String(v) : "-");
+
+const SNAPSHOT_LABEL_FIELDS: { keys: string[]; label: string; format: (v: unknown) => string }[] = [
+    { keys: ["periodLabel", "period_label"], label: "Period", format: fmtText },
+    { keys: ["fromDate", "from_date"], label: "From", format: fmtText },
+    { keys: ["toDate", "to_date"], label: "To", format: fmtText },
+    { keys: ["district"], label: "District", format: fmtText },
+];
+
+const SNAPSHOT_METRIC_FIELDS: { keys: string[]; label: string; format: (v: unknown) => string }[] = [
     { keys: ["avgPrice", "avg_price"], label: "Avg Price", format: fmtAed },
     { keys: ["medianPrice", "median_price"], label: "Median Price", format: fmtAed },
     { keys: ["totalTransactions", "total_transactions"], label: "Total Transactions", format: fmtCount },
@@ -69,6 +76,8 @@ const SNAPSHOT_FIELDS: { keys: string[]; label: string; format: (v: unknown) => 
     { keys: ["offPlanCount", "off_plan_count"], label: "Off-Plan Count", format: fmtCount },
     { keys: ["readyCount", "ready_count"], label: "Ready Count", format: fmtCount },
 ];
+
+const SNAPSHOT_FIELDS = [...SNAPSHOT_LABEL_FIELDS, ...SNAPSHOT_METRIC_FIELDS];
 
 const fieldValue = (row: Record<string, unknown>, keys: string[]) => keys.map((k) => row[k]).find((v) => v != null);
 
@@ -78,7 +87,7 @@ function collectSnapshotRows(value: unknown, out: Record<string, unknown>[] = []
         value.forEach((v) => collectSnapshotRows(v, out));
     } else if (value && typeof value === "object") {
         const obj = value as Record<string, unknown>;
-        if (SNAPSHOT_FIELDS.slice(1).some((f) => fieldValue(obj, f.keys) != null)) out.push(obj);
+        if (SNAPSHOT_METRIC_FIELDS.some((f) => fieldValue(obj, f.keys) != null)) out.push(obj);
         else Object.values(obj).forEach((v) => collectSnapshotRows(v, out));
     }
     return out;

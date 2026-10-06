@@ -248,7 +248,7 @@ function ListingPageContent() {
               image: item.coverImageUrl || "/property-1.png",
               type: item.propertyType,
               beds: item.layout,
-              sqft: String(Math.round((item.landAreaSqm ?? 0) * 10.764)),
+              sqft: String(Math.round((item.latestTransactionAreaSqm ?? 0) * 10.764)),
               price: `AED ${(item.displayPrice ?? 0).toLocaleString()}`,
               roi: `${(item.roi ?? 0).toFixed(1)}%`,
               rentalYield: `${(item.rentalYield ?? 0).toFixed(1)}%`,
