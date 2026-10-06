@@ -196,6 +196,10 @@ function PropertyCard({ prop, isSaved = false }: { prop: SavedProperty; isSaved?
   );
 }
 
+function capitalizeWords(value?: string) {
+  return (value ?? "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function ListingPageContent() {
   const searchParams = useSearchParams();
   const sortBy = searchParams.get("sortBy");
@@ -246,13 +250,13 @@ function ListingPageContent() {
               name: item.projectName,
               district: item.districtName,
               image: item.coverImageUrl || "/property-1.png",
-              type: item.propertyType,
+              type: capitalizeWords(item.propertyType),
               beds: item.layout,
-              sqft: String(Math.round((item.landAreaSqm ?? 0) * 10.764)),
+              sqft: String(Math.round(Number(item.latestTransactionAreaSqft ?? 0))),
               price: `AED ${(item.displayPrice ?? 0).toLocaleString()}`,
               roi: `${(item.roi ?? 0).toFixed(1)}%`,
               rentalYield: `${(item.rentalYield ?? 0).toFixed(1)}%`,
-              appreciation: `${(item.yoyGrowth ?? 0).toFixed(1)}%`,
+              appreciation: `${+Number(item.yoyGrowth ?? 0).toFixed(2)}%`,
               appreciationCls:
                 item.districtTrendDirection === "rising"
                   ? "text-green-500"

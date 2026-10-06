@@ -1201,9 +1201,19 @@ class AppService {
     }
   }
 
-  async getRentalCoverage() {
+  async getRentalCoverage(page: number = 1, limit: number = 20) {
     try {
-      return await instance.get(ApiConfig.rentalCoverage);
+      return await instance.get(ApiConfig.rentalCoverage, {
+        params: { page, limit },
+      });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async recomputeDistricts() {
+    try {
+      return await instance.post(ApiConfig.adminDistrictsRecompute);
     } catch (error: any) {
       return error.response;
     }

@@ -62,6 +62,7 @@ const ApiConfig = {
   adminDistricts: `${apiURL}/admin/districts`,
   adminDistrictsById: `${apiURL}/admin/districts/{id}`,
   adminDistrictsCoverImage: `${apiURL}/admin/districts/{id}/cover-image`,
+  adminDistrictsRecompute: `${apiURL}/admin/districts/recompute`,
 
   // Contact (landing page)
   contact: `${apiURL}/contact`,

@@ -179,7 +179,7 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
         <div>
             <div className="bg-(--db-main-bg) rounded-lg p-4">
                 <ResponsiveContainer width="100%" height={340}>
-                    <BarChart data={chartData} margin={{ top: 10, right: 16, left: -4, bottom: 0 }} barSize={32}>
+                    <BarChart data={chartData} margin={{ top: 10, right: 16, left: -4, bottom: 0 }} maxBarSize={32}>
                         <defs>
                             <pattern
                                 id="stripePattern"
@@ -194,13 +194,9 @@ export function RentalYieldChart({ data: apiData }: { data?: Array<{ district: s
                         </defs>
                         <XAxis
                             dataKey="district"
-                            tick={{ fill: "var(--db-text-primary)", fontSize: 11 }}
+                            tick={false}
                             axisLine={{ stroke: "var(--db-border)" }} tickLine={false}
-                            tickMargin={8}
-                            interval={0}
-                            angle={baseRows.length > 6 ? -35 : 0}
-                            textAnchor={baseRows.length > 6 ? "end" : "middle"}
-                            height={baseRows.length > 6 ? 70 : 30}
+                            height={8}
                         />
                         <YAxis
                             tick={{ fill: "var(--db-text-primary)", fontSize: 11 }}

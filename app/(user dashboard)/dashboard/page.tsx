@@ -70,8 +70,10 @@ function toSaleTypeLabel(s: string): string {
 function toInvestmentProperty(p: any): InvestmentProperty {
     const priceValue = p.displayPrice ?? p.price ?? p.listPrice ?? 0;
     const price = typeof priceValue === "number" ? `AED ${priceValue.toLocaleString()}` : String(priceValue);
-    const sqftValue = p.pricePerSqft ?? p.pricePerSqm ?? p.sqft ?? 0;
+    const sqftValue = p.latestTransactionAreaSqft ?? p.latestTransactionAreaSqft ?? 0;
     const sqft = typeof sqftValue === "number" ? sqftValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(sqftValue);
+    const sqmValue = p.latestTransactionAreaSqm;
+    const sqm = typeof sqmValue === "number" ? sqmValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(sqmValue);
     const yieldValue = p.rentalYield ?? p.yield ?? p.yield_;
     const yield_ = yieldValue == null ? "–" : typeof yieldValue === "number" ? `${yieldValue.toFixed(1)}%` : String(yieldValue);
     const roiValue = p.roi ?? p.roiPercent;
@@ -82,6 +84,7 @@ function toInvestmentProperty(p: any): InvestmentProperty {
         district: p.district ?? p.districtName ?? "",
         price,
         sqft,
+        sqm,
         yield_,
         roi,
         status: p.saleType ? toSaleTypeLabel(p.saleType) : p.status ?? "Ready",
@@ -398,6 +401,9 @@ export default function DashboardPage() {
                                         Price/sqft
                                     </th>
                                     <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
+                                        Price/sqm
+                                    </th>
+                                    <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
                                         Yield
                                     </th>
                                     <th className="px-5.5 font-semibold py-3 whitespace-nowrap">
@@ -418,6 +424,7 @@ export default function DashboardPage() {
                                         <td className="px-5 py-3.5">{p.district}</td>
                                         <td className="px-5 py-3.5">{p.price}</td>
                                         <td className="px-5 py-3.5">{p.sqft}</td>
+                                        <td className="px-5 py-3.5">{p.sqm ?? "–"}</td>
                                         <td className="px-5 py-3.5">{p.yield_}</td>
                                         <td className="px-5 py-3.5">{p.roi}</td>
                                         <td className="px-5 py-3.5">

@@ -141,8 +141,9 @@ const INVESTMENT_SERIES = [
 ];
 
 function fmtM(v: number) {
-    if (v >= 1000) return `AED ${+(v / 1000).toFixed(1)}B`;
-    return `AED ${v}M`;
+    if (!Number.isFinite(v) || v === 0) return "AED 0";
+    if (Math.abs(v) >= 1000) return `AED ${+(v / 1000).toFixed(1)}B`;
+    return `AED ${+v.toFixed(1)}M`;
 }
 
 export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ month: string; yas: number | null; alReem: number | null; saadiyat: number | null }> }) {
@@ -179,7 +180,10 @@ export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ mont
                             tickLine={false}
                             tickFormatter={fmtM}
                             width={76}
+                            scale="linear"
                             domain={[0, "auto"]}
+                            allowDataOverflow={false}
+                            tickCount={6}
                         />
                         <Tooltip
                             formatter={(v, name) => [fmtM(Number(v)), name]}
@@ -190,7 +194,7 @@ export function InvestmentMovementChart({ data: apiData }: { data?: Array<{ mont
                         {INVESTMENT_SERIES.map((s) => (
                             <Line
                                 key={s.key}
-                                type="natural"
+                                type="monotone"
                                 dataKey={s.key}
                                 name={s.name}
                                 stroke={s.color}

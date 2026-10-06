@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AIChatMonitoring } from "@/app/components/dashboard/ai-chat-monitoring";
 import { AIIntelligenceEngine } from "@/app/components/dashboard/ai-intelligence-engine";
 import { DistrictDataManagement } from "@/app/components/dashboard/district-data-management";
@@ -12,8 +13,22 @@ import { TABS, type DistrictDetail } from "../constants";
 
 type TabId = typeof TABS[number]["id"];
 
-export default function AIDataPage() {
-    const [activeTab, setActiveTab] = useState<TabId>("chat-monitoring");
+function isTabId(value: string | null): value is TabId {
+    return TABS.some((t) => t.id === value);
+}
+
+function AIDataPageContent() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const tabParam = searchParams.get("tab");
+    const activeTab: TabId = isTabId(tabParam) ? tabParam : "chat-monitoring";
+    const setActiveTab = (id: TabId) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", id);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
     const [drawerRecord, setDrawerRecord] = useState<DistrictDetail | null>(null);
 
     return (
@@ -57,5 +72,13 @@ export default function AIDataPage() {
 
             {drawerRecord && <DistrictDetailDrawer record={drawerRecord} onClose={() => setDrawerRecord(null)} />}
         </div>
+    );
+}
+
+export default function AIDataPage() {
+    return (
+        <Suspense fallback={null}>
+            <AIDataPageContent />
+        </Suspense>
     );
 }
