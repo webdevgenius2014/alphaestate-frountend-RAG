@@ -70,9 +70,9 @@ function toSaleTypeLabel(s: string): string {
 function toInvestmentProperty(p: any): InvestmentProperty {
     const priceValue = p.displayPrice ?? p.price ?? p.listPrice ?? 0;
     const price = typeof priceValue === "number" ? `AED ${priceValue.toLocaleString()}` : String(priceValue);
-    const sqftValue = p.latestTransactionAreaSqft ?? p.latestTransactionAreaSqft ?? 0;
+    const sqftValue = p.pricePerSqft;
     const sqft = typeof sqftValue === "number" ? sqftValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(sqftValue);
-    const sqmValue = p.latestTransactionAreaSqm;
+    const sqmValue = p.pricePerSqm;
     const sqm = typeof sqmValue === "number" ? sqmValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(sqmValue);
     const yieldValue = p.rentalYield ?? p.yield ?? p.yield_;
     const yield_ = yieldValue == null ? "–" : typeof yieldValue === "number" ? `${yieldValue.toFixed(1)}%` : String(yieldValue);
