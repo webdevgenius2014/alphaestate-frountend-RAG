@@ -195,7 +195,7 @@ export default function ReportsPage() {
                 await navigator.clipboard.writeText(shareUrl);
                 toast.success("Share link copied to clipboard.");
             } catch {
-                toast.success(shareUrl);
+                toast.success("Share link copied to clipboard.");
             }
         } else {
             toast.error(res?.data?.message || res?.data?.error || "Failed to generate share link.");
