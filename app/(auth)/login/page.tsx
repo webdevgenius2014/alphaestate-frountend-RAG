@@ -39,7 +39,7 @@ export default function LoginPage() {
                 }
                 window.location.href = user.role === "admin" ? "/admin-dashboard" : "/dashboard";
             } else {
-                toast.error(res?.data?.message || "Invalid email or password.");
+                toast.error(res?.data?.message || res?.data?.error || "Invalid email or password.");
             }
         } finally {
             setLoading(false);
