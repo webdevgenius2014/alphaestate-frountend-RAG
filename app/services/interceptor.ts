@@ -35,9 +35,17 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
-// A 401 from these endpoints means "current password is incorrect", not "session expired" —
-// they must never trigger the token-refresh/auto-logout flow below.
-const AUTH_CHECK_PATHS = ["/auth/change-password", "/admin/profile/change-password"];
+// A 401 from these endpoints means "wrong credentials / invalid token", not "session expired" —
+
+const AUTH_CHECK_PATHS = [
+  "/auth/login",
+  "/auth/signup",
+  "/auth/refresh",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/change-password",
+  "/admin/profile/change-password",
+];
 
 instance.interceptors.response.use(
   (response) => response,
