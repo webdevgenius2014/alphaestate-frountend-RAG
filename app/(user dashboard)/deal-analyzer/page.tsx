@@ -218,9 +218,33 @@ export default function DealAnalyzerPage() {
         return digits ? Number(digits) : 0;
     }
 
+    function validateForm(): string | null {
+        if (!form.propertyType) return "Please select a property type.";
+        if (!form.district) return "Please select a district.";
+        if (!form.sizeSqm.trim()) return "Please enter the property size.";
+        const size = Number(form.sizeSqm);
+        if (!Number.isFinite(size) || size <= 0) return "Property size must be a number greater than 0.";
+        if (!form.askingPrice.trim()) return "Please enter the asking price.";
+        if (parseNumber(form.askingPrice) <= 0) return "Asking price must be greater than 0.";
+        if (!form.saleType) return "Please select a sale type.";
+        if (form.expectedAnnualRent && parseNumber(form.expectedAnnualRent) <= 0) {
+            return "Expected annual rent must be greater than 0.";
+        }
+        return null;
+    }
+
+    function apiErrorMessage(res: any, fallback: string): string {
+        if (!res) return "Unable to reach the server. Please check your connection.";
+        const msg = res?.data?.message ?? res?.data?.error;
+        if (Array.isArray(msg)) return msg.filter(Boolean)[0] || fallback;
+        return (typeof msg === "string" && msg) || fallback;
+    }
+
     async function handleAnalyze() {
-        if (!form.district || !form.sizeSqm || !form.askingPrice) {
-            toast.error("Please fill in district, property size, and asking price.");
+        if (analyzing) return;
+        const validationError = validateForm();
+        if (validationError) {
+            toast.error(validationError);
             return;
         }
 
@@ -228,7 +252,7 @@ export default function DealAnalyzerPage() {
         const payload: Record<string, any> = {
             propertyType: slugify(form.propertyType),
             district: form.district,
-            areaSqm: parseNumber(form.sizeSqm),
+            areaSqm: Number(form.sizeSqm),
             askingPriceAed: parseNumber(form.askingPrice),
             saleType: slugify(form.saleType),
             saveResult: true,
@@ -236,14 +260,18 @@ export default function DealAnalyzerPage() {
         if (form.bedrooms) payload.bedrooms = bedroomsToApiValue(form.bedrooms);
         if (form.expectedAnnualRent) payload.expectedAnnualRentAed = parseNumber(form.expectedAnnualRent);
 
-        const res = await appService.analyzeDeal(payload as any);
-        setAnalyzing(false);
-
-        if ((res?.status === 200 || res?.status === 201) && res?.data?.data) {
-            setResult(res.data.data);
-            toast.success("Deal analyzed successfully.");
-        } else {
-            toast.error(res?.data?.message || res?.data?.error || "Failed to analyze deal.");
+        try {
+            const res = await appService.analyzeDeal(payload as any);
+            if ((res?.status === 200 || res?.status === 201) && res?.data?.data) {
+                setResult(res.data.data);
+                toast.success("Deal analyzed successfully.");
+            } else {
+                toast.error(apiErrorMessage(res, "Failed to analyze deal."));
+            }
+        } catch {
+            toast.error("Failed to analyze deal.");
+        } finally {
+            setAnalyzing(false);
         }
     }
 
@@ -392,9 +420,12 @@ export default function DealAnalyzerPage() {
                             <label className={fieldLbl}>Property Size (SQM)</label>
                             <input
                                 type="number"
+                                min={0}
+                                step="any"
                                 placeholder="145 sqm"
                                 className={formInput}
                                 value={form.sizeSqm}
+                                onKeyDown={(e) => { if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault(); }}
                                 onChange={(e) => setForm((prev) => ({ ...prev, sizeSqm: e.target.value }))}
                             />
                         </div>
