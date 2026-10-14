@@ -8,6 +8,7 @@ import Input from "@/app/components/ui/input";
 import { GoogleIcon, FacebookIcon } from "../constants";
 import appService from "@/app/services/appService";
 import { toast } from "react-hot-toast";
+import { registerPushDevice } from "@/app/utils/pushNotifications";
 
 export default function LoginPage() {
 
@@ -37,6 +38,10 @@ export default function LoginPage() {
                 if (sessionId) {
                     document.cookie = `session_id=${sessionId}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
                 }
+                await Promise.race([
+                    registerPushDevice({ force: true }),
+                    new Promise((resolve) => setTimeout(resolve, 3000)),
+                ]);
                 window.location.href = user.role === "admin" ? "/admin-dashboard" : "/dashboard";
             } else {
                 toast.error(res?.data?.message || res?.data?.error || "Invalid email or password.");

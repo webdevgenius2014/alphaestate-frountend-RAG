@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef, type ReactNode } from "react";
+import React, { useState, useEffect, useRef, Suspense, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import ModalButton from "@/app/components/ui/modal-button";
 import { DeleteAccountModal } from "@/app/components/dashboard/alert-modals";
 import appService from "@/app/services/appService";
 import { getCookie, clearAuthCookies } from "@/app/services/interceptor";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
-import { formatDevice, getLocation, formatRelativeTime } from "@/app/utils/session";
+import { formatDevice, formatLoginDevice, getLocation, formatRelativeTime } from "@/app/utils/session";
+import { useVisibleRowsHeight } from "@/app/hooks/useVisibleRowsHeight";
+import { registerPushDevice, unregisterPushDevice } from "@/app/utils/pushNotifications";
 import { PHONE_CODES, formatLastLogin } from "@/app/constant";
 import {
     SETTINGS_TABS,
@@ -442,6 +445,7 @@ function SecurityTab() {
                 setConfirmPassword("");
 
                 try {
+                    await unregisterPushDevice();
                     const sessionsRes = await appService.getSessions();
                     const allSessions = sessionsRes?.data?.data ?? sessionsRes?.data;
                     if (Array.isArray(allSessions)) {
@@ -462,6 +466,7 @@ function SecurityTab() {
 
     const [prefs, setPrefs] = useState({ email: true, newDevice: true, suspicious: true });
     const [prefsLoading, setPrefsLoading] = useState({ email: false, newDevice: false, suspicious: false });
+    const [prefsLoaded, setPrefsLoaded] = useState(false);
 
     useEffect(() => {
         appService.getNotificationPreferences().then((res) => {
@@ -473,7 +478,7 @@ function SecurityTab() {
                     suspicious: d.suspiciousActivityDetectionEnabled ?? true,
                 });
             }
-        });
+        }).finally(() => setPrefsLoaded(true));
     }, []);
 
     const handleTogglePref = async (key: keyof typeof prefs) => {
@@ -506,16 +511,22 @@ function SecurityTab() {
 
     const [twoFaEnabled, setTwoFaEnabled] = useState(false);
     const [twoFaLoading, setTwoFaLoading] = useState(false);
+    const [twoFaLoaded, setTwoFaLoaded] = useState(false);
+    const [passwordChangedAt, setPasswordChangedAt] = useState<string | null>(null);
 
     useEffect(() => {
         appService.getUserProfile().then((res) => {
             if (res?.data?.success && res.data.data) {
                 setTwoFaEnabled(!!res.data.data.isTwoFactorEnabled);
+                setPasswordChangedAt(res.data.data.passwordChangedAt ?? res.data.data.passwordUpdatedAt ?? null);
             }
-        });
+        }).finally(() => setTwoFaLoaded(true));
     }, []);
 
-    type SessionRow = { id: string; device: string; location: string; lastActive: string; isCurrent: boolean };
+    type SessionRow = {
+        id: string; device: string; loginDevice: string; location: string;
+        lastActive: string; lastUsedAt: string | null; createdAt: string | null; isCurrent: boolean;
+    };
     const [sessions, setSessions] = useState<SessionRow[]>([]);
     const [sessionsLoading, setSessionsLoading] = useState(true);
     const [logoutLoadingId, setLogoutLoadingId] = useState<string | null>(null);
@@ -529,13 +540,20 @@ function SecurityTab() {
             }
             const currentSessionId = getCookie("session_id");
             const rows = await Promise.all(
-                list.map(async (s: any): Promise<SessionRow> => ({
-                    id: s.id,
-                    device: formatDevice(s.userAgent ?? null),
-                    location: await getLocation(s.ipAddress ?? s.ip ?? null),
-                    lastActive: formatRelativeTime(s.lastUsedAt ?? s.lastUsed ?? null),
-                    isCurrent: !!currentSessionId && s.id === currentSessionId,
-                }))
+                list.map(async (s: any): Promise<SessionRow> => {
+                    const ua = s.deviceInfo ?? s.userAgent ?? null;
+                    const lastUsedAt = s.lastUsedAt ?? s.lastUsed ?? null;
+                    return {
+                        id: s.id,
+                        device: formatDevice(ua),
+                        loginDevice: formatLoginDevice(ua),
+                        location: await getLocation(s.ipAddress ?? s.ip ?? null),
+                        lastActive: formatRelativeTime(lastUsedAt),
+                        lastUsedAt,
+                        createdAt: s.createdAt ?? null,
+                        isCurrent: !!currentSessionId && s.id === currentSessionId,
+                    };
+                })
             );
             setSessions(rows);
             setSessionsLoading(false);
@@ -555,6 +573,14 @@ function SecurityTab() {
         }
     };
 
+    const byTime = (iso: string | null) => (iso ? new Date(iso).getTime() || 0 : 0);
+    const orderedSessions = [...sessions].sort((a, b) =>
+        Number(b.isCurrent) - Number(a.isCurrent) || byTime(b.lastUsedAt) - byTime(a.lastUsedAt));
+    const logins = [...sessions].filter((s) => s.createdAt).sort((a, b) => byTime(b.createdAt) - byTime(a.createdAt));
+    const latestLogin = logins[0];
+    const newDeviceLogin = latestLogin ? logins.find((l) => l.loginDevice !== latestLogin.loginDevice) : undefined;
+    const { ref: sessionsListRef, maxHeight: sessionsMaxHeight } = useVisibleRowsHeight(1, [sessions]);
+
     const [currentSessionLoading, setCurrentSessionLoading] = useState(false);
 
     const handleLogoutCurrentSession = async () => {
@@ -565,6 +591,7 @@ function SecurityTab() {
         }
 
         setCurrentSessionLoading(true);
+        await unregisterPushDevice();
         const res = await appService.logoutSessionBySessionId(sessionId);
         setCurrentSessionLoading(false);
 
@@ -614,18 +641,49 @@ function SecurityTab() {
 
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-4">Active Sessions</h3>
-                            <div className="bg-(--db-main-bg) p-4.5 mb-4">
-                                <p className="text-[15px] font-medium text-(--db-text-primary) mb-1.5">Windows Desktop · Chrome</p>
-                                <div className="flex items-center gap-1 text-[13px] text-[#D28A44] mb-2">
-                                    <SavedLocIcon />
-                                    <span>Abu Dhabi, UA</span>
+                            {sessionsLoading ? (
+                                <div className="bg-(--db-main-bg) p-4.5 mb-4 space-y-2">
+                                    <div className="h-4 w-48 bg-(--db-sidebar-bg) rounded animate-pulse" />
+                                    <div className="h-3 w-32 bg-(--db-sidebar-bg) rounded animate-pulse" />
+                                    <div className="h-4 w-40 bg-(--db-sidebar-bg) rounded animate-pulse" />
                                 </div>
-                                <p className="text-[15px] font-medium text-(--db-text-primary) mb-1.5">Last Active: 10 mins ago</p>
-                                <div className="flex items-center gap-1.5 text-sm font-semibold text-(--db-text-primary)">
-                                    <div className="w-2 h-2 rounded-full bg-[#5E9F62] shrink-0" />
-                                    <span>Current Session</span>
+                            ) : !orderedSessions.length ? (
+                                <p className="bg-(--db-main-bg) p-4.5 mb-4 text-[13px] text-(--db-text-muted)">Data not present</p>
+                            ) : (
+                                <div
+                                    ref={sessionsListRef}
+                                    style={{ maxHeight: sessionsMaxHeight }}
+                                    className="relative space-y-3 mb-4 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#D28A4466_transparent]"
+                                >
+                                    {orderedSessions.map((s) => (
+                                        <div key={s.id} className="bg-(--db-main-bg) p-4.5">
+                                            <div className="flex items-start justify-between gap-3 mb-1.5">
+                                                <p className="text-[15px] font-medium text-(--db-text-primary)">{s.device}</p>
+                                                {!s.isCurrent && (
+                                                    <button
+                                                        onClick={() => handleLogoutSession(s.id)}
+                                                        disabled={logoutLoadingId === s.id}
+                                                        className="shrink-0 text-[11px] font-semibold text-[#D28A44] border border-[#D28A44] rounded-xs px-2.5 py-1 hover:bg-[#D28A44] hover:text-white transition-colors disabled:opacity-60"
+                                                    >
+                                                        {logoutLoadingId === s.id ? "LOGGING OUT..." : "LOGOUT"}
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-[13px] text-[#D28A44] mb-2">
+                                                <SavedLocIcon />
+                                                <span>{s.location}</span>
+                                            </div>
+                                            <p className="text-[15px] font-medium text-(--db-text-primary)">Last Active: {s.lastActive}</p>
+                                            {s.isCurrent && (
+                                                <div className="flex items-center gap-1.5 mt-1.5 text-sm font-semibold text-(--db-text-primary)">
+                                                    <div className="w-2 h-2 rounded-full bg-[#5E9F62] shrink-0" />
+                                                    <span>Current Session</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            </div>
+                            )}
                             <ModalButton className="py-3! max-w-fit px-6" onClick={handleLogoutCurrentSession} disabled={currentSessionLoading}>
                                 {currentSessionLoading ? "LOGGING OUT..." : "LOGOUT DEVICE"}
                             </ModalButton>
@@ -635,32 +693,56 @@ function SecurityTab() {
                     <div className="space-y-5">
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-4">Two-Factor Authentication</h3>
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className={`w-2 h-2 rounded-full shrink-0 ${twoFaEnabled ? "bg-[#5E9F62]" : "bg-[#CF2D48]"}`} />
-                                <span className="text-sm font-semibold text-(--db-text-primary)">{twoFaEnabled ? "2FA Enabled" : "2FA Disabled"}</span>
-                            </div>
-                            <p className="text-[13px] text-(--db-text-primary) mb-4">
-                                {twoFaEnabled ? "Your account is protected with two-factor authentication." : "Your account currently uses password-only authentication."}
-                            </p>
-                            <ModalButton className="py-2.25! max-w-fit px-6" onClick={handleToggle2Fa} disabled={twoFaLoading}>
-                                {twoFaLoading ? "UPDATING..." : twoFaEnabled ? "DISABLE 2FA" : "ENABLE 2FA"}
-                            </ModalButton>
+                            {!twoFaLoaded ? (
+                                <div className="space-y-2">
+                                    <div className="h-4 w-28 bg-(--db-main-bg) rounded animate-pulse" />
+                                    <div className="h-3 w-64 max-w-full bg-(--db-main-bg) rounded animate-pulse" />
+                                    <div className="h-9 w-32 mt-4 bg-(--db-main-bg) rounded animate-pulse" />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className={`w-2 h-2 rounded-full shrink-0 ${twoFaEnabled ? "bg-[#5E9F62]" : "bg-[#CF2D48]"}`} />
+                                        <span className="text-sm font-semibold text-(--db-text-primary)">{twoFaEnabled ? "2FA Enabled" : "2FA Disabled"}</span>
+                                    </div>
+                                    <p className="text-[13px] text-(--db-text-primary) mb-4">
+                                        {twoFaEnabled ? "Your account is protected with two-factor authentication." : "Your account currently uses password-only authentication."}
+                                    </p>
+                                    <ModalButton className="py-2.25! max-w-fit px-6" onClick={handleToggle2Fa} disabled={twoFaLoading}>
+                                        {twoFaLoading ? "UPDATING..." : twoFaEnabled ? "DISABLE 2FA" : "ENABLE 2FA"}
+                                    </ModalButton>
+                                </>
+                            )}
                         </div>
 
                         <div className="bg-(--db-sidebar-bg) rounded-sm p-5">
                             <h3 className="text-[17px] font-semibold text-[#D28A44] mb-4">Login Activity</h3>
-                            <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">Successful login — Chrome on Windows</p>
-                            <p className="text-[13px] text-(--db-text-primary) mb-3.5">Today · 10:42 AM</p>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">New device login</p>
-                                    <p className="text-[13px] text-(--db-text-primary)">Last week</p>
+                            {sessionsLoading ? (
+                                <div className="space-y-2">
+                                    <div className="h-4 w-56 bg-(--db-main-bg) rounded animate-pulse" />
+                                    <div className="h-3 w-28 bg-(--db-main-bg) rounded animate-pulse" />
                                 </div>
-                                <div>
-                                    <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">Password updated</p>
-                                    <p className="text-[13px] text-(--db-text-primary)">3 days ago</p>
-                                </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">
+                                        {latestLogin ? `Successful login — ${latestLogin.loginDevice}` : "Successful login"}
+                                    </p>
+                                    <p className="text-[13px] text-(--db-text-primary) mb-3.5">{latestLogin ? formatLastLogin(latestLogin.createdAt) : "—"}</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* Could be used further */}
+                                        {/* <div>
+                                            <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">New device login</p>
+                                            <p className="text-[13px] text-(--db-text-primary)">
+                                                {newDeviceLogin ? `${newDeviceLogin.loginDevice} · ${formatRelativeTime(newDeviceLogin.createdAt)}` : "—"}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[15px] font-medium text-(--db-text-primary) mb-0.5">Password updated</p>
+                                            <p className="text-[13px] text-(--db-text-primary)">{passwordChangedAt ? formatRelativeTime(passwordChangedAt) : "—"}</p>
+                                        </div> */}
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="bg-(--db-sidebar-bg) p-5">
@@ -669,7 +751,11 @@ function SecurityTab() {
                                 {secPrefs.map(({ key, label }) => (
                                     <div key={key} className="flex bg-(--db-main-bg) p-3.75 items-center justify-between gap-4">
                                         <span className="text-sm font-normal text-(--db-text-primary)">{label}</span>
-                                        <Toggle checked={prefs[key]} onChange={() => !prefsLoading[key] && handleTogglePref(key)} />
+                                        {prefsLoaded ? (
+                                            <Toggle checked={prefs[key]} onChange={() => !prefsLoading[key] && handleTogglePref(key)} />
+                                        ) : (
+                                            <div className="h-6 w-13.75 shrink-0 rounded-full bg-(--db-sidebar-bg) animate-pulse" />
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -700,7 +786,7 @@ const ACCOUNT_TOGGLE_FIELD_MAP: Record<string, string> = {
     profile_updated: "profileUpdatedEnabled",
 };
 
-const FREQUENCY_TO_API: Record<string, string> = { "Daily": "daily", "Weekly": "weekly", "Monthly": "monthly", "Never": "never" };
+const FREQUENCY_TO_API: Record<string, string> = { "Immediate": "immediate", "Hourly": "hourly", "Daily": "daily", "Weekly": "weekly" };
 const API_TO_FREQUENCY: Record<string, string> = Object.fromEntries(Object.entries(FREQUENCY_TO_API).map(([k, v]) => [v, k]));
 
 const SENSITIVITY_TO_API: Record<string, string> = { "Low": "low", "Medium": "medium", "High": "high" };
@@ -796,6 +882,14 @@ function NotificationsTab() {
 
         setMainToggles((p) => ({ ...p, [id]: nextValue }));
         setMainToggleLoading((p) => ({ ...p, [id]: true }));
+
+        if (id === "push") {
+            if (nextValue) {
+                await registerPushDevice({ prompt: true, force: true });
+            } else {
+                await unregisterPushDevice();
+            }
+        }
 
         const payload = id === "push" ? { pushNotificationsEnabled: nextValue } : { smsNotificationsEnabled: nextValue };
         await patchPref(payload, () => setMainToggles((p) => ({ ...p, [id]: prevValue })));
@@ -1111,12 +1205,24 @@ function AIPreferencesTab() {
 }
 
 export default function ProfileSettingsPage() {
-    const [activeTab, setActiveTab]       = useState("profile");
+    return (
+        <Suspense fallback={null}>
+            <ProfileSettingsContent />
+        </Suspense>
+    );
+}
+
+const TAB_IDS = SETTINGS_TABS.filter((t) => t.id !== "delete").map((t) => t.id);
+
+function ProfileSettingsContent() {
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get("tab");
+    const activeTab = tabParam && TAB_IDS.includes(tabParam) ? tabParam : "profile";
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
     const handleTabClick = (id: string) => {
         if (id === "delete") { setDeleteModalOpen(true); return; }
-        setActiveTab(id);
+        window.history.replaceState(null, "", id === "profile" ? window.location.pathname : `?tab=${id}`);
     };
 
     return (

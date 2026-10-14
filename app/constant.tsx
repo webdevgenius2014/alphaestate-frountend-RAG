@@ -522,4 +522,104 @@ export const TOC = [
     { num: "11", label: "Governing Law and Dispute Resolution" },
     { num: "12", label: "Changes to These Terms" },
     { num: "13", label: "Contact" },
+]
+
+// ── Alert / report modals ──────────────────────────────────────────────
+export const NOTIF_METHODS = ["Email Notifications", "SMS Alerts", "Push Notifications"];
+export const DISTRICTS = ["Yas Island", "Al Reem Island", "Saadiyat Island", "Al Khalidiyah", "Corniche", "Masdar City"];
+export type AlertTypeOption = { triggerType: string; direction: string | null; label: string };
+export const DEFAULT_ALERT_TYPES: AlertTypeOption[] = [
+    { triggerType: "price_change", direction: "increase", label: "Appreciation Opportunity" },
+    { triggerType: "price_change", direction: "decrease", label: "Price Drop Alert" },
+    { triggerType: "roi_change", direction: "increase", label: "ROI Growth Alert" },
+    { triggerType: "roi_change", direction: "decrease", label: "ROI Decline Alert" },
+    { triggerType: "rental_yield_change", direction: "increase", label: "Rental Yield Spike" },
+    { triggerType: "rental_yield_change", direction: "decrease", label: "Rental Yield Decline" },
+    { triggerType: "market_shift", direction: null, label: "Market Signal Shift" },
+    { triggerType: "new_transaction", direction: null, label: "New Transaction Alert" },
 ];
+
+export const DELIVERY_CHANNELS: Record<string, string> = { "Email": "email", "Push Notification": "push", "SMS": "sms" };
+export const ALERT_FREQUENCIES = [
+    { label: "Immediate", value: "immediate" },
+    { label: "Hourly Digest", value: "hourly" },
+    { label: "Daily Summary", value: "daily" },
+    { label: "Weekly Summary", value: "weekly" },
+];
+export const DEFAULT_FREQUENCY = "immediate";
+export const DEFAULT_CONDITION = "Notify me when ROI exceeds 8%";
+export const DELETE_ACCOUNT_LOSE_ITEMS = [
+    "Saved Properties",
+    "AI Reports",
+    "Alert Configurations",
+    "Investment History",
+    "Account Preferences",
+];
+
+export const REPORT_PERIODS = ["last_year", "last_6months", "last_2_years", "all_time"] as const;
+export const REPORT_TYPE_LOG_LABEL: Record<string, string> = {
+    district: "district_analysis",
+    investment: "investment_comparison",
+    validation: "deal_validation",
+    snapshot: "market_snapshot",
+};
+
+// ── Smart Alerts page ──────────────────────────────────────────────────
+
+export const SIGNAL_BADGE_CLS: Record<string, string> = {
+    bullish: "bg-[#5E9F62] text-[#5E9F62]",
+    bearish: "bg-[#CF2D48] text-[#CF2D48]",
+};
+
+export const TRIGGER_TYPE_LABELS: Record<string, string> = {
+    new_transaction: "New transaction",
+    price_change: "Price change",
+    market_shift: "Market shift",
+    roi_change: "ROI change",
+    rental_yield_change: "Rental yield change",
+};
+
+export const FEED_VISIBLE_ITEMS = 4;
+
+export const ALERT_PREF_FIELDS: Record<string, string> = {
+    "ROI Growth Alerts": "roiGrowthAlertsEnabled",
+    "Market Trend Updates": "marketTrendUpdatesEnabled",
+    "Appreciation Opportunities": "appreciationOpportunitiesEnabled",
+    "Weekly Investment Summary": "weeklyInvestmentSummaryEnabled",
+    "Price Drops": "priceDropsEnabled",
+    "Market Signals": "marketSignalsEnabled",
+    "Bullish Market Signals": "bullishMarketSignalsEnabled",
+    "New Investment Opportunities": "newInvestmentOpportunitiesEnabled",
+    "Major Market Changes": "majorMarketChangesEnabled",
+    "High ROI Opportunities": "highRoiOpportunitiesEnabled",
+};
+
+export const FREQUENCY_FIELDS: { label: string; field: string }[] = [
+    { label: "ROI Alerts", field: "roiAlertsFrequency" },
+    { label: "Market Updates", field: "marketUpdatesFrequency" },
+    { label: "Price Alerts", field: "priceAlertsFrequency" },
+];
+
+export const FREQUENCY_OPTIONS = [
+    { label: "Immediate", value: "immediate" },
+    { label: "Hourly Digest", value: "hourly" },
+    { label: "Daily Summary", value: "daily" },
+    { label: "Weekly Report", value: "weekly" },
+];
+
+export type ChannelStats = { enabled?: boolean; categoriesEnabled?: number; categoriesTotal?: number };
+
+export type AlertStatsResponse = {
+    activeAlerts?: number;
+    email?: ChannelStats;
+    push?: ChannelStats;
+    sms?: ChannelStats;
+    monitoringActive?: boolean;
+};
+
+export const INITIAL_ALERT_STATS: Record<string, { value: string; sub: string }> = {
+    "Active Alerts": { value: "0 Active", sub: "Monitoring 0 conditions" },
+    "Email Notifications": { value: "Enabled", sub: "Email alerts on" },
+    "SMS / Push Alerts": { value: "0 Enabled", sub: "Push & SMS active" },
+    "AI Monitoring Status": { value: "Live Tracking", sub: "Real-time market scan" },
+};

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import appService from "@/app/services/appService";
 import { toast } from "react-hot-toast";
+import { unregisterPushDevice } from "@/app/utils/pushNotifications";
 
 function clearAuthCookies() {
   document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
@@ -18,6 +19,7 @@ export function useLogoutAction() {
   const handleLogout = async () => {
     setLoading(true);
     try {
+      await unregisterPushDevice();
       await appService.logout();
     } finally {
       clearAuthCookies();
