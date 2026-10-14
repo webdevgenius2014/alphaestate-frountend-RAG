@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useTheme } from "@/app/(user dashboard)/theme-provider";
 import { NotificationIcon, ReportTrashIcon } from "@/app/(user dashboard)/constants";
 import appService from "@/app/services/appService";
+import { registerPushDevice } from "@/app/utils/pushNotifications";
 
 function formatLabel(segment: string) {
     return segment.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -36,6 +37,10 @@ export default function Navbar() {
     const [notifications, setNotifications] = useState<NotificationRow[]>([]);
     const [notifLoading, setNotifLoading] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        registerPushDevice();
+    }, []);
 
     useEffect(() => {
         appService.getUnreadNotificationCount().then((res) => {

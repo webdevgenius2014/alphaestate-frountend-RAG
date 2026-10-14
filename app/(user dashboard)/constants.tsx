@@ -2635,6 +2635,14 @@ export const ALERT_NOTIFICATION_METHODS: AlertNotificationMethod[] = [
 ];
 
 export type AlertFeedItem = {
+  id?: string;
+  alertId?: string;
+  isMuted?: boolean;
+  triggerType?: string;
+  direction?: string | null;
+  deliveryChannels?: string[];
+  frequency?: string | null;
+  thresholdPercent?: number;
   type: string;
   district: string;
   description: string;
@@ -3791,10 +3799,10 @@ export const NOTIF_AI_ALERTS = [
 ];
 
 export const NOTIF_MARKET_UPDATE_OPTIONS = [
+  "Immediate",
+  "Hourly",
   "Daily",
   "Weekly",
-  "Monthly",
-  "Never",
 ];
 export const NOTIF_SENSITIVITY_OPTIONS = ["Low", "Medium", "High"];
 export const NOTIF_SUMMARY_OPTIONS = [

@@ -268,6 +268,22 @@ class AppService {
     }
   }
 
+  async registerDevice(payload: { fcmToken: string; platform?: "ios" | "android" | "web" }) {
+    try {
+      return await instance.post(ApiConfig.userDevices, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async unregisterDevice(fcmToken: string) {
+    try {
+      return await instance.delete(ApiConfig.userDevices, { data: { fcmToken } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async getNotificationPreferences() {
     try {
       return await instance.get(ApiConfig.notificationPrefrences);
@@ -398,6 +414,15 @@ class AppService {
     }
   }
 
+  async getDistrictTrend(id: string, metric: string = "roi", days: number = 30) {
+    try {
+      const url = ApiConfig.districtTrend.replace("{id}", id);
+      return await instance.get(url, { params: { metric, days } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   // Admin Districts
   async getAdminDistricts(page: number = 1, limit: number = 20, status?: string) {
     try {
@@ -459,6 +484,90 @@ class AppService {
   async getNotifications(page: number = 1, limit: number = 20) {
     try {
       return await instance.get(ApiConfig.notifications, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAlerts(page: number = 1, limit: number = 20) {
+    try {
+      return await instance.get(ApiConfig.alerts, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAlertTypes() {
+    try {
+      return await instance.get(ApiConfig.alertTypes);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAlertStats() {
+    try {
+      return await instance.get(ApiConfig.alertStats);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async parseAlertCondition(text: string) {
+    try {
+      return await instance.post(ApiConfig.alertParseCondition, { text });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async createAlert(payload: any) {
+    try {
+      return await instance.post(ApiConfig.alerts, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAlertsFeed(page: number = 1, limit: number = 20) {
+    try {
+      return await instance.get(ApiConfig.alertsFeed, { params: { page, limit } });
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAlertFeedById(id: string) {
+    try {
+      const url = ApiConfig.alertFeedById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async getAlertById(id: string) {
+    try {
+      const url = ApiConfig.alertById.replace("{id}", id);
+      return await instance.get(url);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async updateAlert(id: string, payload: any) {
+    try {
+      const url = ApiConfig.alertById.replace("{id}", id);
+      return await instance.patch(url, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
+  async deleteAlert(id: string) {
+    try {
+      const url = ApiConfig.alertById.replace("{id}", id);
+      return await instance.delete(url);
     } catch (error: any) {
       return error.response;
     }

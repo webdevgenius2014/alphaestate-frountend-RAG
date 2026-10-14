@@ -57,6 +57,7 @@ const ApiConfig = {
 
   //districts
   allDistricts: `${apiURL}/districts`,
+  districtTrend: `${apiURL}/districts/{id}/trend`,
 
   // admin districts
   adminDistricts: `${apiURL}/admin/districts`,
@@ -77,6 +78,15 @@ const ApiConfig = {
   notificationRead: `${apiURL}/notifications/{id}/read`,
   notificationsReadAll: `${apiURL}/notifications/read-all`,
   notificationById: `${apiURL}/notifications/{id}`,
+  
+  // Smart alerts
+  alerts: `${apiURL}/alerts`,
+  alertTypes: `${apiURL}/alerts/types`,
+  alertStats: `${apiURL}/alerts/stats`,
+  alertParseCondition: `${apiURL}/alerts/parse-condition`,
+  alertById: `${apiURL}/alerts/{id}`,
+  alertsFeed: `${apiURL}/alerts/feed`,
+  alertFeedById: `${apiURL}/alerts/feed/{id}`,
 
   // Deal Analyzer
   dealAnalyzerAnalyze: `${apiURL}/deal-analyzer/analyze`,
@@ -181,6 +191,9 @@ const ApiConfig = {
 
   //user profile notification
   notificationPrefrences: `${apiURL}/users/me/notification-preferences`,
+
+  // Push notification devices (FCM)
+  userDevices: `${apiURL}/users/me/devices`,
 
   //AI preferences
   aiPreferences: `${apiURL}/users/me/ai-preferences`,

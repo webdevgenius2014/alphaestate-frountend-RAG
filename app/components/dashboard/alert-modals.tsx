@@ -9,6 +9,12 @@ import Button from "../ui/button";
 import appService from "@/app/services/appService";
 import { toast } from "react-hot-toast";
 import { buildReportPdf, type ReportSection } from "@/app/utils/reportPdf";
+import { unregisterPushDevice } from "@/app/utils/pushNotifications";
+import {
+    DISTRICTS, DEFAULT_ALERT_TYPES, DELIVERY_CHANNELS, ALERT_FREQUENCIES, DEFAULT_FREQUENCY,
+    DEFAULT_CONDITION, DELETE_ACCOUNT_LOSE_ITEMS, REPORT_PERIODS, REPORT_TYPE_LOG_LABEL,
+    type AlertTypeOption,
+} from "@/app/constant";
 
 function clearAuthCookies() {
   ["access_token", "refresh_token", "user_role"].forEach((name) => {
@@ -20,15 +26,22 @@ const selectCls = "w-full bg-(--db-modal-field-bg) border border-(--db-modal-fie
 const inputCls = "h-auto! bg-(--db-modal-field-bg)! border-(--db-modal-field-border)! text-(--db-text-primary)! rounded-md! placeholder-(--db-text-muted)! focus:border-[#D28A44]/60!";
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <label className="block text-[17px] font-medium text-(--db-text-primary) mb-2.25">{children}</label>;
+    return <label className="block text-[15px] sm:text-[17px] font-medium text-(--db-text-primary) mb-2.25">{children}</label>;
 }
 
-function SelectField({ label, defaultValue, children }: { label: string; defaultValue?: string; children: React.ReactNode }) {
+function SelectField({ label, defaultValue, value, onChange, children }: { label: string; defaultValue?: string; value?: string; onChange?: (value: string) => void; children: React.ReactNode }) {
     return (
         <div>
             <FieldLabel>{label}</FieldLabel>
             <div className="relative">
-                <select className={selectCls} defaultValue={defaultValue}>{children}</select>
+                <select
+                    className={selectCls}
+                    defaultValue={value === undefined ? defaultValue : undefined}
+                    value={value}
+                    onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+                >
+                    {children}
+                </select>
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <SelectChevron />
                 </span>
@@ -49,50 +62,225 @@ function useModalEsc(onClose: () => void) {
     }, [onClose]);
 }
 
-const NOTIF_METHODS = ["Email Notifications", "SMS Alerts", "Push Notifications"];
-const DISTRICTS = ["Yas Island", "Al Reem Island", "Saadiyat Island", "Al Khalidiyah", "Corniche", "Masdar City"];
-const ALERT_TYPES = ["ROI Growth Alert", "Appreciation Opportunity", "Market Cooling Signal", "Rental Yield Spike", "Price Drop Alert"];
+const alertTypeKey = (t: Pick<AlertTypeOption, "triggerType" | "direction">) => `${t.triggerType}:${t.direction ?? ""}`;
+
+let alertTypesCache: AlertTypeOption[] | null = null;
+
+function useAlertTypes() {
+    const [types, setTypes] = useState<AlertTypeOption[]>(alertTypesCache ?? DEFAULT_ALERT_TYPES);
+    useEffect(() => {
+        if (alertTypesCache) return;
+        let cancelled = false;
+        appService.getAlertTypes().then((res) => {
+            const list: AlertTypeOption[] | null = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : null;
+            if (!list?.length) return;
+            alertTypesCache = list.map((t) => ({ triggerType: t.triggerType, direction: t.direction ?? null, label: t.label }));
+            if (!cancelled) setTypes(alertTypesCache!);
+        });
+        return () => { cancelled = true; };
+    }, []);
+    return types;
+}
+
+function findAlertType(types: AlertTypeOption[], alert: AlertFeedItem) {
+    return (
+        (alert.direction !== undefined && types.find((t) => t.triggerType === alert.triggerType && t.direction === alert.direction)) ||
+        types.find((t) => alert.type === t.label || alert.type.endsWith(` ${t.label}`)) ||
+        types.find((t) => t.triggerType === alert.triggerType) ||
+        types[0]
+    );
+}
+
+function deliveryFromChannels(channels?: string[]) {
+    const labels = Object.keys(DELIVERY_CHANNELS).filter((m) => channels?.includes(DELIVERY_CHANNELS[m]));
+    return new Set(labels.length ? labels : ["Email"]);
+}
+
+function FrequencySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    return (
+        <SelectField label="Alert Frequency" value={value} onChange={onChange}>
+            {ALERT_FREQUENCIES.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+        </SelectField>
+    );
+}
+
+function buildAlertPayload(alertType: AlertTypeOption, district: string, threshold: number | null, delivery: Set<string>, frequency: string | undefined, isUpdate = false) {
+    const hasCondition = alertType.direction !== null && threshold != null;
+    return {
+        name: `${district} ${alertType.label}`,
+        filterJson: {
+            district,
+            ...(hasCondition ? { thresholdPercent: threshold } : isUpdate ? { thresholdPercent: null } : {}),
+            ...(alertType.direction || isUpdate ? { direction: alertType.direction } : {}),
+        },
+        triggerType: alertType.triggerType,
+        deliveryChannels: Object.keys(DELIVERY_CHANNELS).filter((m) => delivery.has(m)).map((m) => DELIVERY_CHANNELS[m]),
+        ...(frequency ? { frequency } : {}),
+    };
+}
+
+type ParsedCondition = { triggerType: string; direction: string | null; thresholdPercent: number | null };
+type ConditionParse =
+    | { status: "idle" }
+    | { status: "parsing" }
+    | { status: "ok"; result: ParsedCondition }
+    | { status: "error"; message: string };
+
+function useConditionParse(text: string, skipText?: string): ConditionParse {
+    const trimmed = text.trim();
+    const needsParse = !!trimmed && trimmed !== skipText?.trim();
+    const [settled, setSettled] = useState<{ text: string; state: ConditionParse } | null>(null);
+    useEffect(() => {
+        if (!needsParse) return;
+        let cancelled = false;
+        const timer = setTimeout(async () => {
+            const res = await appService.parseAlertCondition(trimmed);
+            if (cancelled) return;
+            const data = res?.data?.data ?? res?.data;
+            if ((res?.status === 200 || res?.status === 201) && data?.triggerType) {
+                const threshold = Number(data.thresholdPercent);
+                setSettled({ text: trimmed, state: {
+                    status: "ok",
+                    result: {
+                        triggerType: data.triggerType,
+                        direction: data.direction ?? null,
+                        thresholdPercent: data.thresholdPercent != null && Number.isFinite(threshold) ? threshold : null,
+                    },
+                } });
+            } else {
+                setSettled({ text: trimmed, state: { status: "error", message: res?.data?.message || "Couldn't understand this condition. Try e.g. \"Notify me when ROI exceeds 8%\"." } });
+            }
+        }, 600);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [trimmed, needsParse]);
+    if (!needsParse) return IDLE_PARSE;
+    return settled?.text === trimmed ? settled.state : PARSING;
+}
+
+const IDLE_PARSE: ConditionParse = { status: "idle" };
+const PARSING: ConditionParse = { status: "parsing" };
+
+function useParsedAlertCondition(
+    parse: ConditionParse,
+    alertTypes: AlertTypeOption[],
+    setAlertTypeId: (key: string) => void,
+    fallbackThreshold: number | null,
+) {
+    useEffect(() => {
+        if (parse.status !== "ok") return;
+        const match = alertTypes.find((t) => t.triggerType === parse.result.triggerType && t.direction === parse.result.direction);
+        if (match) setAlertTypeId(alertTypeKey(match));
+    }, [parse]);
+
+    const threshold = parse.status === "ok" ? parse.result.thresholdPercent : parse.status === "idle" ? fallbackThreshold : null;
+    const blockReason =
+        parse.status === "parsing" ? "Still checking your target condition…" :
+        parse.status === "error" ? "Please fix the target condition before saving." :
+        null;
+    return { threshold, blockReason };
+}
+
+function TargetConditionField({ value, onChange, parse, alertTypes }: { value: string; onChange: (v: string) => void; parse: ConditionParse; alertTypes: AlertTypeOption[] }) {
+    const parsedLabel = parse.status === "ok"
+        ? alertTypes.find((t) => t.triggerType === parse.result.triggerType && t.direction === parse.result.direction)?.label ?? parse.result.triggerType
+        : null;
+    return (
+        <div>
+            <FieldLabel>Target Condition</FieldLabel>
+            <Input placeholder={DEFAULT_CONDITION} className={inputCls} value={value} onChange={(e) => onChange(e.target.value)} />
+            {parse.status === "parsing" && (
+                <p className="mt-2 text-xs text-(--db-text-muted)">Interpreting condition…</p>
+            )}
+            {parse.status === "error" && (
+                <p className="mt-2 text-xs text-[#E5484D]">{parse.message}</p>
+            )}
+            {parse.status === "ok" && (
+                <div className="mt-2 rounded-md border border-[#D28A44]/40 bg-[#D28A44]/10 px-3 py-2 text-xs text-(--db-text-primary)">
+                    <span className="text-(--db-text-muted)">We understood: </span>
+                    <span className="font-medium">{parsedLabel}</span>
+                    {parse.result.direction && <> · {parse.result.direction === "increase" ? "Increase" : "Decrease"}</>}
+                    {parse.result.thresholdPercent != null && <> · {parse.result.thresholdPercent}%</>}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function AlertTypeSelect({ types, value, onChange }: { types: AlertTypeOption[]; value: AlertTypeOption; onChange: (t: AlertTypeOption) => void }) {
+    return (
+        <SelectField
+            label="Alert Type"
+            value={alertTypeKey(value)}
+            onChange={(key) => { const t = types.find((x) => alertTypeKey(x) === key); if (t) onChange(t); }}
+        >
+            {types.map((t) => <option key={alertTypeKey(t)} value={alertTypeKey(t)}>{t.label}</option>)}
+        </SelectField>
+    );
+}
 
 // ── Create Alert Modal ────────────────────────────────────────────────────
 
-export function CreateAlertModal({ onClose }: { onClose: () => void }) {
+export function CreateAlertModal({ onClose, onCreated }: { onClose: () => void; onCreated?: () => void }) {
     useModalEsc(onClose);
+    const alertTypes = useAlertTypes();
+    const [alertTypeId, setAlertTypeId] = useState(() => alertTypeKey(alertTypes[0]));
+    const alertType = alertTypes.find((t) => alertTypeKey(t) === alertTypeId) ?? alertTypes[0];
+    const [district, setDistrict] = useState(DISTRICTS[0]);
+    const [condition, setCondition] = useState(DEFAULT_CONDITION);
+    const parse = useConditionParse(condition);
+    const { threshold, blockReason } = useParsedAlertCondition(parse, alertTypes, setAlertTypeId, null);
+    const [submitting, setSubmitting] = useState(false);
     const [delivery, setDelivery] = useState<Set<string>>(new Set(["Email"]));
+    const [frequency, setFrequency] = useState(DEFAULT_FREQUENCY);
     const toggleDelivery = (m: string) => setDelivery((prev) => {
         const next = new Set(prev); next.has(m) ? next.delete(m) : next.add(m); return next;
     });
 
+    const handleCreate = async () => {
+        if (submitting) return;
+        if (blockReason) { toast.error(blockReason); return; }
+        if (!delivery.size) { toast.error("Select at least one delivery method."); return; }
+        const payload = buildAlertPayload(alertType, district, threshold, delivery, frequency);
+        setSubmitting(true);
+        const res = await appService.createAlert(payload);
+        setSubmitting(false);
+        if (res?.status === 200 || res?.status === 201) {
+            toast.success("Smart alert activated.");
+            onCreated?.();
+            onClose();
+        } else {
+            toast.error(res?.data?.message || "Failed to create alert.");
+        }
+    };
+
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-3 sm:p-4" onClick={onClose}>
             <div
-                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 shadow-2xl relative"
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl relative"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button onClick={onClose} className="absolute top-4 right-4 z-20">
+                <button onClick={onClose} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
                     <img src="/close.svg" alt="" />
                 </button>
 
-                <div className="px-7 pt-7 pb-4 text-center">
-                    <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">Create AI Alert</h2>
+                <div className="px-5 sm:px-7 pt-6 sm:pt-7 pb-4 text-center">
+                    <h2 className="text-xl sm:text-[25px] font-medium text-(--db-text-primary) mb-2">Create AI Alert</h2>
                     <p className="text-sm text-(--db-text-primary) font-normal">
-                        Set custom investment conditions and let AI monitor<br />the market for you.
+                        Set custom investment conditions and let AI monitor<br className="hidden sm:block" /> the market for you.
                     </p>
                 </div>
 
-                <div className="px-7 pb-4 space-y-4">
-                    <SelectField label="Alert Type">
-                        {ALERT_TYPES.map((t) => <option key={t}>{t}</option>)}
-                    </SelectField>
-                    <SelectField label="District">
+                <div className="px-5 sm:px-7 pb-4 space-y-4">
+                    <AlertTypeSelect types={alertTypes} value={alertType} onChange={(t) => setAlertTypeId(alertTypeKey(t))} />
+                    <SelectField label="District" value={district} onChange={setDistrict}>
                         {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
                     </SelectField>
-                    <div>
-                        <FieldLabel>Target Condition</FieldLabel>
-                        <Input placeholder="Notify me when ROI exceeds 8%" className={inputCls} />
-                    </div>
+                    {(alertType.direction !== null || condition.trim() !== "") && (
+                        <TargetConditionField value={condition} onChange={setCondition} parse={parse} alertTypes={alertTypes} />
+                    )}
                     <div>
                         <FieldLabel>Delivery Method</FieldLabel>
-                        <div className="flex flex-wrap gap-x-5 gap-y-3 mt-1">
+                        <div className="flex flex-wrap gap-x-4 sm:gap-x-5 gap-y-3 mt-1">
                             {["Email", "Push Notification", "SMS"].map((m) => (
                                 <label key={m} className="flex items-center gap-2 text-sm font-normal text-(--db-text-primary) cursor-pointer select-none">
                                     <input
@@ -106,16 +294,11 @@ export function CreateAlertModal({ onClose }: { onClose: () => void }) {
                             ))}
                         </div>
                     </div>
-                    <SelectField label="Alert Frequency">
-                        <option>Immediate</option>
-                        <option>Hourly Digest</option>
-                        <option>Daily Summary</option>
-                        <option>Weekly Summary</option>
-                    </SelectField>
+                    <FrequencySelect value={frequency} onChange={setFrequency} />
                 </div>
 
-                <div className="px-7 pb-7 pt-3">
-                    <ModalButton>
+                <div className="px-5 sm:px-7 pb-6 sm:pb-7 pt-3">
+                    <ModalButton onClick={handleCreate} disabled={submitting}>
                         ACTIVATE SMART ALERT
                     </ModalButton>
                 </div>
@@ -127,44 +310,71 @@ export function CreateAlertModal({ onClose }: { onClose: () => void }) {
 
 // ── Edit Alert Modal ──────────────────────────────────────────────────────
 
-export function EditAlertModal({ alert, onClose }: { alert: AlertFeedItem; onClose: () => void }) {
+export function EditAlertModal({ alert, onClose, onSaved }: { alert: AlertFeedItem; onClose: () => void; onSaved?: () => void }) {
     useModalEsc(onClose);
-    const [delivery, setDelivery] = useState<Set<string>>(new Set(["Email"]));
+    const alertTypes = useAlertTypes();
+    const [alertTypeId, setAlertTypeId] = useState(() => alertTypeKey(findAlertType(alertTypes, alert)));
+    const alertType = alertTypes.find((t) => alertTypeKey(t) === alertTypeId) ?? findAlertType(alertTypes, alert);
+    const [district, setDistrict] = useState(() => (DISTRICTS.includes(alert.district) ? alert.district : DISTRICTS[0]));
+    const [initialCondition] = useState(alert.thresholdPercent != null ? `${alert.thresholdPercent}%` : "");
+    const [condition, setCondition] = useState(initialCondition);
+    const parse = useConditionParse(condition, initialCondition);
+    const { threshold, blockReason } = useParsedAlertCondition(
+        parse, alertTypes, setAlertTypeId,
+        condition.trim() && condition.trim() === initialCondition ? alert.thresholdPercent ?? null : null,
+    );
+    const [saving, setSaving] = useState(false);
+
+    const handleSave = async () => {
+        if (saving) return;
+        if (!alert.alertId) { toast.error("Alert not found."); return; }
+        if (blockReason) { toast.error(blockReason); return; }
+        if (!delivery.size) { toast.error("Select at least one delivery method."); return; }
+        setSaving(true);
+        const res = await appService.updateAlert(alert.alertId, buildAlertPayload(alertType, district, threshold, delivery, alert.frequency || frequency !== DEFAULT_FREQUENCY ? frequency : undefined, true));
+        setSaving(false);
+        if (res?.status === 200 || res?.status === 201) {
+            toast.success("Alert updated.");
+            onSaved?.();
+            onClose();
+        } else {
+            toast.error(res?.data?.message || "Failed to update alert.");
+        }
+    };
+    const [delivery, setDelivery] = useState<Set<string>>(() => deliveryFromChannels(alert.deliveryChannels));
+    const [frequency, setFrequency] = useState(alert.frequency ?? DEFAULT_FREQUENCY);
     const toggleDelivery = (m: string) => setDelivery((prev) => {
         const next = new Set(prev); next.has(m) ? next.delete(m) : next.add(m); return next;
     });
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-3 sm:p-4" onClick={onClose}>
             <div
-                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 shadow-2xl relative"
+                className="bg-(--db-modal-bg) rounded-[10px] w-full max-w-128.5 max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-2xl relative"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button onClick={onClose} className="absolute top-4 right-4 z-20">
+                <button onClick={onClose} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
                     <img src="/close.svg" alt="" />
                 </button>
 
-                <div className="px-7 pt-7 pb-4 text-center">
-                    <h2 className="text-[25px] font-medium text-(--db-text-primary) mb-2">Edit AI Alert</h2>
+                <div className="px-5 sm:px-7 pt-6 sm:pt-7 pb-4 text-center">
+                    <h2 className="text-xl sm:text-[25px] font-medium text-(--db-text-primary) mb-2">Edit AI Alert</h2>
                     <p className="text-sm text-(--db-text-primary) font-normal">
-                        Set custom investment conditions and let AI monitor<br />the market for you.
+                        Set custom investment conditions and let AI monitor<br className="hidden sm:block" /> the market for you.
                     </p>
                 </div>
 
-                <div className="px-7 pb-4 space-y-4">
-                    <SelectField label="Alert Type" defaultValue={alert.type}>
-                        {ALERT_TYPES.map((t) => <option key={t}>{t}</option>)}
-                    </SelectField>
-                    <SelectField label="District" defaultValue={alert.district}>
+                <div className="px-5 sm:px-7 pb-4 space-y-4">
+                    <AlertTypeSelect types={alertTypes} value={alertType} onChange={(t) => setAlertTypeId(alertTypeKey(t))} />
+                    <SelectField label="District" value={district} onChange={setDistrict}>
                         {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
                     </SelectField>
-                    <div>
-                        <FieldLabel>Target Condition</FieldLabel>
-                        <Input placeholder="Notify me when ROI exceeds 8%" className={inputCls} />
-                    </div>
+                    {(alertType.direction !== null || condition.trim() !== "") && (
+                        <TargetConditionField value={condition} onChange={setCondition} parse={parse} alertTypes={alertTypes} />
+                    )}
                     <div>
                         <FieldLabel>Delivery Method</FieldLabel>
-                        <div className="flex flex-wrap gap-x-5 gap-y-3 mt-1">
+                        <div className="flex flex-wrap gap-x-4 sm:gap-x-5 gap-y-3 mt-1">
                             {["Email", "Push Notification", "SMS"].map((m) => (
                                 <label key={m} className="flex items-center gap-2 text-sm font-normal text-(--db-text-primary) cursor-pointer select-none">
                                     <input
@@ -178,16 +388,11 @@ export function EditAlertModal({ alert, onClose }: { alert: AlertFeedItem; onClo
                             ))}
                         </div>
                     </div>
-                    <SelectField label="Alert Frequency">
-                        <option>Immediate</option>
-                        <option>Hourly Digest</option>
-                        <option>Daily Summary</option>
-                        <option>Weekly Summary</option>
-                    </SelectField>
+                    <FrequencySelect value={frequency} onChange={setFrequency} />
                 </div>
 
-                <div className="px-7 pb-7 pt-3">
-                    <ModalButton>SAVE CHANGES</ModalButton>
+                <div className="px-5 sm:px-7 pb-6 sm:pb-7 pt-3">
+                    <ModalButton onClick={handleSave} disabled={saving}>SAVE CHANGES</ModalButton>
                 </div>
             </div>
         </div>,
@@ -206,6 +411,7 @@ export function LogoutModal({ onClose }: { onClose: () => void }) {
     const handleLogout = async () => {
         setLoading(true);
         try {
+            await unregisterPushDevice();
             await appService.logout();
         } finally {
             clearAuthCookies();
@@ -266,14 +472,6 @@ export function LogoutModal({ onClose }: { onClose: () => void }) {
 
 // ── Delete Account Modal ──────────────────────────────────────────────────
 
-const DELETE_ACCOUNT_LOSE_ITEMS = [
-    "Saved Properties",
-    "AI Reports",
-    "Alert Configurations",
-    "Investment History",
-    "Account Preferences",
-];
-
 // ── Download Report Modal ─────────────────────────────────────────────────
 
 export type ReportRow = {
@@ -289,8 +487,6 @@ export type ReportRow = {
     propertyType?: string;
     timePeriod?: string;
 };
-
-const REPORT_PERIODS = ["last_year", "last_6months", "last_2_years", "all_time"] as const;
 
 export function DownloadReportModal({ report, onClose }: { report: ReportRow; onClose: () => void }) {
     useModalEsc(onClose);
@@ -440,13 +636,6 @@ export type GenerateReportConfig = {
     saleType?: string;
     areaSqm?: number;
     askingPriceAed?: number;
-};
-
-const REPORT_TYPE_LOG_LABEL: Record<string, string> = {
-    district: "district_analysis",
-    investment: "investment_comparison",
-    validation: "deal_validation",
-    snapshot: "market_snapshot",
 };
 
 async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "district" | "districtId" | "propertyType" | "period" | "saleType" | "areaSqm" | "askingPriceAed">) {
@@ -906,7 +1095,6 @@ export function DeleteAccountModal({ onClose, onConfirm }: { onClose: () => void
                     <img src="/close.svg" alt="" />
                 </button>
 
-
                 <div className="px-7 pt-8 pb-5 text-center">
                     <div className="w-21.75 h-21.75 rounded-[7px] bg-[#D28A441F] flex items-center justify-center mx-auto mb-5">
                         <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52" fill="none">
@@ -958,8 +1146,23 @@ export function DeleteAccountModal({ onClose, onConfirm }: { onClose: () => void
 
 // ── Delete Alert Modal ────────────────────────────────────────────────────
 
-export function DeleteAlertModal({ alert, onClose }: { alert: AlertFeedItem; onClose: () => void }) {
+export function DeleteAlertModal({ alert, onClose, onDeleted }: { alert: AlertFeedItem; onClose: () => void; onDeleted?: (alertId: string) => void }) {
     useModalEsc(onClose);
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!alert.alertId) { toast.error("Alert not found."); return; }
+        setDeleting(true);
+        const res = await appService.deleteAlert(alert.alertId);
+        setDeleting(false);
+        if (res?.status === 200 || res?.status === 201 || res?.status === 204) {
+            toast.success("Alert deleted.");
+            onDeleted?.(alert.alertId);
+            onClose();
+        } else {
+            toast.error(res?.data?.message || "Failed to delete alert.");
+        }
+    };
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center bg-black/80 justify-center p-4" onClick={onClose}>
@@ -995,7 +1198,8 @@ export function DeleteAlertModal({ alert, onClose }: { alert: AlertFeedItem; onC
                     </p>
                     <div className="px-7 mt-7 flex gap-3">
                         <button
-                            onClick={onClose}
+                            onClick={handleDelete}
+                            disabled={deleting}
                             className="w-full bg-[#CF2D48] text-white text-sm font-semibold py-3.5 rounded-md tracking-widest hover:bg-[#b8253e] transition-colors"
                         >
                             DELETE
