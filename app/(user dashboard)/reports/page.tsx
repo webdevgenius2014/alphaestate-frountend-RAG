@@ -60,11 +60,14 @@ function toReportRow(r: any): ReportRow {
 const inputCls =
     "w-full border border-[#D28A441F] rounded-[3px] p-[12px_14px] bg-(--db-sidebar-bg) text-(--db-text-primary) text-[13px] outline-none focus:border-[#D28A44]/60 transition-colors appearance-none cursor-pointer";
 
-function Toggle({ checked, disabled }: { checked: boolean; disabled?: boolean }) {
+function Toggle({ checked, disabled, onChange }: { checked: boolean; disabled?: boolean; onChange?: (next: boolean) => void }) {
     return (
         <button
             type="button"
+            role="switch"
+            aria-checked={checked}
             disabled={disabled}
+            onClick={() => onChange?.(!checked)}
             className={`relative w-13.75 h-6 rounded-full border transition-colors ease-linear shrink-0 ${checked ? "bg-[#D28A44] border-[#D28A44]" : "bg-(--db-main-bg) border-(--db-toggle-border)"} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
         >
             <div className={`absolute top-px w-5 h-5 rounded-full shadow transition-all ease-linear ${checked ? "right-0.5 bg-(--db-main-bg)" : "left-0.5 bg-[#D28A44]"}`} />
@@ -134,7 +137,7 @@ export default function ReportsPage() {
     const [propType, setPropType] = useState(REPORT_PROPERTY_TYPES[0]);
     const [timePeriod, setTimePeriod] = useState(REPORT_TIME_PERIODS[0]);
     const [format, setFormat] = useState(REPORT_FORMATS[0]);
-    const [aiInsights] = useState(false);
+    const [aiInsights, setAiInsights] = useState(false);
 
     const [saleType, setSaleType] = useState(SALE_TYPE_OPTIONS[0]);
     const [areaSqm, setAreaSqm] = useState("");
@@ -255,6 +258,7 @@ export default function ReportsPage() {
             saleType: isValidationSelected ? saleType : undefined,
             areaSqm: isValidationSelected ? Number(areaSqm) : undefined,
             askingPriceAed: isValidationSelected ? Number(askingPrice) : undefined,
+            includeAiInsights: aiInsights,
         });
     }
 
@@ -267,6 +271,7 @@ export default function ReportsPage() {
         setSaleType(SALE_TYPE_OPTIONS[0]);
         setAreaSqm("");
         setAskingPrice("");
+        setAiInsights(false);
     }
 
     return (
@@ -347,9 +352,9 @@ export default function ReportsPage() {
 
                             <div>
                                 <p className="text-[13px] font-medium text-(--db-text-primary) mb-2.5">Include AI Insights</p>
-                                <Toggle checked={aiInsights} disabled />
-                                {generateCooldown && (
-                                    <p className="text-[11px] text-(--db-text-muted) mt-1.5">Coming soon .....</p>
+                                <Toggle checked={aiInsights} onChange={setAiInsights} />
+                                {aiInsights && format !== "PDF Report" && (
+                                    <p className="text-[11px] text-(--db-text-muted) mt-1.5">AI insights are included in PDF reports only.</p>
                                 )}
                             </div>
 
