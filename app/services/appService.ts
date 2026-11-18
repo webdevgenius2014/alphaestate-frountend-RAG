@@ -855,6 +855,20 @@ class AppService {
     }
   }
 
+  async getReportInsights(payload: {
+    reportType: string;
+    district?: string;
+    propertyType?: string;
+    timePeriod?: string;
+    data: unknown;
+  }) {
+    try {
+      return await instance.post(ApiConfig.reportInsights, payload);
+    } catch (error: any) {
+      return error.response;
+    }
+  }
+
   async shareReportHistory(id: string) {
     try {
       const url = ApiConfig.reportHistoryShare.replace("{id}", id);

@@ -112,6 +112,7 @@ export type ReportSection = {
     snapshot?: Record<string, any> | null;
     overview?: Record<string, any> | null;
     dealResult?: Record<string, any> | null;
+    insightsText?: string;
 };
 
 export async function buildReportPdf(opts: {
@@ -205,6 +206,27 @@ export async function buildReportPdf(opts: {
             ];
             y = ensureSpace(doc, y, watermarkDataUrl, 20);
             y = addKeyValueTable(doc, rows, y);
+        }
+
+        if (section.insightsText !== undefined) {
+            doc.setFontSize(10);
+            doc.setTextColor(31, 41, 55);
+            const text = section.insightsText
+                ? section.insightsText.replace(/\*\*|__|^#+\s*/gm, "")
+                : "AI insights are unavailable at this time.";
+            const lines: string[] = doc.splitTextToSize(text, doc.internal.pageSize.getWidth() - 28);
+            for (const line of lines) {
+                y = ensureSpace(doc, y, watermarkDataUrl, 6);
+                doc.setFontSize(10);
+                doc.setTextColor(31, 41, 55);
+                doc.text(line, 14, y);
+                y += 5;
+            }
+            y = ensureSpace(doc, y, watermarkDataUrl, 8);
+            doc.setFontSize(8);
+            doc.setTextColor(107, 114, 128);
+            doc.text("AI-generated analysis for information only, not investment advice.", 14, y + 2);
+            y += 8;
         }
 
         y += 4;

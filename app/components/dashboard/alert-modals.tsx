@@ -636,25 +636,30 @@ export type GenerateReportConfig = {
     saleType?: string;
     areaSqm?: number;
     askingPriceAed?: number;
+    includeAiInsights?: boolean;
 };
 
-async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "district" | "districtId" | "propertyType" | "period" | "saleType" | "areaSqm" | "askingPriceAed">) {
-    const { types, district, districtId, propertyType, period, saleType, areaSqm, askingPriceAed } = opts;
+async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "district" | "districtId" | "propertyType" | "period" | "saleType" | "areaSqm" | "askingPriceAed" | "includeAiInsights">) {
+    const { types, district, districtId, propertyType, period, saleType, areaSqm, askingPriceAed, includeAiInsights } = opts;
     const sections: ReportSection[] = [];
     const bullets: string[] = [];
+    let rawData: unknown = null;
 
     if (types.includes("district")) {
-        const [cmpRes, trendRes, snapRes] = await Promise.all([
+        const [cmpRes, trendRes] = await Promise.all([
             appService.getDistrictRoi(districtId ? undefined : district, period, districtId ? [districtId] : undefined),
             appService.getPriceTrend(period, district || undefined),
-            appService.getMarketSnapshots(district || undefined),
         ]);
-        sections.push({
+        const districtSection = {
             title: "District Analysis",
             districtComparison: cmpRes?.data?.data ?? [],
             priceTrend: trendRes?.data?.data ?? [],
-            snapshot: snapRes?.data?.data ?? null,
-        });
+        };
+        sections.push(districtSection);
+        rawData = {
+            districtComparison: districtSection.districtComparison,
+            priceTrend: districtSection.priceTrend,
+        };
         bullets.push(`District analysis for ${district || "selected district"}`);
     }
 
@@ -674,10 +679,9 @@ async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "d
             allRows.find(isSelected) ??
             ((selectedRes?.data?.data ?? []) as Array<Record<string, any>>).find(isSelected) ??
             (selectedRes?.data?.data ?? [])[0];
-        sections.push({
-            title: "Investment Comparison",
-            districtComparison: selectedRow ? [selectedRow, ...allRows.filter((r) => !isSelected(r))] : allRows,
-        });
+        const comparison = selectedRow ? [selectedRow, ...allRows.filter((r) => !isSelected(r))] : allRows;
+        sections.push({ title: "Investment Comparison", districtComparison: comparison });
+        rawData = comparison;
         bullets.push("Investment comparison across districts");
     }
 
@@ -696,6 +700,7 @@ async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "d
             throw new Error(res?.data?.message || "Deal analysis failed.");
         }
         sections.push({ title: "Deal Validation", dealResult: res.data.data });
+        rawData = res.data.data;
         bullets.push("Deal validation analysis");
     }
 
@@ -709,10 +714,25 @@ async function fetchReportSections(opts: Pick<GenerateReportConfig, "types" | "d
             title: "Market Snapshot",
             snapshot: snapRes?.data?.data ?? null,
         });
+        rawData = snapRes?.data?.data ?? null;
         bullets.push("Market snapshot overview");
     }
 
     if (!sections.length) throw new Error("Select at least one report type.");
+
+    if (includeAiInsights) {
+        const res = await appService.getReportInsights({
+            reportType: REPORT_TYPE_LOG_LABEL[types[0]] ?? types[0],
+            district: district || undefined,
+            propertyType: propertyType ? slugifyReportValue(propertyType) : undefined,
+            timePeriod: period,
+            data: rawData,
+        });
+        const text = res?.status === 200 || res?.status === 201 ? res?.data?.data?.insights : null;
+        const insightsText = typeof text === "string" ? text.trim() : "";
+        sections.push({ title: "AI Insights", insightsText });
+        bullets.push(insightsText ? "AI insights included" : "AI insights unavailable at this time");
+    }
     return { sections, bullets };
 }
 
@@ -782,6 +802,7 @@ export function GenerateReportModal({ config, onClose, onLogged }: { config: Gen
                     saleType,
                     areaSqm,
                     askingPriceAed,
+                    includeAiInsights: config.includeAiInsights,
                 });
 
                 const doc = await buildReportPdf({
